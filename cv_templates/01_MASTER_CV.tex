@@ -1,0 +1,371 @@
+%%=====================================================================
+%% MASTER CV -- NILOY SANNYAL  (SOURCE OF TRUTH)
+%%=====================================================================
+%% HOW THE JOB-APPLICATION AGENT MUST USE THIS FILE
+%%  1. Every fact, number, title, date and tool in a tailored CV must come from THIS file.
+%%     Never invent or inflate. If a job needs something not here, flag it as a gap.
+%%  2. Keep everything from \documentclass through \begin{document} (preamble + macros)
+%%     EXACTLY as-is so design, spacing and alignment stay identical.
+%%  3. Tailor by: rewriting the Summary, reordering/trimming bullets, reordering skills
+%%     and projects, and mirroring the job's keywords where truthful.
+%%  4. Lines starting with %% are control notes for the agent. Do not copy this control
+%%     block into tailored output; a tailored file starts at \documentclass.
+%%  5. Escape LaTeX special characters (% & $ # _) in any new text. Keep braces balanced.
+%%  6. Target 1 page; 2 pages maximum.
+%%
+%% TAG VOCABULARY (used in the [tag] notes above sections and bullets)
+%%  agentic, llm, rag, backend, fullstack, mlops, infra, ml, ds, cv, genai,
+%%  conversational, consulting, leadership, embedded, cs-fundamentals
+%%
+%% TRIM ORDER FOR 1 PAGE (cut in this order, keep the most job-relevant items)
+%%  1) Robotics & Embedded projects (unless the job is embedded/robotics)
+%%  2) Certifications & Courses
+%%  3) Career Highlights (overlaps Summary and Experience)
+%%  4) Technical Leadership & Ownership (overlaps Experience)
+%%  5) Enterprise AI Systems section (duplicates Experience; keep only the most relevant entry)
+%%  6) Lower-relevance projects, then Softvence bullets
+%%
+%% VERIFIED FACT LEDGER (numbers must match exactly wherever used)
+%%  600+ salespersons (Betopia Sales Agent) | 530+ problems = 350+ LeetCode + 200+ Codeforces
+%%  32,247 matches, 1990--2025 (FIFA forecast) | 10,000+ fights, 80+ features, sub-100ms (UFC)
+%%  28,000+ listings, 95%+ accuracy (rent prediction) | 97% average accuracy (crop disease)
+%%  sub-100ms inference latency (Softvence FastAPI APIs) | 6-month, 1-year, 5-year horizons (BioVue)
+%%  Betopia Limited, AI Engineer: Apr 2026 -- Present | Softvence Agency, AI Developer: Nov 2025 -- Mar 2026
+%%  B.Sc. ICE, University of Rajshahi: Jan 2019 -- Oct 2024
+%%
+%% SUMMARY VARIANTS (all use only facts from this file; paste one into \section{Summary},
+%% then adapt keywords to the job)
+%%  [agentic/llm]
+%%  \resumeItem{AI Engineer building production \textbf{agentic AI and LLM systems} -- architected the Betopia Sales Agent embedded in Odoo CRM for \textbf{600+ salespersons}, with a multi-provider LLM chain (OpenAI, Anthropic, Gemini), Qdrant-based \textbf{RAG}, and end-to-end ownership from architecture through deployment and operations.}
+%%  [mlops/platform]
+%%  \resumeItem{AI Engineer with end-to-end \textbf{MLOps and AI platform engineering} experience -- GitHub Actions CI/CD, a Dockerized multi-service production stack (FastAPI, Odoo, PostgreSQL, Redis, Qdrant), VPS administration, backups, monitoring, and incident response for a system used by \textbf{700+ salespersons}.}
+%%  [ml/data-science]
+%%  \resumeItem{AI/ML Engineer with hands-on \textbf{machine learning} experience -- ensemble models (XGBoost, LightGBM) trained on \textbf{10,000+ UFC fights} with \textbf{80+ engineered features} and served via FastAPI at \textbf{sub-100ms latency}, plus forecasting, regression and CNN projects, alongside production LLM and RAG systems.}
+%%  [backend/full-stack]
+%%  \resumeItem{AI Engineer with strong \textbf{backend and full-stack} skills -- FastAPI services, async Python, Next.js 15 dashboards, PostgreSQL, Redis and Qdrant, shipped with Docker and GitHub Actions CI/CD into production systems used by \textbf{700+ salespersons}.}
+%%=====================================================================
+ 
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{verbatim}
+\usepackage{titlesec}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{latexsym}
+\usepackage{marvosym}
+\usepackage[empty]{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\hypersetup{pdfnewwindow=true}
+
+\input glyphtounicode
+\pdfgentounicode=1
+
+\usepackage[default]{sourcesanspro}
+\urlstyle{same}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0in}
+\renewcommand{\footrulewidth}{0in}
+\setlength{\tabcolsep}{0in}
+
+\addtolength{\oddsidemargin}{-0.55in}
+\addtolength{\topmargin}{-0.55in}
+\addtolength{\textwidth}{1.0in}
+\addtolength{\textheight}{1.0in}
+
+\raggedbottom{}
+\raggedright{}
+
+\titleformat{\section}
+  {\scshape\large}{}
+    {0em}{\color{black}}[\color{black}\titlerule\vspace{0pt}]
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\renewcommand{\ULdepth}{2pt}
+
+\newcommand{\resumeItem}[1]{
+  \item\small{#1}
+}
+
+\newcommand{\resumeItemListStart}{\begin{itemize}[rightmargin=0.11in]}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+
+\newcommand{\resumeSectionType}[3]{
+  \item\begin{tabular*}{0.96\textwidth}[t]{
+    p{0.20\textwidth}p{0.02\textwidth}p{0.74\textwidth}
+  }
+    \textbf{#1} & \hspace{-1.5em}#2 & \hspace{-1.5em}#3
+  \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeCourseType}[3]{
+  \item\begin{tabular*}{0.96\textwidth}[t]{
+    l@{\hspace{0.5em}}c@{\hspace{0.5em}}l
+  }
+    \textbf{#1} & #2 & #3
+  \end{tabular*}\vspace{-2pt}
+}
+
+\newcommand{\resumeTrioHeading}[3]{
+  \item\small{
+    \begin{tabular*}{0.96\textwidth}[t]{
+      l@{\extracolsep{\fill}}c@{\extracolsep{\fill}}r
+    }
+      \textbf{#1} & \textit{#2} & #3
+    \end{tabular*}
+  }
+}
+
+\newcommand{\resumeQuadHeading}[4]{
+  \item
+  \begin{tabular*}{0.96\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+    \textit{\small#3} & \textit{\small #4} \\
+  \end{tabular*}
+}
+
+\newcommand{\resumeHeadingListStart}{
+  \begin{itemize}[leftmargin=0.15in, label={}]
+}
+\newcommand{\resumeHeadingListEnd}{\end{itemize}}
+
+\begin{document}
+
+%-------------- HEADER ---------------
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+  \textbf{\Huge NILOY SANNYAL\vspace{2pt}} & Location: Dhaka, Bangladesh \\
+  \href{https://www.niloysannyal.me/}{\uline{Portfolio}} $|$
+  \href{https://www.linkedin.com/in/niloysannyal/}{\uline{LinkedIn}} $|$
+  \href{https://github.com/niloysannyal}{\uline{GitHub}} $|$
+  \href{https://leetcode.com/NiloySannyal/}{\uline{LeetCode}}
+  &
+  Email: \href{mailto:niloysannyal@gmail.com}{\uline{niloysannyal@gmail.com}} $|$
+  Mobile: \href{tel:+8801783445245}{\uline{+8801783445245}} \\
+\end{tabular*}
+
+%-------------- EXECUTIVE SUMMARY ---------------
+\section{Summary}
+\resumeHeadingListStart{}
+\resumeItemListStart{}
+  \resumeItem{AI Engineer specializing in \textbf{Agentic AI, LLM Systems, RAG, and AI Platform Engineering}, with a track record of designing and shipping production AI systems used by hundreds of enterprise employees -- spanning ML/LLM engineering, backend architecture, infrastructure, and deployment. Internally progressed from \textbf{AI Developer} (Softvence Agency) to \textbf{AI Engineer} (Betopia Limited) within Betopia Group, taking on architecture ownership and client-facing consulting work beyond the original scope of the role.}
+\resumeItemListEnd{}
+\resumeHeadingListEnd{}
+
+%-------------- CAREER HIGHLIGHTS ---------------
+\section{Career Highlights}
+\resumeHeadingListStart{}
+\resumeItemListStart{}
+  \resumeItem{Internally promoted from \textbf{Softvence Agency to Betopia Limited}, taking on greater architectural ownership and enterprise scope.}
+  \resumeItem{Architected the \textbf{Betopia Sales Agent}, a production Agentic AI system embedded in Odoo CRM, serving \textbf{600+ salespersons} across Betopia Group.}
+  \resumeItem{Designed a \textbf{multi-provider LLM architecture} (OpenAI, Anthropic, Gemini) and production-grade \textbf{RAG systems} on Qdrant for context-aware AI responses.}
+  \resumeItem{Delivered \textbf{end-to-end MLOps} -- CI/CD, model versioning, monitoring -- and operate as a full-stack AI engineer across backend, frontend, data, and infrastructure.}
+  \resumeItem{Independently lead a \textbf{factory digitization consulting engagement} for an external RMG manufacturing client alongside core engineering duties.}
+  \resumeItem{\textbf{530+ algorithmic problems solved} across LeetCode and Codeforces, reflecting strong CS fundamentals underpinning system design work.}
+\resumeItemListEnd{}
+\resumeHeadingListEnd{}
+
+%-------------- EXPERIENCE ---------------
+\section{Professional Experience}
+\resumeHeadingListStart{}
+
+\resumeQuadHeading{AI Engineer}{Dhaka, Bangladesh}{Betopia Limited -- Betopia Group}{Apr 2026 -- Present}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Architected and own \textbf{Betopia Sales Agent}, a production agentic AI system embedded directly in \textbf{Odoo CRM}, serving \textbf{600+ salespersons} with psychological client profiling, conversation-stage detection, and autonomous lead-closing logic.}
+  \resumeItem{Designed a \textbf{multi-provider LLM chain} (OpenAI, Anthropic, Gemini) with dynamic provider-slot routing, automatic failover, and \textbf{Redis AOF}-backed persistence for conversation state.}
+  \resumeItem{Built a production \textbf{RAG pipeline} on \textbf{Qdrant} with semantic search over Fiverr proposal templates and historical sales conversations for context-aware response generation.}
+  \resumeItem{Delivered a \textbf{Next.js 15} admin dashboard for real-time sales monitoring, LLM chain configuration, and system health observability, used directly by management.}
+  \resumeItem{Established \textbf{CI/CD pipelines} (GitHub Actions) with automated testing/deployment gates; applied MLOps practices including model versioning, async I/O optimization, and inference-latency monitoring.}
+  \resumeItem{Own the system end-to-end -- requirement analysis, architecture, implementation, deployment, and post-launch iteration -- with direct accountability for uptime and reliability. Rapidly self-onboarded onto \textbf{Odoo, Redis, Qdrant, and Next.js}, none of which were prior hands-on experience.}
+  \resumeItem{Perform ongoing \textbf{VPS and server administration} for the production Dockerized stack (FastAPI, Odoo, frontend, Postgres, Redis, Qdrant), including deployment, backup/restore of Qdrant vector collections, and incident troubleshooting.}
+  \resumeItem{Independently lead a parallel \textbf{factory digitization consulting engagement} for HA-MEEM Group (RMG manufacturing), scoping five operational modules spanning inventory, QC, cutting/waste, and admin reporting.}
+\resumeItemListEnd{}
+
+\resumeQuadHeading{AI Developer}{Dhaka, Bangladesh}{Softvence Agency -- Betopia Group}{Nov 2025 -- Mar 2026}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Built and deployed \textbf{production-grade AI APIs} using FastAPI with sub-100ms inference latency for real-time ML prediction endpoints.}
+  \resumeItem{Implemented \textbf{RAG pipelines} with vector databases for semantic search and context-aware AI responses, and integrated LLM APIs (OpenAI, Anthropic) with structured prompting for reliable production use.}
+  \resumeItem{Developed ML pipelines with advanced feature engineering, class-imbalance handling (SMOTE, class weights), and rigorous cross-validation evaluation.}
+  \resumeItem{Designed \textbf{n8n automation workflows} to orchestrate AI services, external APIs, and data pipelines for client operations.}
+  \resumeItem{Deployed AI services using \textbf{Docker and AWS (EC2, S3)}, with automated, repeatable deployment workflows, consistently meeting production SLAs.}
+\resumeItemListEnd{}
+
+\resumeHeadingListEnd{}
+
+
+%-------------- ENTERPRISE AI SYSTEMS ---------------
+\section{Enterprise AI Systems \& Initiatives}
+\resumeHeadingListStart{}
+
+\resumeTrioHeading{Betopia Sales Agent -- Enterprise Agentic CRM Assistant}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Production agentic AI system embedded in Odoo CRM, actively used by \textbf{600+ salespersons} across Betopia Group, with psychological client profiling, conversation-stage detection, and autonomous lead-closing logic -- backed by a multi-provider LLM chain, a Qdrant-based RAG layer, and a Next.js observability dashboard.}
+  \resumeItem{\textbf{Tech Stack:} FastAPI, Odoo, Redis, Qdrant, PostgreSQL, Next.js 15, OpenAI, Anthropic, Gemini, Docker, GitHub Actions.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{Internal AI Enablement \& Cross-Team Support}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Serve as a go-to internal resource for LLM integration, RAG architecture, and production AI design across teams within Betopia Group, and author detailed technical/user documentation (e.g., the Betopia Sales Agent user manual) so systems remain maintainable beyond a single engineer.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{HA-MEEM Group -- Factory Digitization Consulting (External Engagement)}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Independently scoped and documented a five-module digitization program for an RMG manufacturer -- inventory \& needle management, chemical/wash recipe control, fabric QC (shade \& shrinkage testing), cutting \& waste management, and a master admin dashboard -- producing client-ready documentation and custom architecture diagrams (five-scopes overview, AI marker-engine, Lectra cutting pipeline).}
+\resumeItemListEnd{}
+
+\resumeHeadingListEnd{}
+
+%-------------- TECHNICAL LEADERSHIP ---------------
+\section{Technical Leadership \& Ownership}
+\resumeHeadingListStart{}
+\resumeItemListStart{}
+  \resumeItem{\textbf{End-to-end ownership:} sole architect and engineer for the Betopia Sales Agent, from requirement analysis through production deployment and ongoing operation.}
+  \resumeItem{\textbf{Client-facing consulting:} lead technical point of contact on the HA-MEEM digitization engagement, translating factory-floor needs into system architecture and documentation.}
+  \resumeItem{\textbf{Cross-functional collaboration \& reliability:} work directly with sales leadership and external clients on requirements; own server administration, backups, and incident response for a multi-service production stack.}
+\resumeItemListEnd{}
+\resumeHeadingListEnd{}
+
+%-------------- TECHNICAL SKILLS ---------------
+\section{Technical Skills}
+\resumeHeadingListStart{}
+  \resumeSectionType{Languages}{:}{Python, SQL, JavaScript / TypeScript, C++}
+  \resumeSectionType{AI \& ML}{:}{Scikit-learn, TensorFlow (Keras), XGBoost, LightGBM, OpenCV, NLP, Agentic AI, GenAI}
+  \resumeSectionType{LLM \& RAG}{:}{LangChain, LangGraph, Prompt Engineering, Multi-Provider LLM Routing, Vector Search}
+  \resumeSectionType{Backend \& Web}{:}{FastAPI, REST APIs, Async Python, Next.js 15, React, Odoo CRM, n8n}
+  \resumeSectionType{Data \& Storage}{:}{Qdrant, PostgreSQL, MySQL, Redis, Pandas, NumPy, Feature Engineering, ETL}
+  \resumeSectionType{Infra \& MLOps}{:}{Docker, GitHub Actions (CI/CD), AWS (EC2, S3), Git, Model Versioning, Server/VPS Administration, Monitoring}
+  \resumeSectionType{Core Concepts}{:}{DSA, OOP, SDLC, System Design}
+\resumeHeadingListEnd{}
+
+
+%-------------- PROJECTS ---------------
+\section{Projects}
+\resumeHeadingListStart{}
+
+\resumeTrioHeading{\textit{Production / Enterprise}}{}{}
+\vspace{-2pt}
+
+\resumeTrioHeading{FIFA World Cup 2026 Forecast \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://fifawc2026-simulator.netlify.app/}{\uline{Live Demo}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Built and deployed a football forecasting platform using \textbf{32,247 international matches (1990--2025)}, featuring a custom Elo rating system, rolling form analytics, probabilistic match prediction, and tournament forecasting.}
+  \resumeItem{Real-time dashboard with live scores, streaming, schedules, standings, AI predictions, custom forecasts, and interactive tournament/bracket simulation.}
+  \resumeItem{\textbf{Tech Stack:} Python, Scikit-learn, FastAPI, React, Vite, Tailwind CSS, SQLite, AWS, Pandas, NumPy.}
+\resumeItemListEnd{}
+
+
+\resumeTrioHeading{BioVue Digital Wellness \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://biovuedigitalwellness.com/}{\uline{Website}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Developed the project's \textbf{AI components} for a digital wellness platform that generates personalized future-body projections from user lifestyle, habits, health-related inputs, and wellness goals.}
+  \resumeItem{Built AI workflows for \textbf{current-lifestyle and goal-aligned projections} across 6-month, 1-year, and 5-year horizons, generating personalized health insights, potential risk indicators, recommendations, and wellness guidance.}
+  \resumeItem{Implemented AI-driven analysis and guidance workflows using \textbf{Google Vertex AI}, supporting personalized daily tips, weekly insights, and actionable recommendations based on user-specific wellness data.}
+  \resumeItem{\textbf{Tech Stack:} Google Vertex AI, Generative AI, AI Workflows.}
+\resumeItemListEnd{}
+
+
+
+\resumeTrioHeading{Full Send Sports AI -- UFC Prediction Platform \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://apps.apple.com/us/app/full-send-sports-ai/id6751740118}{\uline{App Store}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{End-to-end ML pipeline trained on \textbf{10,000+ UFC fights} with \textbf{80+ engineered features}; ensemble models deployed as a FastAPI service with \textbf{sub-100ms latency} for real-time predictions.}
+  \resumeItem{Live on the iOS App Store, serving production traffic with high-availability cloud deployment.}
+  \resumeItem{\textbf{Tech Stack:} Python, XGBoost, LightGBM, Scikit-learn, FastAPI, AWS.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{\textit{Machine Learning \& Research}}{}{}
+\vspace{-2pt}
+
+\resumeTrioHeading{Dhaka Home Rent Prediction \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/Data_Science/tree/main/projects/DhakaHomeRentPrediction}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
+\href{https://dhakahomerentprediction.onrender.com/}{\uline{Live Demo}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{ML regression system predicting Dhaka residential rent across \textbf{28,000+ listings}; Random Forest regression achieving \textbf{95\%+ accuracy} after tuning and cross-validation, with extensive feature engineering and outlier handling.}
+  \resumeItem{\textbf{Tech Stack:} Python, Pandas, NumPy, Scikit-learn, Flask, Render.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{Crop Disease Classifier \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/Crop_Disease_Classifier}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
+\href{https://cropdiseaseclassifier.streamlit.app/}{\uline{Live Demo}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{CNN-based web app for plant disease detection across corn, potato, wheat, and rice leaves; trained from scratch achieving \textbf{97\% average accuracy} after processing and augmenting thousands of images.}
+  \resumeItem{\textbf{Tech Stack:} Python, NumPy, TensorFlow, Keras, Streamlit.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{\textit{Conversational AI}}{}{}
+\vspace{-2pt}
+
+\resumeTrioHeading{Panda Chatbot -- Food Ordering System \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/Hungry_Panda}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
+\href{https://hungry-panda-niloysannyal.vercel.app}{\uline{Live Demo}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Full-stack food-ordering chatbot using Dialogflow for natural-language interactions (menu browsing, cart updates, order confirmation, tracking); FastAPI REST APIs with MySQL persistence, deployed on Vercel.}
+  \resumeItem{\textbf{Tech Stack:} Python, FastAPI, Dialogflow, MySQL, HTML, CSS, JavaScript.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{Company Policy Chatbot \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/Company_Policy_Chatbot}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
+\href{https://company-policy-chatbot.vercel.app/}{\uline{Live Demo}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{RAG-based chatbot answering HR and IT policy questions with context-aware responses, using vector similarity search and persisted conversation memory.}
+  \resumeItem{\textbf{Tech Stack:} Python, Streamlit, Gemini API, FAISS, LangChain, HTML, CSS, JavaScript.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{\textit{Robotics \& Embedded Systems}}{}{}
+\vspace{-2pt}
+
+\resumeTrioHeading{Arduino Robo-Car \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/Robo-Car}{\uline{GitHub}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Multifunctional Bluetooth-controlled robot car with a custom Android app, supporting Manual, Line Following, Obstacle Avoidance, Surveillance, and Voice Command modes via IR, ultrasonic, DHT11, and ESP32-CAM sensor integration.}
+  \resumeItem{\textbf{Tech Stack:} Arduino, C++, MIT App Inventor, Bluetooth HC-05, ESP32-CAM, IR \& Ultrasonic Sensors, DHT11.}
+\resumeItemListEnd{}
+
+\resumeTrioHeading{4-Channel RC Plane \hspace{2pt} \textbullet \hspace{2pt}
+{\normalsize \textnormal{\href{https://github.com/niloysannyal/RC-Plane}{\uline{GitHub}}}}}{}{}
+\vspace{-6pt}
+\resumeItemListStart{}
+  \resumeItem{Designed and built a 4-channel RC plane (thrust, aileron, elevator, rudder), achieving stable flight after iterative troubleshooting of aerodynamics, center of gravity, and control-surface coordination.}
+  \resumeItem{\textbf{Tech Stack:} FSI6x Transmitter, IA6B Receiver, Servos, Brushless Motor, LiPo Batteries, Aerodynamic Design Principles.}
+\resumeItemListEnd{}
+
+\resumeHeadingListEnd{}
+
+%-------------- PROBLEM SOLVING ---------------
+\section{Problem Solving}
+\resumeHeadingListStart{}
+  \resumeSectionType{\href{https://leetcode.com/NiloySannyal/}{\uline{LeetCode}}}{:}{350+ algorithmic problems solved}
+  \resumeSectionType{\href{https://codeforces.com/profile/niloy_sannyal}{\uline{Codeforces}}}{:}{200+ competitive-programming problems solved}
+\resumeHeadingListEnd{}
+
+%-------------- EDUCATION ---------------
+\section{Education}
+\resumeHeadingListStart{}
+  \resumeQuadHeading{University of Rajshahi}{Rajshahi, Bangladesh}{B.Sc. in Information and Communication Engineering}{Jan 2019 -- Oct 2024}
+\resumeHeadingListEnd{}
+
+%-------------- CERTIFICATIONS ---------------
+\section{Certifications \& Courses}
+\resumeHeadingListStart{}
+  \resumeCourseType{Data Science Full Course}{:}{\href{https://codebasics.io/courses/data-science-full-course-for-beginners}{\uline{Codebasics}}}
+  \resumeCourseType{Natural Language Processing Full Course}{:}{\href{https://m.youtube.com/playlist?list=PLeo1K3hjS3uuvuAXhYjV2lMEShq2UYSwX}{\uline{Codebasics}}}
+\resumeHeadingListEnd{}
+
+\end{document}
