@@ -59,8 +59,9 @@ MOCK_ADZUNA_RESPONSE = {
 }
 
 
-def test_adzuna_fetch_with_mock_client():
-    """Test fetch parsing with an injected httpx.Client using MockTransport."""
+@pytest.mark.asyncio
+async def test_adzuna_fetch_with_mock_client():
+    """Test async fetch parsing with an injected httpx.AsyncClient using MockTransport."""
     def handler(request: httpx.Request) -> httpx.Response:
         assert "api.adzuna.com" in request.url.host
         assert "/jobs/gb/search/1" in request.url.path
@@ -70,7 +71,7 @@ def test_adzuna_fetch_with_mock_client():
         assert request.url.params["where"] == "London"
         return httpx.Response(200, json=MOCK_ADZUNA_RESPONSE)
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     source = AdzunaJobSource(app_id="test_id", app_key="test_key", client=client)
 
     query = JobSearchQuery(
@@ -79,8 +80,9 @@ def test_adzuna_fetch_with_mock_client():
         country="gb",
         page=1,
     )
-    postings = source.fetch(query)
+    postings = await source.fetch(query)
 
+    assert isinstance(postings, list)
     assert len(postings) == 3
 
     # Check first item (standard on-site role)
@@ -120,8 +122,9 @@ def test_adzuna_fetch_with_mock_client():
     assert job3.posted_at is None
 
 
-def test_adzuna_fetch_query_variations():
-    """Test fetch using string and dict queries."""
+@pytest.mark.asyncio
+async def test_adzuna_fetch_query_variations():
+    """Test async fetch using string and dict queries."""
     recorded_params = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -129,17 +132,17 @@ def test_adzuna_fetch_query_variations():
         recorded_params = dict(request.url.params)
         return httpx.Response(200, json={"results": []})
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     source = AdzunaJobSource(app_id="test_id", app_key="test_key", client=client)
 
     # Test string query
-    results_str = source.fetch("Machine Learning")
+    results_str = await source.fetch("Machine Learning")
     assert len(results_str) == 0
     assert recorded_params["what"] == "Machine Learning"
     assert recorded_params["app_id"] == "test_id"
 
     # Test dict query
-    results_dict = source.fetch({
+    results_dict = await source.fetch({
         "what": "AI Engineer",
         "where": "Berlin",
         "country": "de",
@@ -153,55 +156,38 @@ def test_adzuna_fetch_query_variations():
     assert recorded_params["full_time"] == "1"
 
 
-def test_adzuna_missing_credentials():
+@pytest.mark.asyncio
+async def test_adzuna_missing_credentials():
     """Test that missing credentials raise JobSourceConfigError."""
     source = AdzunaJobSource(app_id=None, app_key=None)
     with pytest.raises(JobSourceConfigError) as exc_info:
-        source.fetch("Python")
+        await source.fetch("Python")
     assert "ADZUNA_APP_ID" in str(exc_info.value) or "app_id and app_key" in str(exc_info.value)
 
 
-def test_adzuna_http_error():
+@pytest.mark.asyncio
+async def test_adzuna_http_error():
     """Test that HTTP errors from Adzuna raise JobSourceHTTPError."""
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(401, text="Unauthorized: Invalid app_key")
 
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     source = AdzunaJobSource(app_id="bad_id", app_key="bad_key", client=client)
 
     with pytest.raises(JobSourceHTTPError) as exc_info:
-        source.fetch("AI Engineer")
+        await source.fetch("AI Engineer")
     assert exc_info.value.status_code == 401
     assert "Unauthorized" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_adzuna_afetch_async():
-    """Test async afetch with AsyncClient using MockTransport."""
+async def test_adzuna_empty_results():
+    """Test that an empty results array returns an empty list."""
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=MOCK_ADZUNA_RESPONSE)
+        return httpx.Response(200, json={"results": []})
 
-    async_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    source = AdzunaJobSource(
-        app_id="test_id",
-        app_key="test_key",
-        async_client=async_client,
-    )
-
-    postings = await source.afetch("Python Developer")
-    assert len(postings) == 3
-    assert postings[0].company == "TechCorp Ltd"
-
-
-@pytest.mark.asyncio
-async def test_adzuna_fetch_is_awaitable():
-    """Test that JobSource.fetch result can be awaited in async context."""
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=MOCK_ADZUNA_RESPONSE)
-
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     source = AdzunaJobSource(app_id="test_id", app_key="test_key", client=client)
 
-    postings = await source.fetch("Python Developer")
-    assert len(postings) == 3
-    assert postings[1].role == "Remote AI/ML Engineer"
+    postings = await source.fetch("Niche Query")
+    assert postings == []

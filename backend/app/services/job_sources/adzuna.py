@@ -5,7 +5,7 @@ import httpx
 
 from app.core.config import settings
 from app.models.job import JobPosting, JobSearchQuery
-from app.services.job_sources.base import JobPostingList, JobSource
+from app.services.job_sources.base import JobSource
 from app.services.job_sources.exceptions import (
     JobSourceConfigError,
     JobSourceHTTPError,
@@ -38,9 +38,7 @@ def _clean_text(text: Optional[str]) -> str:
     """Strip HTML tags and normalize whitespace."""
     if not text:
         return ""
-    # Strip HTML tags
     cleaned = re.sub(r"<[^>]+>", "", text)
-    # Collapse multiple whitespaces
     return " ".join(cleaned.split())
 
 
@@ -49,7 +47,6 @@ def _parse_created_date(date_str: Optional[str]) -> Optional[datetime]:
     if not date_str:
         return None
     try:
-        # Normalize Z to UTC offset
         normalized = date_str.replace("Z", "+00:00")
         return datetime.fromisoformat(normalized)
     except (ValueError, TypeError):
@@ -99,15 +96,13 @@ class AdzunaJobSource(JobSource):
         app_id: Optional[str] = None,
         app_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        client: Optional[httpx.Client] = None,
-        async_client: Optional[httpx.AsyncClient] = None,
+        client: Optional[httpx.AsyncClient] = None,
         timeout: float = 15.0,
     ):
         self.app_id = app_id or settings.ADZUNA_APP_ID
         self.app_key = app_key or settings.ADZUNA_APP_KEY
         self.base_url = (base_url or settings.ADZUNA_BASE_URL).rstrip("/")
         self.client = client
-        self.async_client = async_client
         self.timeout = timeout
 
     def _validate_credentials(self) -> None:
@@ -156,7 +151,7 @@ class AdzunaJobSource(JobSource):
         self,
         raw_results: List[Dict[str, Any]],
         norm_query: JobSearchQuery,
-    ) -> JobPostingList:
+    ) -> List[JobPosting]:
         postings: List[JobPosting] = []
 
         for item in raw_results:
@@ -215,40 +210,12 @@ class AdzunaJobSource(JobSource):
             )
             postings.append(posting)
 
-        return JobPostingList(postings)
+        return postings
 
-    def fetch(
+    async def fetch(
         self,
         query: Union[JobSearchQuery, str, Dict[str, Any]],
-    ) -> JobPostingList:
-        """
-        Synchronously fetch job postings matching the query from Adzuna.
-        """
-        self._validate_credentials()
-        norm_query = self.normalize_query(query)
-        url, params = self._build_url_and_params(norm_query)
-
-        if self.client:
-            response = self.client.get(url, params=params, timeout=self.timeout)
-        else:
-            with httpx.Client(timeout=self.timeout) as client:
-                response = client.get(url, params=params)
-
-        if response.status_code != 200:
-            raise JobSourceHTTPError(
-                f"Adzuna API request failed with status {response.status_code}: {response.text}",
-                status_code=response.status_code,
-                response_text=response.text,
-            )
-
-        data = response.json()
-        raw_results = data.get("results") or []
-        return self._parse_results(raw_results, norm_query)
-
-    async def afetch(
-        self,
-        query: Union[JobSearchQuery, str, Dict[str, Any]],
-    ) -> JobPostingList:
+    ) -> List[JobPosting]:
         """
         Asynchronously fetch job postings matching the query from Adzuna.
         """
@@ -256,8 +223,8 @@ class AdzunaJobSource(JobSource):
         norm_query = self.normalize_query(query)
         url, params = self._build_url_and_params(norm_query)
 
-        if self.async_client:
-            response = await self.async_client.get(url, params=params, timeout=self.timeout)
+        if self.client:
+            response = await self.client.get(url, params=params, timeout=self.timeout)
         else:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(url, params=params)

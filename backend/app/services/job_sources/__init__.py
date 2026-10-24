@@ -1,4 +1,4 @@
-from app.services.job_sources.base import JobPostingList, JobSource
+from app.services.job_sources.base import JobSource
 from app.services.job_sources.adzuna import AdzunaJobSource
 from app.services.job_sources.exceptions import (
     JobSourceConfigError,
@@ -8,7 +8,6 @@ from app.services.job_sources.exceptions import (
 
 __all__ = [
     "JobSource",
-    "JobPostingList",
     "AdzunaJobSource",
     "JobSourceError",
     "JobSourceConfigError",
