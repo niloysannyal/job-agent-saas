@@ -101,3 +101,42 @@ Last updated: 2026-09-24. Re-run these searches every few months — this market
   Worth a direct side-by-side on fee structure and payout speed to Bangladesh
   bank accounts specifically before committing, since that detail wasn't
   confirmed in this research pass.
+
+---
+
+## Addendum (2026-10-18): ai-job-search-dev/ai-job-search (MIT, 64k stars)
+
+A local-first, Claude-Code-based job application framework — not a SaaS, no
+backend, no multi-tenancy. Personal data lives as tracked files in a private fork.
+Author used it on his own job search (69 applications, 20 first interviews, 1
+signed offer) before open-sourcing it. Relevant findings, folded into
+`ARCHITECTURE.md`:
+
+- **Posting integrity gate** — strips hidden/invisible text and flags
+  instruction-shaped lines in scraped postings before any LLM reads them. Our own
+  plan had no defense against prompt injection via a malicious job description
+  until this was added.
+- **Drafter-reviewer pair** for CV/cover-letter generation, not single-pass.
+- **Compile-and-inspect PDF loop** — actually renders the PDF and iterates on
+  layout until clean, rather than trusting the `.tex` source looks right.
+- **ATS text-layer check** — extracts the compiled PDF's text and verifies it
+  reads cleanly to a parser, scoring keyword coverage honestly (gaps stay visible,
+  never stuffed).
+- **Relevance-weighted CV cutting** — dynamic per-line scoring instead of a static
+  trim order; replaces the fixed list in `01_MASTER_CV.tex`'s control block.
+- **Language Gate** — hard-rejects postings requiring an undeclared language;
+  flags (doesn't reject) ones asking for a higher level than declared.
+- **`/outcome followup`** — drafts (never sends) a follow-up for quiet
+  applications after a default 10-day threshold, capped at twice per application.
+- **Job sourcing additions found here:**
+  - `freehire.me` — public REST API, no key, MIT-licensed, self-hostable,
+    tech-focused, structured results. Legal, zero-cost. Added as a Layer 1 source.
+  - LinkedIn's public, unauthenticated `jobs-guest` endpoint — no login, no stored
+    credentials, but LinkedIn's ToS still prohibits automated access regardless of
+    auth state. The repo itself flags this personal-use-only. Added as "Layer 1b,
+    Niloy's own account only" — explicitly not extended to other SaaS users
+    without separate legal review.
+- **Not adopted as our platform:** the repo's own architecture (file-based,
+  single-user, git-tracked personal data) is incompatible with the multi-tenant
+  SaaS goal. Recommendation: Niloy may run a private fork of it in parallel for
+  his own real job search, but it never becomes part of this codebase.
