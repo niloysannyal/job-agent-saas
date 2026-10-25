@@ -4,6 +4,7 @@ from app.services.job_sources.remotive import RemotiveJobSource
 from app.services.job_sources.remoteok import RemoteOKJobSource
 from app.services.job_sources.greenhouse import GreenhouseJobSource
 from app.services.job_sources.lever import LeverJobSource
+from app.services.job_sources.freehire import FreehireJobSource
 from app.services.job_sources.exceptions import (
     JobSourceConfigError,
     JobSourceError,
@@ -17,6 +18,7 @@ __all__ = [
     "RemoteOKJobSource",
     "GreenhouseJobSource",
     "LeverJobSource",
+    "FreehireJobSource",
     "JobSourceError",
     "JobSourceConfigError",
     "JobSourceHTTPError",
