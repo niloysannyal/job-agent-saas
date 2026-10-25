@@ -92,6 +92,16 @@ class Job(Base):
         Float,
         nullable=True,
     )
+    # Deal-breaker / language gate veto outcome
+    vetoed: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+    veto_reason: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
     # Application-pipeline status per ARCHITECTURE.md §6 (default: 'new')
     status: Mapped[str] = mapped_column(
         String(50),
@@ -204,6 +214,8 @@ class JobBase(BaseModel):
     visa_required: bool = False
     target_company: bool = False
     match_score: Optional[float] = None
+    vetoed: bool = False
+    veto_reason: Optional[str] = None
     status: str = "new"
     integrity_status: str = "clean"
     source: str
@@ -232,6 +244,8 @@ class JobUpdate(BaseModel):
     visa_required: Optional[bool] = None
     target_company: Optional[bool] = None
     match_score: Optional[float] = None
+    vetoed: Optional[bool] = None
+    veto_reason: Optional[str] = None
     status: Optional[str] = None
     integrity_status: Optional[str] = None
     source: Optional[str] = None

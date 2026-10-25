@@ -57,16 +57,19 @@ for the SaaS. Layered sourcing instead:
 | 1 | **Adzuna API** (official) | Fully legal, direct | Broad, 19 countries, decent EU/remote coverage |
 | 1 | **Remotive API**, **RemoteOK API** | Fully legal, direct | Remote-specific roles |
 | 1 | **Greenhouse / Lever / Ashby public job-board APIs** | Fully legal, direct | Per-company — ideal for the user's "Target Company" list |
-| 1 | **freehire.me aggregator API** (added 2026-10-18) | Fully legal, direct — public REST API, no key, MIT-licensed, self-hostable | Tech-focused (software/data/engineering/DevOps/remote), structured results (skills, seniority, category); validated in ai-job-search-dev/ai-job-search |
+| 1b | **freehire.me aggregator API** (added 2026-10-18, corrected 2026-10-19) | **Restricted, not fully legal for the SaaS as-is** — freehire.me's own ToS (`/terms` §"Data licence for API plans") states the keyless API is "for personal and non-commercial use... a tool you run for yourself," and that showing its postings "in a product or service you offer to others, paid or not, needs a plan." Niloy's own account (Phase 0/1 personal use) is fully covered. Offering it to other SaaS users requires either (a) a paid freehire.me API plan, or (b) self-hosting the engine — the underlying code (`strelov1/freehire`) is MIT-licensed with no non-commercial restriction, so self-hosting is a legitimate path. Either path also carries a mandatory attribution requirement: every shown posting must link back to freehire.me or carry "via freehire.me" credit — same category of blocking requirement as RemoteOK's below. | Tech-focused (software/data/engineering/DevOps/remote), structured results (skills, seniority, category); validated in ai-job-search-dev/ai-job-search |
 | 1b | **LinkedIn public `jobs-guest` endpoint** (added 2026-10-18) | Unauthenticated, no stored credentials — but LinkedIn's ToS still prohibits automated access. Fine for Niloy's own personal use (low volume); **do not expose this source to other SaaS users** without a separate legal review, since "no password stored" doesn't mean "ToS-compliant at multi-tenant volume." | LinkedIn listings, zero-cost |
 | 2 | **JSearch (via RapidAPI)** | Legal to *us* — paid vendor aggregating LinkedIn/Indeed/Glassdoor/ZipRecruiter under its own ToS. We're a customer, not a scraper. | Fills gaps Layer 1 can't reach |
 | — | Direct LinkedIn/Facebook scraping or credential storage | **Never**, for the SaaS | N/A |
 
-Start with Layer 1 only for the MVP (zero ToS exposure, enough coverage to prove the
-product). Layer 1b (LinkedIn public endpoint) may be used in Niloy's own account
-only, behind a feature flag that defaults off for every other account — do not wire
-it into the general `JobSource` rotation other users get. Add JSearch in Phase 2+
-once there's budget and the product needs broader coverage.
+Start with Layer 1 (Adzuna, Remotive, RemoteOK, Greenhouse/Lever) for the MVP —
+zero ToS exposure, enough coverage to prove the product. **Both Layer 1b sources
+(LinkedIn public endpoint, freehire.me keyless API) are Niloy-only**, behind a
+feature flag that defaults off for every other account — do not wire either into
+the general `JobSource` rotation other users get, until a paid freehire.me plan
+or self-hosted instance is in place for freehire.me specifically, and until a
+separate legal review clears the LinkedIn endpoint. Add JSearch in Phase 2+ once
+there's budget and the product needs broader coverage.
 
 **RemoteOK attribution requirement (found 2026-10-18, blocks public display):**
 RemoteOK's API ToS (delivered in-band in every API response's `legal` field, not a
@@ -78,6 +81,13 @@ code alone** — both are frontend/template requirements. **Do not display Remot
 listings in any UI until the job-listing template explicitly implements both.**
 This is a blocking requirement for whichever task first builds the Find module's
 UI, not an optional polish item — failing it risks RemoteOK suspending API access.
+
+**freehire.me attribution requirement (found 2026-10-19, blocks public display too):**
+Same category of requirement as RemoteOK above: every freehire.me-sourced posting
+shown to a user must link back to its freehire.me page or carry "via freehire.me"
+credit. This is in addition to, not instead of, the account-scope restriction
+above — freehire.me needs both the attribution UI work *and* a paid plan/self-host
+before it can leave Niloy-only status.
 
 **Puzzle piece:** the job-ingestion layer is a plugin interface
 (`JobSource.fetch(query) -> list[JobPosting]`), so adding/removing a source later
@@ -106,6 +116,25 @@ do; postings never grant tool access or change agent behavior.
    so a borderline case gets human judgment instead of a silent drop.
 3. Upgrade path (unchanged): move coarse ranking to LLM-scored fit later if
    embedding similarity alone proves too coarse.
+
+**Current implementation status (as of 2026-10-19 — two known gaps, both
+deliberate for now, not forgotten):**
+- **Language gate covers only 5 hardcoded languages** (German, French, Spanish,
+  Dutch, Italian) with a fixed requirement-keyword list. A posting requiring a
+  language outside this list (Portuguese, Mandarin, Arabic, etc.) is **not**
+  caught — a false negative, not a false positive. Low risk for Niloy's own
+  target markets right now, but must be revisited before this gate is trusted
+  for other users with different language profiles. Fix path: make the covered-
+  language list and keyword patterns configurable per account, not hardcoded.
+- **Only the language sub-case of the deal-breaker gate is implemented.** The
+  general free-text "Dealbreakers:" line in USER_PROFILE.md (e.g. "generic/
+  low-substance roles") is captured but not acted on — no posting is vetoed on
+  it yet. This is a real capability gap against this section's own design, not
+  a style choice. Fix path (deferred, see ROADMAP.md): either an LLM-evaluated
+  rubric against the free-text dealbreakers, or formalizing them into structured
+  fields (`min_base_salary`, `visa_sponsorship_required`, `remote_only`,
+  `excluded_stacks`, etc.) that can be checked deterministically. Don't guess
+  which approach without revisiting actual Phase 1 usage data first.
 
 ## 5. Module 2 — Apply for the Job
 
@@ -242,6 +271,7 @@ without a schema change later.
 | 2026-10-18 | Adopted posting integrity gate, drafter-reviewer, PDF verification loop, ATS text-layer check, relevance-weighted CV cutting, language gate, capped follow-up drafting | Validated patterns from ai-job-search-dev/ai-job-search (MIT, author-verified outcome) |
 | 2026-10-18 | Added freehire.me (Layer 1) and LinkedIn public jobs-guest endpoint (Layer 1b, Niloy-only) as sources | Zero-cost, legal (freehire.me) or low-risk personal-use (LinkedIn endpoint) coverage found via competitor research |
 | 2026-10-18 | RemoteOK source built; found its ToS requires dofollow link + visible "Remote OK" credit at display time, not satisfiable by backend alone | Discovered while implementing RemoteOKJobSource; flagged as blocking for the Find UI task |
+| 2026-10-19 | Corrected freehire.me from Layer 1 ("fully legal") to Layer 1b (Niloy-only, like LinkedIn) | Its own ToS restricts the keyless API to personal/non-commercial use; commercial multi-tenant use needs a paid plan or self-hosting, plus attribution credit |
 | 2026-10-18 | Niloy may run a parallel private fork of ai-job-search-dev/ai-job-search for his own job search during the build | Decouples "start applying now" from "SaaS build takes a month"; feeds real lessons back before Phase 1 ends |
 | — | Pricing model, team structure beyond solo | Still OPEN — intentionally deferred, schema supports it |
 | — | Hosting choice (§10) | Still OPEN |

@@ -11,6 +11,10 @@ directly by Niloy or carried over from his existing context file; anything still
 - Education: B.Sc. in Information and Communication Engineering, University of Rajshahi
 - Location: Dhaka, Bangladesh
 - Links: see MASTER_CV.tex header (Portfolio, LinkedIn, GitHub, LeetCode, Codeforces)
+- Spoken languages: [fill in — e.g. "English (fluent), Bengali (native)". The
+  matching service's language gate (ARCHITECTURE.md §4) defaults to English-only
+  until this is filled in, so leaving it blank silently under-declares what you
+  actually speak.]
 
 ## Job search logistics
 - Target roles: AI Engineering, Machine Learning Engineering, Generative AI, LLM
