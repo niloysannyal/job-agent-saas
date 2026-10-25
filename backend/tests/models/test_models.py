@@ -59,7 +59,8 @@ def test_job_model_matching_architecture_spec(db_session: Session):
         visa_required=True,
         target_company=True,
         match_score=0.92,
-        status="found",
+        status="new",
+        integrity_status="clean",
         source="adzuna",
         source_job_id="12345",
         apply_link="https://jobs.optimizely.com/12345",
@@ -76,6 +77,8 @@ def test_job_model_matching_architecture_spec(db_session: Session):
     assert job.visa_required is True
     assert job.target_company is True
     assert job.match_score == 0.92
+    assert job.status == "new"
+    assert job.integrity_status == "clean"
     assert job.source == "adzuna"
     assert job.apply_link == "https://jobs.optimizely.com/12345"
     assert job.location_type == "hybrid"

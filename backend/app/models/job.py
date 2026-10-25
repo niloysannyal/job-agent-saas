@@ -92,10 +92,17 @@ class Job(Base):
         Float,
         nullable=True,
     )
+    # Application-pipeline status per ARCHITECTURE.md §6 (default: 'new')
     status: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
-        default="found",
+        default="new",
+    )
+    # Posting integrity gate outcome: 'clean' | 'flagged'
+    integrity_status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="clean",
     )
     source: Mapped[str] = mapped_column(
         String(50),
@@ -197,7 +204,8 @@ class JobBase(BaseModel):
     visa_required: bool = False
     target_company: bool = False
     match_score: Optional[float] = None
-    status: str = "found"
+    status: str = "new"
+    integrity_status: str = "clean"
     source: str
     source_job_id: Optional[str] = None
     apply_link: str
@@ -225,6 +233,7 @@ class JobUpdate(BaseModel):
     target_company: Optional[bool] = None
     match_score: Optional[float] = None
     status: Optional[str] = None
+    integrity_status: Optional[str] = None
     source: Optional[str] = None
     source_job_id: Optional[str] = None
     apply_link: Optional[str] = None

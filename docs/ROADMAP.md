@@ -14,9 +14,17 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [ ] Multi-tenant schema live (`accounts`, `jobs`, `applications`, `cv_templates`,
       `subscription_plans`/`entitlements` — unused but present)
 - [x] Adzuna + Remotive + RemoteOK API integration behind the `JobSource` interface
-- [ ] freehire.me API integration behind the `JobSource` interface (added to
-      ARCHITECTURE.md §4 as Layer 1 on 2026-10-18 — don't let this quietly drop)
-- [ ] Greenhouse/Lever integration for the user's Target Company list
+- [x] freehire.me API integration — built 2026-10-19, but Niloy-only per its ToS
+      (ARCHITECTURE.md §4, Layer 1b) until a paid plan or self-hosted instance
+      exists; needs the "via freehire.me" attribution UI before any public display
+- [x] Greenhouse/Lever integration for the user's Target Company list — all Layer
+      1/1b sources now complete (Adzuna, Remotive, RemoteOK, Greenhouse, Lever,
+      freehire.me, LinkedIn public endpoint)
+- [ ] Greenhouse/Lever pagination (ARCHITECTURE.md §4) — both currently return
+      only the first page for companies with large job boards (Greenhouse: Link
+      header pagination unhandled; Lever: limit/skip pagination unhandled).
+      Low priority until a target company's board actually exceeds one page, but
+      don't let it get forgotten once real usage starts.
 - [x] Posting integrity gate (ARCHITECTURE.md §4) — built 2026-10-xx, runs before
       any posting is persisted or sent to an LLM; not yet wired into the
       job-ingestion pipeline since that orchestration layer doesn't exist yet
