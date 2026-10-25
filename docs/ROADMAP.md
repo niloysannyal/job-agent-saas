@@ -13,8 +13,13 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 **Find (build first, validate before moving on):**
 - [ ] Multi-tenant schema live (`accounts`, `jobs`, `applications`, `cv_templates`,
       `subscription_plans`/`entitlements` — unused but present)
-- [ ] Adzuna + Remotive + RemoteOK API integration behind the `JobSource` interface
+- [x] Adzuna + Remotive + RemoteOK API integration behind the `JobSource` interface
+- [ ] freehire.me API integration behind the `JobSource` interface (added to
+      ARCHITECTURE.md §4 as Layer 1 on 2026-10-18 — don't let this quietly drop)
 - [ ] Greenhouse/Lever integration for the user's Target Company list
+- [x] Posting integrity gate (ARCHITECTURE.md §4) — built 2026-10-xx, runs before
+      any posting is persisted or sent to an LLM; not yet wired into the
+      job-ingestion pipeline since that orchestration layer doesn't exist yet
 - [ ] Match scoring via Qdrant embedding similarity against MASTER_CV.tex +
       USER_PROFILE.md target roles
 - [ ] Queue view ranked by match score, highest first
