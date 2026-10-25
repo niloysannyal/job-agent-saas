@@ -68,6 +68,17 @@ only, behind a feature flag that defaults off for every other account — do not
 it into the general `JobSource` rotation other users get. Add JSearch in Phase 2+
 once there's budget and the product needs broader coverage.
 
+**RemoteOK attribution requirement (found 2026-10-18, blocks public display):**
+RemoteOK's API ToS (delivered in-band in every API response's `legal` field, not a
+separate page) requires, for any RemoteOK-sourced posting shown to a user: (1) a
+dofollow link to the RemoteOK listing URL — no `rel="nofollow"` — and (2) a visible
+"Remote OK" source credit near the listing. The backend correctly persists the
+listing URL in `apply_link`, but **neither obligation can be satisfied by backend
+code alone** — both are frontend/template requirements. **Do not display RemoteOK
+listings in any UI until the job-listing template explicitly implements both.**
+This is a blocking requirement for whichever task first builds the Find module's
+UI, not an optional polish item — failing it risks RemoteOK suspending API access.
+
 **Puzzle piece:** the job-ingestion layer is a plugin interface
 (`JobSource.fetch(query) -> list[JobPosting]`), so adding/removing a source later
 never touches the rest of the pipeline.
@@ -230,6 +241,7 @@ without a schema change later.
 | 2026-10-04 | LLM: OpenAI first, admin-configurable provider table from day one | Flexibility without a future migration |
 | 2026-10-18 | Adopted posting integrity gate, drafter-reviewer, PDF verification loop, ATS text-layer check, relevance-weighted CV cutting, language gate, capped follow-up drafting | Validated patterns from ai-job-search-dev/ai-job-search (MIT, author-verified outcome) |
 | 2026-10-18 | Added freehire.me (Layer 1) and LinkedIn public jobs-guest endpoint (Layer 1b, Niloy-only) as sources | Zero-cost, legal (freehire.me) or low-risk personal-use (LinkedIn endpoint) coverage found via competitor research |
+| 2026-10-18 | RemoteOK source built; found its ToS requires dofollow link + visible "Remote OK" credit at display time, not satisfiable by backend alone | Discovered while implementing RemoteOKJobSource; flagged as blocking for the Find UI task |
 | 2026-10-18 | Niloy may run a parallel private fork of ai-job-search-dev/ai-job-search for his own job search during the build | Decouples "start applying now" from "SaaS build takes a month"; feeds real lessons back before Phase 1 ends |
 | — | Pricing model, team structure beyond solo | Still OPEN — intentionally deferred, schema supports it |
 | — | Hosting choice (§10) | Still OPEN |
