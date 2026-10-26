@@ -31,13 +31,11 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [x] Match scoring via Qdrant embedding similarity against MASTER_CV.tex +
       USER_PROFILE.md target roles — built 2026-10-19 (mocked embedding/Qdrant
       in tests)
-- [ ] **Wire matching into the pipeline.** `score_and_gate_jobs()` exists but
-      nothing calls it yet — `job_ingestion.py` only runs the posting guard and
-      persists. Confirmed standalone as of 2026-10-19, same situation
-      posting_guard was in before job_ingestion wired it up. Needs the same
-      treatment: either called synchronously at the end of ingestion, or by a
-      background worker once one exists (ARCHITECTURE.md §9 — Celery/Arq, not
-      needed yet otherwise).
+- [x] **Wire matching into the pipeline.** Wired synchronously at the end of
+      `job_ingestion.py` — newly persisted clean jobs are automatically scored and
+      gated upon ingestion, while flagged jobs are skipped from scoring until
+      human review (built 2026-10-19). Ready to transition to a background worker
+      later when volume demands it (ARCHITECTURE.md §9).
 - [x] Language gate — built 2026-10-19, but hardcoded to 5 languages
       (ARCHITECTURE.md §4 — needs to be configurable before trusted for other
       users)
@@ -46,7 +44,8 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
       captured but nothing is vetoed on it yet. Decide the approach (LLM rubric
       vs. structured fields) after Phase 1 real-usage data, per ARCHITECTURE.md
       §4 — don't guess at this without evidence.
-- [ ] Queue view ranked by match score, highest first
+- [x] Queue endpoint ranked by match score (`GET /api/v1/jobs` with default gating and review overrides) — built 2026-10-25
+- [ ] Queue UI view (frontend table showing company, role, match score, and apply link)
 
 **Apply (build second):**
 - [ ] CV template gallery (seed with `01_MASTER_CV.tex` as template #1)

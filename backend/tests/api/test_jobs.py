@@ -495,3 +495,83 @@ def test_multi_tenant_isolation_never_leaks_cross_account_data(client: TestClien
     assert res_unknown.status_code == 200
     assert res_unknown.json() == []
 
+
+def test_trigger_ingestion_endpoint(client: TestClient, seeded_accounts, monkeypatch):
+    """
+    Test POST /api/v1/jobs/ingest triggers job sourcing, integrity guarding,
+    persistence, and synchronous match scoring.
+    """
+    from app.models.job import JobPosting
+    from app.services.job_sources.base import JobSource
+
+    account_1, _ = seeded_accounts
+
+    class MockTestJobSource(JobSource):
+        is_per_company = False
+
+        async def fetch(self, query):
+            return [
+                JobPosting(
+                    id="ingest-api-1",
+                    source="remotive",
+                    company="DeepVision Labs",
+                    role="Senior AI Engineer",
+                    description="Build agentic systems and vision-language models with PyTorch.",
+                    apply_link="https://example.com/deepvision-job",
+                ),
+                JobPosting(
+                    id="ingest-api-2",
+                    source="remoteok",
+                    company="German Corp",
+                    role="ML Specialist",
+                    description="Requirements: Fluent German (C1) and 3+ years experience.",
+                    apply_link="https://example.com/german-job",
+                ),
+            ]
+
+    # Monkeypatch get_available_sources to return our mock source
+    import app.api.jobs as jobs_api_module
+    monkeypatch.setattr(jobs_api_module, "get_available_sources", lambda names: [MockTestJobSource()])
+
+    payload = {
+        "account_id": account_1.id,
+        "search_queries": ["AI Engineer"],
+        "target_companies": ["deepvision"],
+        "sources": ["remotive", "remoteok"],
+    }
+
+    response = client.post("/api/v1/jobs/ingest", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_fetched"] == 2
+    assert data["saved_count"] == 2
+    assert data["duplicate_count"] == 0
+    assert data["flagged_count"] == 0
+    assert data["scored_count"] == 2
+    assert data["vetoed_count"] == 1
+    assert data["errors"] == []
+
+    # Verify that the newly ingested jobs can be retrieved via GET /api/v1/jobs
+    res_queue = client.get(f"/api/v1/jobs?account_id={account_1.id}")
+    assert res_queue.status_code == 200
+    queue_jobs = res_queue.json()
+
+    # The clean AI job must be in the queue with a valid match_score
+    ai_job = next(j for j in queue_jobs if j["company"] == "DeepVision Labs")
+    assert ai_job["role"] == "Senior AI Engineer"
+    assert ai_job["match_score"] is not None
+    assert ai_job["match_score"] > 0.0
+    assert ai_job["vetoed"] is False
+
+    # The German-vetoed job must be excluded from default queue but visible when show_all=True
+    assert not any(j["company"] == "German Corp" for j in queue_jobs)
+
+    res_all = client.get(f"/api/v1/jobs?account_id={account_1.id}&show_all=true")
+    assert res_all.status_code == 200
+    all_jobs = res_all.json()
+    german_job = next(j for j in all_jobs if j["company"] == "German Corp")
+    assert german_job["vetoed"] is True
+    assert "German" in german_job["veto_reason"]
+
+

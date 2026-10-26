@@ -19,6 +19,7 @@ from app.services.matching.embedding import (
     EmbeddingClient,
     MockEmbeddingClient,
     compute_cosine_similarity,
+    get_embedding_client,
 )
 from app.services.matching.language_gate import LanguageGate
 from app.services.matching.profile_parser import ProfileParser
@@ -60,7 +61,7 @@ class MatchingService:
     ) -> None:
         self.db = db
         self.qdrant_client = qdrant_client
-        self.embedder = embedder or MockEmbeddingClient()
+        self.embedder = embedder or get_embedding_client()
         self.collection_name = collection_name
         self._cached_profile_vectors: Dict[str, List[float]] = {}
 
@@ -127,6 +128,7 @@ class MatchingService:
         profile_vector: Optional[List[float]] = None,
         profile_path: Optional[Path] = None,
         cv_path: Optional[Path] = None,
+        jobs: Optional[Sequence[Job]] = None,
     ) -> MatchingResult:
         """
         Score clean jobs with cosine similarity and apply language/dealbreaker gate.
@@ -148,21 +150,32 @@ class MatchingService:
         parsed_profile = ProfileParser.parse(cv_path=cv_path, profile_path=profile_path)
         language_gate = LanguageGate(declared_languages=parsed_profile.declared_languages)
 
-        # 3. Count skipped flagged jobs
-        stmt_flagged = select(Job.id).where(
-            Job.account_id == account_id,
-            Job.integrity_status == "flagged",
-        )
-        flagged_jobs = self.db.execute(stmt_flagged).all()
-        result.skipped_flagged_count = len(flagged_jobs)
+        # 3. Determine clean and flagged jobs to evaluate
+        if jobs is not None:
+            clean_jobs = [
+                j for j in jobs
+                if j.account_id == account_id and j.integrity_status == "clean"
+            ]
+            flagged_jobs = [
+                j for j in jobs
+                if j.account_id == account_id and j.integrity_status == "flagged"
+            ]
+            result.skipped_flagged_count = len(flagged_jobs)
+            result.total_clean_evaluated = len(clean_jobs)
+        else:
+            stmt_flagged = select(Job.id).where(
+                Job.account_id == account_id,
+                Job.integrity_status == "flagged",
+            )
+            flagged_jobs = self.db.execute(stmt_flagged).all()
+            result.skipped_flagged_count = len(flagged_jobs)
 
-        # 4. Fetch clean jobs to score and gate
-        stmt_clean = select(Job).where(
-            Job.account_id == account_id,
-            Job.integrity_status == "clean",
-        )
-        clean_jobs = self.db.scalars(stmt_clean).all()
-        result.total_clean_evaluated = len(clean_jobs)
+            stmt_clean = select(Job).where(
+                Job.account_id == account_id,
+                Job.integrity_status == "clean",
+            )
+            clean_jobs = self.db.scalars(stmt_clean).all()
+            result.total_clean_evaluated = len(clean_jobs)
 
         for job in clean_jobs:
             desc = job.description or ""

@@ -5,10 +5,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-logger = logging.getLogger(__name__)
+from app.core.config import settings
 
-DEFAULT_MASTER_CV_PATH = Path("cv_templates/01_MASTER_CV.tex")
-DEFAULT_USER_PROFILE_PATH = Path("docs/USER_PROFILE.md")
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -75,8 +74,8 @@ class ProfileParser:
         cv_path: Optional[Path] = None,
         profile_path: Optional[Path] = None,
     ) -> ParsedProfile:
-        cv_file = cv_path or DEFAULT_MASTER_CV_PATH
-        profile_file = profile_path or DEFAULT_USER_PROFILE_PATH
+        cv_file = cv_path or settings.resolve_cv_path()
+        profile_file = profile_path or settings.resolve_profile_path()
 
         cv_clean_text = ""
         if cv_file.exists():

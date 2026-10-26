@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.models.job import Job, JobPosting, JobSearchQuery
 from app.services.job_sources.base import JobSource
+from app.services.matching.service import MatchingService, MatchingResult
 from app.services.posting_guard import GateResult, run_posting_guard
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ class IngestionResult:
     flagged_count: int = 0
     duplicate_count: int = 0
     errors: List[str] = field(default_factory=list)
+    matching_result: Optional[MatchingResult] = None
 
 
 class JobIngestionService:
@@ -63,8 +65,13 @@ class JobIngestionService:
          - Maps cleaned JobPosting to the multi-tenant Job SQLAlchemy model and commits.
     """
 
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session,
+        matching_service: Optional[MatchingService] = None,
+    ) -> None:
         self.db = db
+        self.matching_service = matching_service or MatchingService(db=db)
 
     def _normalize_target_slugs(
         self,
@@ -268,5 +275,19 @@ class JobIngestionService:
             for j in jobs_to_save:
                 self.db.refresh(j)
             result.saved_jobs = jobs_to_save
+
+            # ---------------------------------------------------------------
+            # 4. Synchronously score and gate newly saved jobs per ARCHITECTURE.md §4
+            # (Background worker not needed yet per ARCHITECTURE.md §9).
+            # Clean jobs are embedded and scored; flagged jobs are skipped.
+            # ---------------------------------------------------------------
+            if self.matching_service is not None:
+                match_res = await self.matching_service.score_and_gate_jobs(
+                    account_id=account_id,
+                    jobs=jobs_to_save,
+                )
+                result.matching_result = match_res
+                for j in jobs_to_save:
+                    self.db.refresh(j)
 
         return result

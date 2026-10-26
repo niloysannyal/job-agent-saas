@@ -1,12 +1,96 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query
+from typing import Any, Dict, List, Optional, Union
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.job import Job, JobRead
+from app.models.job import Job, JobRead, JobSearchQuery
+from app.services.job_ingestion import JobIngestionService
+from app.services.job_sources import get_available_sources
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+class IngestionRequest(BaseModel):
+    """Payload for triggering a job ingestion run."""
+    account_id: str = Field(..., description="Target tenant account UUID")
+    search_queries: Optional[List[Union[JobSearchQuery, str]]] = Field(
+        default=["AI Engineer"],
+        description="List of search queries or keyword strings for general sources",
+    )
+    target_companies: Optional[List[str]] = Field(
+        default=None,
+        description="Company slugs for ATS sources (e.g. ['optimizely', 'therap'])",
+    )
+    sources: Optional[List[str]] = Field(
+        default=None,
+        description=(
+            "Specific sources to query: 'adzuna', 'remotive', 'remoteok', "
+            "'greenhouse', 'lever', 'freehire'. Omit to run all available."
+        ),
+    )
+
+
+class IngestionResponse(BaseModel):
+    """Summary metrics of an executed ingestion and matching run."""
+    total_fetched: int
+    saved_count: int
+    duplicate_count: int
+    flagged_count: int
+    scored_count: int
+    vetoed_count: int
+    errors: List[str]
+
+
+@router.post(
+    "/ingest",
+    response_model=IngestionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Trigger job ingestion and automatic match scoring",
+    description=(
+        "Fetches postings from requested or default job sources, runs them through the "
+        "posting integrity guard, deduplicates, persists new jobs, and synchronously "
+        "evaluates language gate vetoes and semantic match scores against the user's profile."
+    ),
+)
+async def trigger_ingestion(
+    payload: IngestionRequest,
+    db: Session = Depends(get_db),
+) -> IngestionResponse:
+    """Trigger job ingestion pipeline for an account."""
+    # 1. Resolve selected job sources
+    job_sources = get_available_sources(payload.sources)
+    if not job_sources:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No valid job sources could be initialized with current configuration.",
+        )
+
+    # 2. Normalize search queries
+    queries = payload.search_queries or ["AI Engineer"]
+
+    # 3. Execute ingestion and synchronous matching
+    service = JobIngestionService(db=db)
+    result = await service.ingest(
+        account_id=payload.account_id,
+        sources=job_sources,
+        search_queries=queries,
+        target_companies=payload.target_companies,
+    )
+
+    scored = result.matching_result.scored_count if result.matching_result else 0
+    vetoed = result.matching_result.vetoed_count if result.matching_result else 0
+
+    return IngestionResponse(
+        total_fetched=result.total_fetched,
+        saved_count=len(result.saved_jobs),
+        duplicate_count=result.duplicate_count,
+        flagged_count=result.flagged_count,
+        scored_count=scored,
+        vetoed_count=vetoed,
+        errors=result.errors,
+    )
 
 
 @router.get(

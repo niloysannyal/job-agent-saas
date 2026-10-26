@@ -15,8 +15,10 @@ from app.services.matching import (
     MatchingResult,
     MatchingService,
     MockEmbeddingClient,
+    OpenAIEmbeddingClient,
     ProfileParser,
     compute_cosine_similarity,
+    get_embedding_client,
 )
 
 
@@ -313,3 +315,60 @@ async def test_matching_service_score_and_gate_clean_jobs(
     db_session.refresh(job3_flagged)
     assert job3_flagged.match_score is None  # NOT scored!
     assert job3_flagged.vetoed is False      # NOT evaluated by gate until reviewed
+
+
+@pytest.mark.asyncio
+async def test_openai_embedding_client(monkeypatch):
+    """
+    Test OpenAIEmbeddingClient with mocked httpx response.
+    """
+    import httpx
+
+    fake_1536_vector = [0.05] * 1536
+
+    class MockResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "data": [
+                    {"embedding": fake_1536_vector, "index": 0},
+                    {"embedding": fake_1536_vector, "index": 1},
+                ]
+            }
+
+    async def mock_post(self, url, headers=None, json=None):
+        return MockResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    client = OpenAIEmbeddingClient(api_key="sk-test-live-key")
+
+    # 1. Single embed
+    single_vec = await client.embed("AI Engineer")
+    assert len(single_vec) == 1536
+    assert single_vec == fake_1536_vector
+
+    # 2. Batch embed
+    batch_vecs = await client.embed_batch(["AI Engineer", "MLOps"])
+    assert len(batch_vecs) == 2
+    assert len(batch_vecs[0]) == 1536
+    assert len(batch_vecs[1]) == 1536
+
+
+def test_get_embedding_client_factory():
+    """
+    Test get_embedding_client factory switches between Mock and OpenAI based on key.
+    """
+    # Empty / None key -> MockEmbeddingClient
+    client_mock = get_embedding_client(api_key="")
+    assert isinstance(client_mock, MockEmbeddingClient)
+
+    client_mock2 = get_embedding_client(api_key="mock-key")
+    assert isinstance(client_mock2, MockEmbeddingClient)
+
+    # Valid key -> OpenAIEmbeddingClient
+    client_openai = get_embedding_client(api_key="sk-proj-valid-real-key-12345")
+    assert isinstance(client_openai, OpenAIEmbeddingClient)
+    assert client_openai.api_key == "sk-proj-valid-real-key-12345"
+
