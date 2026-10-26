@@ -16,8 +16,6 @@ def create_app() -> FastAPI:
 
     # Register API v1 prefix routes
     app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
-    # Also allow direct access under root /jobs
-    app.include_router(jobs_router)
 
     return app
 

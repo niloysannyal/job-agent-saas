@@ -336,9 +336,10 @@ def test_pagination_limit_and_offset(client: TestClient, seeded_accounts, seeded
     assert page_2[1]["company"] == "Startup Labs"
 
 
-def test_root_and_apiv1_routes_both_accessible(client: TestClient, seeded_accounts, seeded_jobs):
+def test_unversioned_root_jobs_route_is_not_exposed(client: TestClient, seeded_accounts, seeded_jobs):
     """
-    Ensure endpoint is accessible both at /api/v1/jobs and /jobs.
+    Ensure API endpoints are strictly standardized under /api/v1 and unversioned
+    root /jobs is not exposed (returns 404).
     """
     account_1, _ = seeded_accounts
 
@@ -346,5 +347,151 @@ def test_root_and_apiv1_routes_both_accessible(client: TestClient, seeded_accoun
     res_root = client.get(f"/jobs?account_id={account_1.id}")
 
     assert res_v1.status_code == 200
-    assert res_root.status_code == 200
-    assert res_v1.json() == res_root.json()
+    assert res_root.status_code == 404
+
+
+
+def test_multi_tenant_isolation_never_leaks_cross_account_data(client: TestClient, test_db: Session):
+    """
+    Explicit multi-tenant security test:
+    Seeds jobs for two distinct accounts (Alice and Bob) across all permutations
+    (clean, vetoed, flagged, unscored). Confirms that querying Alice's jobs NEVER
+    returns any of Bob's rows under any conditions — even when show_all=True,
+    include_vetoed=True, or include_flagged=True.
+    """
+    # 1. Create two distinct accounts
+    alice = Account(email="alice@example.com")
+    bob = Account(email="bob@example.com")
+    test_db.add_all([alice, bob])
+    test_db.commit()
+    test_db.refresh(alice)
+    test_db.refresh(bob)
+
+    now = datetime.now(timezone.utc)
+
+    # 2. Seed jobs for Alice
+    alice_jobs = [
+        Job(
+            account_id=alice.id,
+            company="Alice Corp A",
+            role="AI Engineer",
+            match_score=0.91,
+            vetoed=False,
+            integrity_status="clean",
+            source="adzuna",
+            apply_link="https://alice.corp/job1",
+            found_at=now,
+        ),
+        Job(
+            account_id=alice.id,
+            company="Alice Corp B",
+            role="Data Scientist",
+            match_score=0.85,
+            vetoed=True,
+            veto_reason="Requires undeclared language: german",
+            integrity_status="clean",
+            source="remotive",
+            apply_link="https://alice.corp/job2",
+            found_at=now,
+        ),
+        Job(
+            account_id=alice.id,
+            company="Alice Corp C",
+            role="Promoter",
+            match_score=0.70,
+            vetoed=False,
+            integrity_status="flagged",
+            source="remoteok",
+            apply_link="https://alice.corp/job3",
+            found_at=now,
+        ),
+    ]
+
+    # 3. Seed jobs for Bob
+    bob_jobs = [
+        Job(
+            account_id=bob.id,
+            company="Bob Inc X",
+            role="Robotics Lead",
+            match_score=0.99,
+            vetoed=False,
+            integrity_status="clean",
+            source="greenhouse",
+            apply_link="https://bob.inc/jobX",
+            found_at=now,
+        ),
+        Job(
+            account_id=bob.id,
+            company="Bob Inc Y",
+            role="Embedded AI Engineer",
+            match_score=0.94,
+            vetoed=True,
+            veto_reason="Requires undeclared language: french",
+            integrity_status="clean",
+            source="lever",
+            apply_link="https://bob.inc/jobY",
+            found_at=now,
+        ),
+        Job(
+            account_id=bob.id,
+            company="Bob Inc Z",
+            role="Telegram Spammer",
+            match_score=0.65,
+            vetoed=False,
+            integrity_status="flagged",
+            source="freehire",
+            apply_link="https://bob.inc/jobZ",
+            found_at=now,
+        ),
+    ]
+
+    test_db.add_all(alice_jobs + bob_jobs)
+    test_db.commit()
+
+    # 4. Query Alice's jobs with show_all=True
+    res_alice = client.get(f"/api/v1/jobs?account_id={alice.id}&show_all=true")
+    assert res_alice.status_code == 200
+    alice_data = res_alice.json()
+
+    # Alice must receive exactly her 3 jobs
+    assert len(alice_data) == 3
+    alice_companies = {j["company"] for j in alice_data}
+    assert alice_companies == {"Alice Corp A", "Alice Corp B", "Alice Corp C"}
+
+    # ZERO Bob rows must exist in Alice's payload
+    for job in alice_data:
+        assert job["account_id"] == alice.id
+        assert job["account_id"] != bob.id
+        assert not job["company"].startswith("Bob")
+        assert not job["apply_link"].startswith("https://bob.inc")
+
+    # 5. Query Bob's jobs with show_all=True
+    res_bob = client.get(f"/api/v1/jobs?account_id={bob.id}&show_all=true")
+    assert res_bob.status_code == 200
+    bob_data = res_bob.json()
+
+    # Bob must receive exactly his 3 jobs
+    assert len(bob_data) == 3
+    bob_companies = {j["company"] for j in bob_data}
+    assert bob_companies == {"Bob Inc X", "Bob Inc Y", "Bob Inc Z"}
+
+    # ZERO Alice rows must exist in Bob's payload
+    for job in bob_data:
+        assert job["account_id"] == bob.id
+        assert job["account_id"] != alice.id
+        assert not job["company"].startswith("Alice")
+        assert not job["apply_link"].startswith("https://alice.corp")
+
+    # 6. Query with default filtering (show_all=False) for Alice
+    res_alice_clean = client.get(f"/api/v1/jobs?account_id={alice.id}")
+    assert res_alice_clean.status_code == 200
+    alice_clean_data = res_alice_clean.json()
+    assert len(alice_clean_data) == 1
+    assert alice_clean_data[0]["company"] == "Alice Corp A"
+    assert alice_clean_data[0]["account_id"] == alice.id
+
+    # 7. Query with a non-existent account ID returns empty list, never leaks other tenants
+    res_unknown = client.get("/api/v1/jobs?account_id=00000000-0000-0000-0000-000000000000&show_all=true")
+    assert res_unknown.status_code == 200
+    assert res_unknown.json() == []
+

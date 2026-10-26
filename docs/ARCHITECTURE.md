@@ -250,6 +250,18 @@ into Stripe's own product. Setup deferred per Niloy's decision — the
 without a schema change later.
 
 ## 13. SaaS-only concerns still ahead (Phase 3+)
+- **BLOCKER, not optional (found 2026-10-19): `account_id` is currently a
+  trusted, unverified query parameter on every API endpoint** (confirmed on
+  `GET /jobs` — assume the same is true anywhere else `account_id` appears
+  until proven otherwise). Any caller who knows or guesses an `account_id` can
+  read that account's jobs, CVs, and application data — there is currently zero
+  authentication binding a request to the account it claims. This is harmless
+  at single-user Phase 0/1 scale (only Niloy's own account exists), but it is
+  an absolute, non-negotiable blocker before Phase 3 opens signups to anyone
+  else. Fix path: replace every `account_id: str = Query(...)` parameter with a
+  dependency-injected, auth-verified value (e.g. `current_account: Account =
+  Depends(get_current_account)`, extracted from a validated session/JWT), and
+  audit every existing endpoint for this pattern before adding auth, not after.
 - Legal review of ToS exposure from the JSearch aggregator layer, once added.
 - Legal review specifically of whether Layer 1b (LinkedIn public endpoint, §4) can
   ever be offered to other users at all — current default is no, Niloy-only.
@@ -272,6 +284,7 @@ without a schema change later.
 | 2026-10-18 | Added freehire.me (Layer 1) and LinkedIn public jobs-guest endpoint (Layer 1b, Niloy-only) as sources | Zero-cost, legal (freehire.me) or low-risk personal-use (LinkedIn endpoint) coverage found via competitor research |
 | 2026-10-18 | RemoteOK source built; found its ToS requires dofollow link + visible "Remote OK" credit at display time, not satisfiable by backend alone | Discovered while implementing RemoteOKJobSource; flagged as blocking for the Find UI task |
 | 2026-10-19 | Corrected freehire.me from Layer 1 ("fully legal") to Layer 1b (Niloy-only, like LinkedIn) | Its own ToS restricts the keyless API to personal/non-commercial use; commercial multi-tenant use needs a paid plan or self-hosting, plus attribution credit |
+| 2026-10-19 | Confirmed `account_id` is an unverified, trusted query parameter with zero auth — flagged as an absolute Phase 3 blocker (§13) | Found while reviewing the GET /jobs endpoint; harmless at single-user scale but must be fixed before any other user's data could be exposed |
 | 2026-10-18 | Niloy may run a parallel private fork of ai-job-search-dev/ai-job-search for his own job search during the build | Decouples "start applying now" from "SaaS build takes a month"; feeds real lessons back before Phase 1 ends |
 | — | Pricing model, team structure beyond solo | Still OPEN — intentionally deferred, schema supports it |
 | — | Hosting choice (§10) | Still OPEN |
