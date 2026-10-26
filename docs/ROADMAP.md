@@ -46,7 +46,7 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
       vs. structured fields) after Phase 1 real-usage data, per ARCHITECTURE.md
       §4 — don't guess at this without evidence.
 - [x] Queue endpoint ranked by match score (`GET /api/v1/jobs` with default gating and review overrides) — built 2026-10-25
-- [ ] Queue UI view (frontend table showing company, role, match score, and apply link)
+- [x] Queue UI view (frontend dashboard in Obsidian & Cyber Emerald theme showing company, role, radial match score gauges, posting guard inspection, and RemoteOK/freehire attribution — built 2026-10-26)
 
 **Apply (build second):**
 - [x] CV template gallery (seeded with `01_MASTER_CV.tex` as admin default template #1)
