@@ -50,11 +50,9 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 
 **Apply (build second):**
 - [x] CV template gallery (seeded with `01_MASTER_CV.tex` as admin default template #1)
-- [ ] CV tailoring pipeline (LLM interface behind the provider-abstraction layer,
-      OpenAI as the only implementation for now)
-- [ ] Draft generation per channel (mail / form answers / DM)
-- [ ] Draft → review → Send UI (human-in-the-loop is non-negotiable — see
-      ARCHITECTURE.md §3)
+- [x] CV tailoring pipeline (LLM interface behind provider-abstraction layer with Drafter + Reviewer two-pass generation, truth verification against verified fact ledger, and ATS text-layer check — built 2026-10-26)
+- [x] Draft generation per channel (mail / form answers / DM — built 2026-10-26)
+- [x] Draft → review → Send UI (human-in-the-loop strictly enforced: application created in 'draft' with sent_at=None, confirmed only via human review gate — built 2026-10-26)
 
 **Monitor (build third):**
 - [ ] Jobs table extended with status/follow-up fields
@@ -62,7 +60,7 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 
 **Infra (in parallel, not blocking):**
 - [ ] Single VPS + Docker Compose set up (reuse Caddy VPS experience)
-- [ ] OpenAI API key wired through the LLM interface (not called directly anywhere)
+- [x] OpenAI API key wired through the LLM interface (not called directly anywhere — built 2026-10-26)
 - [ ] Data retention limits + export/delete-account path stubbed in, even if manual
 
 - Exit criteria: Niloy can run a real job search through the product end-to-end —

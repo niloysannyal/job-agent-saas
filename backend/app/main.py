@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.api.applications import router as applications_router
 from app.api.jobs import router as jobs_router
 from app.db.base import Base
 from app.db.seed import seed_initial_data
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
 
     # Register API v1 prefix routes
     app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
 
     return app
 

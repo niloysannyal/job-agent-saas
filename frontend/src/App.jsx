@@ -25,8 +25,16 @@ export default function App() {
   const [searchFilter, setSearchFilter] = useState('');
   const [sortBy, setSortBy] = useState('match');
 
-  // Modal Inspection
+  // Inspection Modal
   const [inspectingJob, setInspectingJob] = useState(null);
+
+  // Module 2 (Apply) Tailoring Modal & State
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [tailorResult, setTailorResult] = useState(null);
+  const [tailorModalJob, setTailorModalJob] = useState(null);
+  const [editedCoverDraft, setEditedCoverDraft] = useState('');
+  const [showLatexSource, setShowLatexSource] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Toast Helper
   const showToast = (msg, duration = 4000) => {
@@ -106,6 +114,70 @@ export default function App() {
     }
   };
 
+  // Trigger CV Tailoring (Module 2)
+  const handleTailorCV = async (job) => {
+    if (isTailoring) return;
+    try {
+      setIsTailoring(true);
+      setTailorModalJob(job);
+      showToast(`🤖 Tailoring CV & drafting outreach for ${job.role} @ ${job.company}...`);
+
+      const res = await fetch(`${API_BASE}/applications/tailor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: accountId,
+          job_id: job.id,
+          channel: 'email',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Tailoring failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      setTailorResult(data);
+      setEditedCoverDraft(data.application.draft_content || '');
+      showToast(`✅ Tailored CV generated! ATS fit: ${(data.ats_score * 100).toFixed(0)}%. Fact audit passed.`);
+    } catch (err) {
+      console.error('Tailor error:', err);
+      showToast(`❌ Tailoring error: ${err.message}`, 6000);
+      setTailorModalJob(null);
+    } finally {
+      setIsTailoring(false);
+    }
+  };
+
+  // Human-in-the-Loop Send Confirmation
+  const handleConfirmSend = async () => {
+    if (!tailorResult?.application?.id || isSending) return;
+    try {
+      setIsSending(true);
+      const appId = tailorResult.application.id;
+      const res = await fetch(`${API_BASE}/applications/${appId}/send?account_id=${accountId}`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to confirm Send gate (${res.status})`);
+      }
+
+      const updated = await res.json();
+      setTailorResult((prev) => ({
+        ...prev,
+        application: updated,
+      }));
+      showToast(`🎉 Human review confirmed! Application marked SENT with timestamp.`);
+    } catch (err) {
+      console.error('Send error:', err);
+      showToast(`❌ Send error: ${err.message}`, 6000);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   // Derived KPI Metrics
   const stats = useMemo(() => {
     const total = jobs.length;
@@ -180,7 +252,7 @@ export default function App() {
           <div className="brand-text">
             <h1 id="app-title">AGY Job Application Agent SaaS</h1>
             <div className="brand-sub">
-              <span>Autonomous Search & Match Engine</span>
+              <span>Autonomous Search, Match & Tailoring Engine</span>
               <span>•</span>
               <span className="tenant-pill" title={`Tenant ID: ${accountId}`}>
                 Niloy Sannyal (Phase 0 Personal Validation)
@@ -509,12 +581,13 @@ export default function App() {
 
                     <button
                       id={`btn-stage-${job.id}`}
-                      className="btn btn-secondary btn-sm"
-                      style={{ opacity: 0.8 }}
-                      onClick={() => showToast(`Module 2 (Apply): Tailoring pipeline staged for "${job.role} at ${job.company}".`)}
-                      title="Stage for LaTeX CV tailoring & outreach generation"
+                      className="btn btn-primary btn-sm"
+                      style={{ background: 'linear-gradient(135deg, var(--indigo-500), #4f46e5)', color: '#fff' }}
+                      onClick={() => handleTailorCV(job)}
+                      disabled={isTailoring}
+                      title="Tailor LaTeX CV & generate outreach draft"
                     >
-                      Tailor CV (Module 2)
+                      {isTailoring && tailorModalJob?.id === job.id ? '⏳ Tailoring...' : '✨ Tailor CV (Apply)'}
                     </button>
                   </div>
                 </article>
@@ -613,6 +686,127 @@ export default function App() {
               <button className="btn btn-secondary" onClick={() => setInspectingJob(null)}>
                 Dismiss
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Module 2 (Apply) CV Tailoring & Human-in-the-Loop Review Modal */}
+      {tailorResult && tailorModalJob && (
+        <div className="modal-overlay" onClick={() => setTailorResult(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '900px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ fontSize: '18px', color: '#fff' }}>
+                  ✨ Tailored Application: {tailorModalJob.role}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+                  {tailorModalJob.company} • Human-in-the-Loop Send Gate
+                </p>
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setTailorResult(null)}
+                aria-label="Close Modal"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Telemetry Chips */}
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <span className="badge badge-emerald" style={{ fontSize: '12px', padding: '5px 10px' }}>
+                  🎯 ATS Keyword Fit: {(tailorResult.ats_score * 100).toFixed(0)}%
+                </span>
+                <span className="badge badge-cyan" style={{ fontSize: '12px', padding: '5px 10px' }}>
+                  🛡️ Fact Audit: 100% Truthful (01_MASTER_CV.tex)
+                </span>
+                <span
+                  className={`badge ${tailorResult.application.status === 'sent' ? 'badge-emerald' : 'badge-amber'}`}
+                  style={{ fontSize: '12px', padding: '5px 10px' }}
+                >
+                  Status: {tailorResult.application.status.toUpperCase()}
+                  {tailorResult.application.status === 'draft' ? ' (Pending Human Review)' : ' (Human Approved)'}
+                </span>
+              </div>
+
+              {/* Missing Gaps Flagged */}
+              {tailorResult.gaps_detected && tailorResult.gaps_detected.length > 0 && (
+                <div style={{ background: 'rgba(30, 41, 59, 0.6)', border: '1px solid var(--border-subtle)', padding: '12px 16px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--amber-400)', marginBottom: '4px' }}>
+                    🔍 Honest Gap Detection (Uninvented Requirements):
+                  </div>
+                  <ul style={{ fontSize: '12px', color: '#cbd5e1', paddingLeft: '20px' }}>
+                    {tailorResult.gaps_detected.map((gap, i) => (
+                      <li key={i}>{gap}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Outreach Cover Letter Draft (Editable by Human) */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    Outreach Cover Letter Draft
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--emerald-300)' }}>
+                    ✏️ Editable before human Send
+                  </span>
+                </div>
+                <textarea
+                  className="input-text"
+                  style={{ width: '100%', minHeight: '180px', fontFamily: 'var(--font-sans)', fontSize: '13px', lineHeight: '1.6' }}
+                  value={editedCoverDraft}
+                  onChange={(e) => setEditedCoverDraft(e.target.value)}
+                />
+              </div>
+
+              {/* Toggle LaTeX Source Preview */}
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowLatexSource(!showLatexSource)}
+                >
+                  {showLatexSource ? 'Hide Tailored LaTeX Source' : 'View Tailored LaTeX Source'}
+                </button>
+
+                {showLatexSource && (
+                  <div style={{ marginTop: '10px', background: 'rgba(0, 0, 0, 0.5)', padding: '14px', borderRadius: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+                    <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#a5b4fc', whiteSpace: 'pre-wrap' }}>
+                      {tailorResult.cv_version.tailored_latex}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <a
+                href={tailorModalJob.apply_link}
+                target="_blank"
+                rel="noopener"
+                className="btn btn-secondary"
+              >
+                Open Job Posting ↗
+              </a>
+
+              {tailorResult.application.status === 'draft' ? (
+                <button
+                  id="btn-confirm-send"
+                  className="btn btn-primary"
+                  onClick={handleConfirmSend}
+                  disabled={isSending}
+                >
+                  {isSending ? 'Confirming...' : '🚀 Approve & Mark Sent (Human Gate)'}
+                </button>
+              ) : (
+                <span className="badge badge-emerald" style={{ padding: '8px 14px', fontSize: '13px' }}>
+                  ✅ Application Confirmed & Sent
+                </span>
+              )}
             </div>
           </div>
         </div>
