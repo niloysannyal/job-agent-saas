@@ -55,8 +55,8 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [x] Draft → review → Send UI (human-in-the-loop strictly enforced: application created in 'draft' with sent_at=None, confirmed only via human review gate — built 2026-10-26)
 
 **Monitor (build third):**
-- [ ] Jobs table extended with status/follow-up fields
-- [ ] Status summary view (Total / Responded / Interview / Upcoming)
+- [x] Jobs table extended with status/follow-up fields (`applied_at`, `follow_up_due`, `notes`, Alembic migration `9fa848922c02` — built 2026-10-26)
+- [x] Status summary view and Monitor pipeline dashboard (Total / Draft / Sent / Follow-ups Due / Responded / Interview / Offer / Rejected with 10-day follow-up drafting strictly capped at 2 and human-in-the-loop review gate — built 2026-10-26)
 
 **Infra (in parallel, not blocking):**
 - [ ] Single VPS + Docker Compose set up (reuse Caddy VPS experience)
