@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.session import get_db
 from app.models.account import Account
@@ -158,7 +158,11 @@ def list_applications(
     """
     List applications for a tenant account.
     """
-    query = db.query(Application).filter(Application.account_id == account_id)
+    query = (
+        db.query(Application)
+        .options(joinedload(Application.job))
+        .filter(Application.account_id == account_id)
+    )
     if status_filter:
         query = query.filter(Application.status == status_filter)
 
@@ -351,3 +355,47 @@ def mark_follow_up_sent(
     db.commit()
     db.refresh(application)
     return application
+
+
+class StatusUpdateRequest(BaseModel):
+    status: str = Field(..., description="Target status: draft | sent | responded | interview | offer | rejected")
+    notes: Optional[str] = None
+
+
+@router.patch("/{application_id}/status", response_model=ApplicationRead)
+def update_application_status(
+    application_id: str,
+    req: StatusUpdateRequest,
+    account_id: str = Query(..., description="Account ID for multi-tenant isolation"),
+    db: Session = Depends(get_db),
+):
+    """
+    Module 3 (Monitor): Update application status across pipeline stages:
+    draft -> sent -> responded -> interview -> offer -> rejected.
+    Synchronizes status with the linked Job entity.
+    """
+    application = (
+        db.query(Application)
+        .options(joinedload(Application.job))
+        .filter(Application.id == application_id, Application.account_id == account_id)
+        .first()
+    )
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Application '{application_id}' not found.",
+        )
+
+    application.status = req.status
+    if req.notes is not None:
+        application.notes = req.notes
+
+    if application.job:
+        application.job.status = req.status
+        if req.notes:
+            application.job.notes = req.notes
+
+    db.commit()
+    db.refresh(application)
+    return application
+

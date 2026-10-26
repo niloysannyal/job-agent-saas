@@ -36,10 +36,141 @@ export default function App() {
   const [showLatexSource, setShowLatexSource] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
+  // View Navigation: 'find' | 'monitor'
+  const [currentView, setCurrentView] = useState('find');
+
+  // Module 3 (Monitor & Pipeline) State
+  const [applications, setApplications] = useState([]);
+  const [loadingApps, setLoadingApps] = useState(false);
+  const [monitorSummary, setMonitorSummary] = useState({
+    total: 0,
+    draft: 0,
+    sent: 0,
+    follow_ups_due: 0,
+    responded: 0,
+    interview: 0,
+    offer: 0,
+    rejected: 0,
+  });
+  const [monitorFilter, setMonitorFilter] = useState('all');
+  const [monitorSearch, setMonitorSearch] = useState('');
+
+  // Follow-Up Modal State
+  const [followUpModalApp, setFollowUpModalApp] = useState(null);
+  const [followUpData, setFollowUpData] = useState(null);
+  const [editedFollowUpDraft, setEditedFollowUpDraft] = useState('');
+  const [isDraftingFollowUp, setIsDraftingFollowUp] = useState(false);
+  const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
+
+  // Materials Inspection Modal
+  const [viewingAppMaterials, setViewingAppMaterials] = useState(null);
+
   // Toast Helper
   const showToast = (msg, duration = 4000) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), duration);
+  };
+
+  // Fetch Monitor Data (Summary & Applications)
+  const fetchMonitorData = async () => {
+    try {
+      setLoadingApps(true);
+      const [sumRes, appsRes] = await Promise.all([
+        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`),
+        fetch(`${API_BASE}/applications?account_id=${accountId}&limit=100`),
+      ]);
+      if (sumRes.ok) {
+        const sumData = await sumRes.json();
+        setMonitorSummary(sumData);
+      }
+      if (appsRes.ok) {
+        const appsData = await appsRes.json();
+        setApplications(Array.isArray(appsData) ? appsData : []);
+      }
+    } catch (err) {
+      console.error('Failed to load monitor data:', err);
+    } finally {
+      setLoadingApps(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMonitorData();
+  }, [accountId]);
+
+  // Update Application Pipeline Status
+  const handleUpdateStatus = async (appId, newStatus) => {
+    try {
+      const res = await fetch(`${API_BASE}/applications/${appId}/status?account_id=${accountId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        throw new Error(`Status update failed (${res.status})`);
+      }
+      const updated = await res.json();
+      setApplications(prev => prev.map(a => a.id === appId ? updated : a));
+      showToast(`✅ Status updated to ${newStatus.toUpperCase()}`);
+      fetchMonitorData();
+    } catch (err) {
+      showToast(`❌ Error updating status: ${err.message}`, 5000);
+    }
+  };
+
+  // Start Follow-Up Drafting Workflow
+  const handleOpenFollowUp = async (app) => {
+    if (app.follow_up_count >= 2) {
+      showToast('⚠️ Maximum follow-up cap of 2 reached for this application per §6.');
+      return;
+    }
+    setFollowUpModalApp(app);
+    setFollowUpData(null);
+    setEditedFollowUpDraft('');
+    try {
+      setIsDraftingFollowUp(true);
+      showToast(`🤖 Drafting follow-up #${app.follow_up_count + 1} with LLM...`);
+      const res = await fetch(`${API_BASE}/applications/${app.id}/follow-up/draft?account_id=${accountId}`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Follow-up draft failed (${res.status})`);
+      }
+      const data = await res.json();
+      setFollowUpData(data);
+      setEditedFollowUpDraft(data.draft_content || '');
+      showToast(`✅ Follow-up #${data.follow_up_number} drafted! Review before confirming Send.`);
+    } catch (err) {
+      showToast(`❌ Error: ${err.message}`, 6000);
+      setFollowUpModalApp(null);
+    } finally {
+      setIsDraftingFollowUp(false);
+    }
+  };
+
+  // Confirm Follow-Up Send (Human Gate)
+  const handleConfirmFollowUpSend = async () => {
+    if (!followUpModalApp || isSendingFollowUp) return;
+    try {
+      setIsSendingFollowUp(true);
+      const res = await fetch(`${API_BASE}/applications/${followUpModalApp.id}/follow-up/send?account_id=${accountId}`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Failed to mark follow-up sent (${res.status})`);
+      }
+      const updated = await res.json();
+      setApplications(prev => prev.map(a => a.id === updated.id ? updated : a));
+      showToast(`🎉 Human Gate: Follow-up #${updated.follow_up_count} confirmed and scheduled!`);
+      setFollowUpModalApp(null);
+      fetchMonitorData();
+    } catch (err) {
+      showToast(`❌ Error: ${err.message}`, 6000);
+    } finally {
+      setIsSendingFollowUp(false);
+    }
   };
 
   // Fetch Jobs from Backend
@@ -170,6 +301,7 @@ export default function App() {
         application: updated,
       }));
       showToast(`🎉 Human review confirmed! Application marked SENT with timestamp.`);
+      fetchMonitorData();
     } catch (err) {
       console.error('Send error:', err);
       showToast(`❌ Send error: ${err.message}`, 6000);
@@ -243,6 +375,52 @@ export default function App() {
     return 'score-low';
   };
 
+  // Helper: check if follow-up is due (10-day cadence post-send, capped at 2)
+  const isFollowUpDue = (app) => {
+    if (app.status !== 'sent' || !app.sent_at || !app.follow_up_due || (app.follow_up_count || 0) >= 2) return false;
+    return new Date(app.follow_up_due) <= new Date();
+  };
+
+  const formatDate = (isoStr) => {
+    if (!isoStr) return '—';
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return isoStr;
+    }
+  };
+
+  // Filtered Applications for Monitor Pipeline View
+  const displayedApplications = useMemo(() => {
+    let list = [...applications];
+    if (monitorFilter === 'draft') {
+      list = list.filter(a => a.status === 'draft');
+    } else if (monitorFilter === 'sent') {
+      list = list.filter(a => a.status === 'sent');
+    } else if (monitorFilter === 'due') {
+      list = list.filter(a => isFollowUpDue(a));
+    } else if (monitorFilter === 'responded') {
+      list = list.filter(a => a.status === 'responded');
+    } else if (monitorFilter === 'interview') {
+      list = list.filter(a => a.status === 'interview' || a.status === 'interviewing');
+    } else if (monitorFilter === 'offer') {
+      list = list.filter(a => a.status === 'offer' || a.status === 'offered');
+    } else if (monitorFilter === 'rejected') {
+      list = list.filter(a => a.status === 'rejected' || a.status === 'declined');
+    }
+
+    if (monitorSearch.trim()) {
+      const q = monitorSearch.toLowerCase();
+      list = list.filter(a =>
+        (a.job_company && a.job_company.toLowerCase().includes(q)) ||
+        (a.job_role && a.job_role.toLowerCase().includes(q)) ||
+        (a.notes && a.notes.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [applications, monitorFilter, monitorSearch]);
+
   return (
     <div className="app-container">
       {/* Header Area */}
@@ -267,8 +445,40 @@ export default function App() {
         </div>
       </header>
 
-      {/* KPI Metric Cards */}
-      <section className="kpi-grid" aria-label="Pipeline Metrics">
+      {/* Main Top-Level Navigation Switcher */}
+      <nav className="main-nav-bar" aria-label="Main Navigation">
+        <button
+          className={`nav-btn ${currentView === 'find' ? 'active' : ''}`}
+          onClick={() => setCurrentView('find')}
+          id="tab-find-queue"
+        >
+          <span>⚡ Find & Match Queue</span>
+          <span className="nav-badge">{stats.total}</span>
+        </button>
+
+        <button
+          className={`nav-btn ${currentView === 'monitor' ? 'active' : ''}`}
+          onClick={() => {
+            setCurrentView('monitor');
+            fetchMonitorData();
+          }}
+          id="tab-monitor-pipeline"
+        >
+          <span>📡 Monitor & Pipeline</span>
+          <span className="nav-badge">{monitorSummary.total}</span>
+          {monitorSummary.follow_ups_due > 0 && (
+            <span className="nav-badge nav-badge-alert" title={`${monitorSummary.follow_ups_due} follow-up(s) due!`}>
+              ⏰ {monitorSummary.follow_ups_due} DUE
+            </span>
+          )}
+        </button>
+      </nav>
+
+      {/* VIEW 1: Find & Match Opportunities Queue */}
+      {currentView === 'find' && (
+        <>
+          {/* KPI Metric Cards */}
+          <section className="kpi-grid" aria-label="Pipeline Metrics">
         <div className="kpi-card" id="kpi-total">
           <div className="kpi-label">
             <span>Total Ingested</span>
@@ -596,6 +806,282 @@ export default function App() {
           </div>
         )}
       </main>
+    </>
+  )}
+
+  {/* VIEW 2: Monitor & Pipeline View */}
+  {currentView === 'monitor' && (
+    <div className="monitor-view-container" id="monitor-view-section">
+      {/* Pipeline Stage KPI Grid */}
+      <section className="monitor-kpi-grid" aria-label="Pipeline Stages Summary">
+        <div className="monitor-kpi-card" id="kpi-mon-total">
+          <div className="monitor-kpi-title">
+            <span>Total In Pipeline</span>
+            <span>📈</span>
+          </div>
+          <div className="monitor-kpi-num">{monitorSummary.total}</div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-draft">
+          <div className="monitor-kpi-title">
+            <span>Drafts (Review)</span>
+            <span>📝</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--amber-400)' }}>
+            {monitorSummary.draft}
+          </div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-sent">
+          <div className="monitor-kpi-title">
+            <span>Sent (Awaiting)</span>
+            <span>🚀</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--emerald-400)' }}>
+            {monitorSummary.sent}
+          </div>
+        </div>
+
+        <div className={`monitor-kpi-card ${monitorSummary.follow_ups_due > 0 ? 'alert-due' : ''}`} id="kpi-mon-due">
+          <div className="monitor-kpi-title">
+            <span style={{ color: monitorSummary.follow_ups_due > 0 ? 'var(--amber-400)' : 'inherit' }}>
+              Follow-ups Due (10-Day)
+            </span>
+            <span>⏰</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: monitorSummary.follow_ups_due > 0 ? 'var(--amber-400)' : '#fff' }}>
+            {monitorSummary.follow_ups_due}
+          </div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-responded">
+          <div className="monitor-kpi-title">
+            <span>Responded</span>
+            <span>💬</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--cyan-400)' }}>
+            {monitorSummary.responded}
+          </div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-interview">
+          <div className="monitor-kpi-title">
+            <span>Interviewing</span>
+            <span>💼</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--indigo-400)' }}>
+            {monitorSummary.interview}
+          </div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-offer">
+          <div className="monitor-kpi-title">
+            <span>Offer Received</span>
+            <span>🏆</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--emerald-300)' }}>
+            {monitorSummary.offer}
+          </div>
+        </div>
+
+        <div className="monitor-kpi-card" id="kpi-mon-rejected">
+          <div className="monitor-kpi-title">
+            <span>Rejected / Closed</span>
+            <span>📁</span>
+          </div>
+          <div className="monitor-kpi-num" style={{ color: 'var(--text-dim)' }}>
+            {monitorSummary.rejected}
+          </div>
+        </div>
+      </section>
+
+      {/* Filter Bar & Controls */}
+      <div className="monitor-controls-panel glass-panel" style={{ padding: '14px 20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+        <div className="tabs-list" style={{ margin: 0 }}>
+          <button
+            className={`tab-btn ${monitorFilter === 'all' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('all')}
+          >
+            All Applications ({applications.length})
+          </button>
+          <button
+            className={`tab-btn ${monitorFilter === 'draft' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('draft')}
+          >
+            Drafts ({monitorSummary.draft})
+          </button>
+          <button
+            className={`tab-btn ${monitorFilter === 'sent' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('sent')}
+          >
+            Sent ({monitorSummary.sent})
+          </button>
+          <button
+            className={`tab-btn ${monitorFilter === 'due' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('due')}
+            style={monitorSummary.follow_ups_due > 0 ? { color: 'var(--amber-400)', borderColor: 'var(--amber-400)' } : {}}
+          >
+            ⏰ Due ({monitorSummary.follow_ups_due})
+          </button>
+          <button
+            className={`tab-btn ${monitorFilter === 'interview' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('interview')}
+          >
+            Interviews ({monitorSummary.interview})
+          </button>
+          <button
+            className={`tab-btn ${monitorFilter === 'offer' ? 'active' : ''}`}
+            onClick={() => setMonitorFilter('offer')}
+          >
+            Offers ({monitorSummary.offer})
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            className="input-text"
+            placeholder="Search company or role..."
+            value={monitorSearch}
+            onChange={(e) => setMonitorSearch(e.target.value)}
+            style={{ width: '220px', padding: '6px 12px', fontSize: '13px' }}
+          />
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={fetchMonitorData}
+            disabled={loadingApps}
+            title="Refresh application status"
+          >
+            {loadingApps ? 'Refreshing...' : '🔄 Refresh'}
+          </button>
+        </div>
+      </div>
+
+      {/* Applications Pipeline List */}
+      {loadingApps && applications.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-state-icon">⏳</span>
+          <p>Loading application pipeline...</p>
+        </div>
+      ) : displayedApplications.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-state-icon">📋</span>
+          <p>No applications found in this pipeline filter.</p>
+          <p style={{ fontSize: '12px' }}>
+            Tailor and review an application in the Find Queue to start tracking it here.
+          </p>
+        </div>
+      ) : (
+        <div className="pipeline-list">
+          {displayedApplications.map((app) => {
+            const isDue = isFollowUpDue(app);
+            const capReached = (app.follow_up_count || 0) >= 2;
+
+            return (
+              <article
+                key={app.id}
+                className={`pipeline-card ${isDue ? 'card-due' : ''}`}
+                id={`pipeline-card-${app.id}`}
+              >
+                <div className="pipeline-card-main">
+                  <div className="pipeline-role-title">
+                    <span>{app.job_role || 'Target Role'}</span>
+                    <span style={{ color: 'var(--emerald-400)', fontWeight: 600 }}>
+                      @ {app.job_company || 'Company'}
+                    </span>
+                    <span className="badge badge-emerald" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                      {app.channel.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="pipeline-meta">
+                    <span>
+                      📅 {app.status === 'draft' ? 'Draft Created: ' : 'Sent: '}
+                      <strong>{formatDate(app.sent_at || app.created_at)}</strong>
+                    </span>
+
+                    <span>•</span>
+
+                    {/* Follow-Up Tracker Status */}
+                    <div className="follow-up-tracker" title="Follow-up rule: 10 days post-send, max 2 follow-ups per ARCHITECTURE.md §6">
+                      <span>Follow-ups:</span>
+                      <div className="follow-up-dots">
+                        <span className={`follow-up-dot ${(app.follow_up_count || 0) >= 1 ? 'filled' : ''}`}></span>
+                        <span className={`follow-up-dot ${(app.follow_up_count || 0) >= 2 ? 'filled' : ''}`}></span>
+                      </div>
+                      <span>
+                        <strong>{app.follow_up_count || 0}/2</strong>
+                        {capReached ? (
+                          <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>(Cap Reached)</span>
+                        ) : isDue ? (
+                          <span style={{ color: 'var(--amber-400)', fontWeight: 'bold', marginLeft: '4px' }}>⚠️ Due Now!</span>
+                        ) : app.follow_up_due ? (
+                          <span style={{ color: 'var(--cyan-300)', marginLeft: '4px' }}>
+                            (Due: {formatDate(app.follow_up_due)})
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-dim)', marginLeft: '4px' }}>—</span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {app.notes && (
+                    <div style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', marginTop: '2px' }}>
+                      💬 {app.notes}
+                    </div>
+                  )}
+                </div>
+
+                {/* Stage Transition Dropdown & Actions */}
+                <div className="pipeline-actions">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                    <label style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                      Status Stage:
+                    </label>
+                    <select
+                      className="status-select"
+                      value={app.status}
+                      onChange={(e) => handleUpdateStatus(app.id, e.target.value)}
+                      id={`select-status-${app.id}`}
+                    >
+                      <option value="draft">Draft (Unsent)</option>
+                      <option value="sent">Sent (Awaiting)</option>
+                      <option value="responded">Responded</option>
+                      <option value="interview">Interviewing</option>
+                      <option value="offer">Offer Received</option>
+                      <option value="rejected">Rejected / Closed</option>
+                    </select>
+                  </div>
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setViewingAppMaterials(app)}
+                    title="View submitted cover letter and details"
+                  >
+                    👁️ Materials
+                  </button>
+
+                  {/* Follow-Up Action Button */}
+                  <button
+                    className={`btn btn-sm ${isDue ? 'btn-primary' : 'btn-secondary'}`}
+                    style={isDue ? { background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#000', fontWeight: 'bold' } : {}}
+                    onClick={() => handleOpenFollowUp(app)}
+                    disabled={capReached || isDraftingFollowUp}
+                    id={`btn-follow-up-${app.id}`}
+                    title={capReached ? 'Max cap of 2 follow-ups reached per §6' : 'Draft follow-up email via LLM'}
+                  >
+                    {capReached ? 'Cap (2/2)' : isDue ? '⏰ Draft Follow-Up' : '✍️ Follow-Up'}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  )}
+
 
       {/* Security & Role Inspection Modal */}
       {inspectingJob && (
@@ -807,6 +1293,128 @@ export default function App() {
                   ✅ Application Confirmed & Sent
                 </span>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Module 3 (Monitor) Follow-Up Draft & Human Gate Modal */}
+      {followUpModalApp && (
+        <div className="modal-overlay" onClick={() => !isSendingFollowUp && setFollowUpModalApp(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '750px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ fontSize: '18px', color: '#fff' }}>
+                  ✍️ Follow-Up Outreach: {followUpModalApp.job_company || 'Target Company'}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+                  Role: {followUpModalApp.job_role || 'Position'} • Sequence: Follow-up #{followUpData ? followUpData.follow_up_number : (followUpModalApp.follow_up_count || 0) + 1} of 2
+                </p>
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setFollowUpModalApp(null)}
+                disabled={isSendingFollowUp}
+                aria-label="Close Modal"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Policy Badge */}
+              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '12px 16px', borderRadius: '8px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--emerald-300)', marginBottom: '4px' }}>
+                  🛡️ ARCHITECTURE.md §6 Follow-Up Policy:
+                </div>
+                <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  Strict 10-day cadence. Follow-ups are limited to <strong>at most 2 per application</strong> to avoid spamming recruiters.
+                  Human review is strictly mandatory prior to send.
+                </div>
+              </div>
+
+              {/* Follow-Up Textarea */}
+              {isDraftingFollowUp ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🤖</div>
+                  <div>Synthesizing polite, high-impact follow-up with LLM...</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      Follow-up Email Draft
+                    </h4>
+                    <span style={{ fontSize: '11px', color: 'var(--emerald-300)' }}>
+                      ✏️ Editable review before human confirmation
+                    </span>
+                  </div>
+                  <textarea
+                    className="input-text"
+                    style={{ width: '100%', minHeight: '160px', fontFamily: 'var(--font-sans)', fontSize: '13px', lineHeight: '1.6' }}
+                    value={editedFollowUpDraft}
+                    onChange={(e) => setEditedFollowUpDraft(e.target.value)}
+                    id="textarea-follow-up-draft"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setFollowUpModalApp(null)}
+                disabled={isSendingFollowUp}
+              >
+                Cancel
+              </button>
+
+              <button
+                id="btn-confirm-follow-up-send"
+                className="btn btn-primary"
+                onClick={handleConfirmFollowUpSend}
+                disabled={isDraftingFollowUp || isSendingFollowUp || !editedFollowUpDraft.trim()}
+              >
+                {isSendingFollowUp ? 'Confirming...' : '🚀 Approve & Mark Follow-Up Sent (Human Gate)'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Application Materials Modal */}
+      {viewingAppMaterials && (
+        <div className="modal-overlay" onClick={() => setViewingAppMaterials(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '800px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ fontSize: '18px', color: '#fff' }}>
+                  📄 Application Materials: {viewingAppMaterials.job_role} @ {viewingAppMaterials.job_company}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+                  Status: {viewingAppMaterials.status.toUpperCase()} • Channel: {viewingAppMaterials.channel}
+                </p>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => setViewingAppMaterials(null)}>
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div>
+                <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Submitted Cover Letter / Outreach Draft
+                </h4>
+                <div style={{ background: 'rgba(0, 0, 0, 0.4)', padding: '16px', borderRadius: '8px', maxHeight: '300px', overflowY: 'auto', fontSize: '13px', lineHeight: '1.7', color: '#cbd5e1', whiteSpace: 'pre-wrap' }}>
+                  {viewingAppMaterials.draft_content || 'No outreach content recorded.'}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setViewingAppMaterials(null)}>
+                Close
+              </button>
             </div>
           </div>
         </div>

@@ -106,6 +106,14 @@ class Application(Base):
         back_populates="applications",
     )
 
+    @property
+    def job_company(self) -> Optional[str]:
+        return self.job.company if self.job else None
+
+    @property
+    def job_role(self) -> Optional[str]:
+        return self.job.role if self.job else None
+
 
 # --- Pydantic Schemas ---
 
@@ -138,6 +146,8 @@ class ApplicationUpdate(BaseModel):
 
 class ApplicationRead(ApplicationBase):
     id: str
+    job_company: Optional[str] = None
+    job_role: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
