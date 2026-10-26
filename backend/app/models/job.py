@@ -9,6 +9,8 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.account import Account
+    from app.models.application import Application
+    from app.models.cv_template import AccountCvVersion
 
 
 class Job(Base):
@@ -152,6 +154,15 @@ class Job(Base):
     account: Mapped["Account"] = relationship(
         "Account",
         back_populates="jobs",
+    )
+    applications: Mapped[list["Application"]] = relationship(
+        "Application",
+        back_populates="job",
+        cascade="all, delete-orphan",
+    )
+    cv_versions: Mapped[list["AccountCvVersion"]] = relationship(
+        "AccountCvVersion",
+        back_populates="job",
     )
 
 

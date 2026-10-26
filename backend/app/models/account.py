@@ -8,7 +8,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.application import Application
+    from app.models.cv_template import AccountCvVersion, CvTemplate
     from app.models.job import Job
+    from app.models.llm_provider import LLMProviderConfig
+    from app.models.subscription import Entitlement
 
 
 class Account(Base):
@@ -56,6 +60,32 @@ class Account(Base):
     # Relationships
     jobs: Mapped[List["Job"]] = relationship(
         "Job",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    cv_templates: Mapped[List["CvTemplate"]] = relationship(
+        "CvTemplate",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    cv_versions: Mapped[List["AccountCvVersion"]] = relationship(
+        "AccountCvVersion",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    applications: Mapped[List["Application"]] = relationship(
+        "Application",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    entitlement: Mapped[Optional["Entitlement"]] = relationship(
+        "Entitlement",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    llm_providers: Mapped[List["LLMProviderConfig"]] = relationship(
+        "LLMProviderConfig",
         back_populates="account",
         cascade="all, delete-orphan",
     )

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.api.jobs import router as jobs_router
 from app.db.base import Base
+from app.db.seed import seed_initial_data
 from app.db.session import get_engine
 
 
@@ -10,6 +11,7 @@ from app.db.session import get_engine
 async def lifespan(app: FastAPI):
     # Ensure database tables exist on startup
     Base.metadata.create_all(bind=get_engine())
+    seed_initial_data()
     yield
 
 

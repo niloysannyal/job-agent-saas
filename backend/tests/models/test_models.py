@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 import pytest
 from sqlalchemy import create_engine
@@ -5,12 +6,33 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.models.account import Account, AccountCreate
+from app.models.application import (
+    Application,
+    ApplicationCreate,
+    ApplicationRead,
+)
+from app.models.cv_template import (
+    AccountCvVersion,
+    AccountCvVersionCreate,
+    CvTemplate,
+    CvTemplateCreate,
+)
 from app.models.job import Job, JobPosting
+from app.models.llm_provider import (
+    LLMProviderConfig,
+    LLMProviderCreate,
+)
+from app.models.subscription import (
+    Entitlement,
+    EntitlementCreate,
+    SubscriptionPlan,
+    SubscriptionPlanCreate,
+)
 
 
 @pytest.fixture
 def db_session():
-    """In-memory SQLite session for testing models."""
+    """In-memory SQLite session with all multi-tenant tables for testing models."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     with Session(engine) as session:
@@ -90,8 +112,210 @@ def test_job_model_matching_architecture_spec(db_session: Session):
     assert account.jobs[0].id == job.id
 
 
+def test_cv_template_and_version_models(db_session: Session):
+    """Test CvTemplate and AccountCvVersion models matching ARCHITECTURE.md §5 & §7."""
+    account = Account(email="niloy@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    # Admin global template (account_id = None)
+    admin_template = CvTemplate(
+        account_id=None,
+        name="01_MASTER_CV",
+        description="Default single-page LaTeX template with tagged control blocks",
+        latex_source="\\documentclass{article}\\begin{document}Hello\\end{document}",
+        is_admin_default=True,
+    )
+    db_session.add(admin_template)
+    db_session.commit()
+    db_session.refresh(admin_template)
+
+    assert admin_template.id is not None
+    assert admin_template.account_id is None
+    assert admin_template.is_admin_default is True
+
+    # Tailored CV Version for a job
+    job = Job(
+        account_id=account.id,
+        company="Anthropic",
+        role="Research Engineer",
+        apply_link="https://anthropic.com/careers/1",
+        source="direct",
+    )
+    db_session.add(job)
+    db_session.commit()
+
+    cv_version = AccountCvVersion(
+        account_id=account.id,
+        job_id=job.id,
+        cv_template_id=admin_template.id,
+        tailored_latex="\\documentclass{article}\\begin{document}Tailored for Anthropic\\end{document}",
+        ats_score=0.88,
+        page_count=1,
+        cut_summary={"cut_lines": 3, "strategy": "relevance_weighted"},
+        status="compiled",
+    )
+    db_session.add(cv_version)
+    db_session.commit()
+    db_session.refresh(cv_version)
+
+    assert cv_version.id is not None
+    assert cv_version.account_id == account.id
+    assert cv_version.job_id == job.id
+    assert cv_version.ats_score == 0.88
+    assert cv_version.page_count == 1
+    assert cv_version.cut_summary["cut_lines"] == 3
+    assert cv_version.template.name == "01_MASTER_CV"
+
+
+def test_application_model_and_human_in_the_loop_gate(db_session: Session):
+    """Test Application model matching ARCHITECTURE.md §3, §6 & §7."""
+    account = Account(email="niloy@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    job = Job(
+        account_id=account.id,
+        company="DeepMind",
+        role="Staff Research Engineer",
+        apply_link="https://deepmind.google/careers/1",
+        source="greenhouse",
+    )
+    db_session.add(job)
+    db_session.commit()
+
+    app = Application(
+        account_id=account.id,
+        job_id=job.id,
+        channel="email",
+        draft_content="Dear Hiring Team, I am excited to apply...",
+        status="draft",
+        sent_at=None,  # Not sent yet — strictly adheres to human-in-the-loop gate
+        follow_up_count=0,
+    )
+    db_session.add(app)
+    db_session.commit()
+    db_session.refresh(app)
+
+    assert app.id is not None
+    assert app.sent_at is None
+    assert app.status == "draft"
+    assert app.follow_up_count == 0
+    assert app.job.company == "DeepMind"
+    assert app.account.email == "niloy@example.com"
+
+    # Human reviews and triggers Send
+    now = datetime.now(timezone.utc)
+    app.sent_at = now
+    app.status = "sent"
+    db_session.commit()
+    db_session.refresh(app)
+
+    assert app.sent_at is not None
+    assert app.status == "sent"
+
+
+def test_subscription_plans_and_entitlements(db_session: Session):
+    """Test SubscriptionPlan and Entitlement models matching ARCHITECTURE.md §0 & §7."""
+    plan = SubscriptionPlan(
+        name="Free Tier",
+        tier="free",
+        price_cents=0,
+        currency="USD",
+        interval="month",
+        features={"max_applications": 50, "custom_templates": True},
+    )
+    db_session.add(plan)
+    db_session.commit()
+    db_session.refresh(plan)
+
+    assert plan.id is not None
+    assert plan.tier == "free"
+    assert plan.price_cents == 0
+
+    account = Account(email="niloy@example.com", plan_tier="free")
+    db_session.add(account)
+    db_session.commit()
+
+    # Default all-access entitlement per ARCHITECTURE.md §7
+    entitlement = Entitlement(
+        account_id=account.id,
+        plan_tier="free",
+        all_access=True,
+        max_active_applications=None,
+        custom_templates_allowed=True,
+        max_cv_versions=20,
+    )
+    db_session.add(entitlement)
+    db_session.commit()
+    db_session.refresh(entitlement)
+
+    assert entitlement.id is not None
+    assert entitlement.all_access is True
+    assert entitlement.account_id == account.id
+    assert account.entitlement.all_access is True
+
+
+def test_llm_provider_config_model(db_session: Session):
+    """Test LLMProviderConfig model matching ARCHITECTURE.md §11 (admin-configurable provider table)."""
+    # System default primary OpenAI provider
+    openai_prov = LLMProviderConfig(
+        account_id=None,
+        provider="openai",
+        model_name="gpt-4o-mini",
+        encrypted_api_key="enc:testkey123",
+        is_active=True,
+        priority=1,
+        config={"temperature": 0.2, "max_tokens": 4096},
+    )
+    # Secondary fallback Claude provider
+    claude_prov = LLMProviderConfig(
+        account_id=None,
+        provider="anthropic",
+        model_name="claude-3-5-sonnet",
+        encrypted_api_key="enc:claudekey456",
+        is_active=True,
+        priority=2,
+    )
+    db_session.add_all([openai_prov, claude_prov])
+    db_session.commit()
+
+    providers = db_session.query(LLMProviderConfig).order_by(LLMProviderConfig.priority).all()
+    assert len(providers) == 2
+    assert providers[0].provider == "openai"
+    assert providers[0].priority == 1
+    assert providers[1].provider == "anthropic"
+    assert providers[1].priority == 2
+
+
+def test_multi_tenant_cascade_deletes(db_session: Session):
+    """Verify that deleting an account cascades to all tenant-scoped rows."""
+    account = Account(email="tenant@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    job = Job(account_id=account.id, company="Co", role="Role", apply_link="http://co.com", source="direct")
+    template = CvTemplate(account_id=account.id, name="Custom", latex_source="...")
+    entitlement = Entitlement(account_id=account.id, plan_tier="free")
+    db_session.add_all([job, template, entitlement])
+    db_session.commit()
+
+    app = Application(account_id=account.id, job_id=job.id, channel="email")
+    db_session.add(app)
+    db_session.commit()
+
+    # Delete account
+    db_session.delete(account)
+    db_session.commit()
+
+    assert db_session.query(Job).filter_by(account_id=account.id).count() == 0
+    assert db_session.query(Application).filter_by(account_id=account.id).count() == 0
+    assert db_session.query(CvTemplate).filter_by(account_id=account.id).count() == 0
+    assert db_session.query(Entitlement).filter_by(account_id=account.id).count() == 0
+
+
 def test_pydantic_schemas():
-    """Verify Pydantic schemas serialize and validate correctly."""
+    """Verify Pydantic schemas serialize and validate correctly across all models."""
     acc_in = AccountCreate(email="test@user.com", plan_tier="free")
     assert acc_in.email == "test@user.com"
     assert acc_in.plan_tier == "free"
@@ -107,3 +331,61 @@ def test_pydantic_schemas():
     assert posting.id == "adzuna:999"
     assert posting.source == "adzuna"
     assert posting.company == "DeepMind"
+
+    app_in = ApplicationCreate(
+        account_id=str(uuid.uuid4()),
+        job_id=str(uuid.uuid4()),
+        channel="email",
+        draft_content="Cover letter draft",
+    )
+    assert app_in.status == "draft"
+    assert app_in.channel == "email"
+
+    tmpl_in = CvTemplateCreate(
+        name="Academic",
+        latex_source="\\documentclass{article}",
+        is_admin_default=False,
+    )
+    assert tmpl_in.name == "Academic"
+
+    sub_in = SubscriptionPlanCreate(name="Pro", tier="pro", price_cents=2900)
+    assert sub_in.price_cents == 2900
+
+    ent_in = EntitlementCreate(account_id=str(uuid.uuid4()), plan_tier="pro", all_access=True)
+    assert ent_in.all_access is True
+
+    llm_in = LLMProviderCreate(provider="openai", model_name="gpt-4o")
+    assert llm_in.provider == "openai"
+
+
+def test_seed_initial_data(db_session: Session):
+    """Test seed_initial_data populates default templates, plans, entitlements, and providers."""
+    from app.db.seed import seed_initial_data
+
+    seed_initial_data(session=db_session)
+
+    # 1. Tenant #1
+    account = db_session.query(Account).filter_by(email="niloy@example.com").first()
+    assert account is not None
+
+    # 2. 01_MASTER_CV template
+    template = db_session.query(CvTemplate).filter_by(name="01_MASTER_CV").first()
+    assert template is not None
+    assert template.is_admin_default is True
+    assert template.account_id is None
+
+    # 3. Subscription plan
+    plan = db_session.query(SubscriptionPlan).filter_by(tier="free").first()
+    assert plan is not None
+
+    # 4. Entitlements
+    entitlement = db_session.query(Entitlement).filter_by(account_id=account.id).first()
+    assert entitlement is not None
+    assert entitlement.all_access is True
+
+    # 5. LLM Provider
+    provider = db_session.query(LLMProviderConfig).filter_by(provider="openai").first()
+    assert provider is not None
+    assert provider.priority == 1
+    assert provider.model_name == "gpt-4o-mini"
+

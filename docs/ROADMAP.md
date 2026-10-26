@@ -11,8 +11,9 @@ Goal: Find → Apply → Monitor working end-to-end for one account (Niloy), on 
 multi-tenant schema, with no shortcuts that would need rearchitecting later.
 
 **Find (build first, validate before moving on):**
-- [ ] Multi-tenant schema live (`accounts`, `jobs`, `applications`, `cv_templates`,
-      `subscription_plans`/`entitlements` — unused but present)
+- [x] Multi-tenant schema live (`accounts`, `jobs`, `applications`, `cv_templates`,
+      `account_cv_versions`, `subscription_plans`/`entitlements`, `llm_providers`)
+      — initialized via Alembic migration and seeded with initial defaults (built 2026-10-26)
 - [x] Adzuna + Remotive + RemoteOK API integration behind the `JobSource` interface
 - [x] freehire.me API integration — built 2026-10-19, but Niloy-only per its ToS
       (ARCHITECTURE.md §4, Layer 1b) until a paid plan or self-hosted instance
@@ -48,7 +49,7 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [ ] Queue UI view (frontend table showing company, role, match score, and apply link)
 
 **Apply (build second):**
-- [ ] CV template gallery (seed with `01_MASTER_CV.tex` as template #1)
+- [x] CV template gallery (seeded with `01_MASTER_CV.tex` as admin default template #1)
 - [ ] CV tailoring pipeline (LLM interface behind the provider-abstraction layer,
       OpenAI as the only implementation for now)
 - [ ] Draft generation per channel (mail / form answers / DM)
