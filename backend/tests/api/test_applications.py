@@ -148,3 +148,128 @@ def test_applications_multi_tenant_isolation(client: TestClient, api_test_db: Se
     # Account B tries to trigger Send on Account A's application
     b_send = client.post(f"/api/v1/applications/{app_id_a}/send?account_id={acc_b.id}")
     assert b_send.status_code == 404
+
+
+def test_monitor_summary_view(client: TestClient, api_test_db: Session):
+    """
+    Test Module 3 (Monitor): Aggregated status summary view across all pipeline stages.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    account = Account(email="monitor_test@example.com")
+    api_test_db.add(account)
+    api_test_db.commit()
+
+    now = datetime.now(timezone.utc)
+    job = Job(account_id=account.id, company="Google", role="Staff Eng", apply_link="http://g.co", source="direct")
+    api_test_db.add(job)
+    api_test_db.commit()
+
+    from app.models.application import Application
+
+    # 1 draft, 1 sent (due in future), 1 sent (follow_up_due in past), 1 interview
+    app1 = Application(account_id=account.id, job_id=job.id, status="draft")
+    app2 = Application(account_id=account.id, job_id=job.id, status="sent", sent_at=now, follow_up_due=now + timedelta(days=5), follow_up_count=0)
+    app3 = Application(account_id=account.id, job_id=job.id, status="sent", sent_at=now - timedelta(days=12), follow_up_due=now - timedelta(days=2), follow_up_count=0)
+    app4 = Application(account_id=account.id, job_id=job.id, status="interview", sent_at=now)
+
+    api_test_db.add_all([app1, app2, app3, app4])
+    api_test_db.commit()
+
+    res = client.get(f"/api/v1/applications/monitor/summary?account_id={account.id}")
+    assert res.status_code == 200
+    summary = res.json()
+
+    assert summary["total"] == 4
+    assert summary["draft"] == 1
+    assert summary["sent"] == 2
+    assert summary["follow_ups_due"] == 1
+    assert summary["interview"] == 1
+
+
+def test_follow_up_draft_and_cap_enforcement(client: TestClient, api_test_db: Session):
+    """
+    Test Module 3: Follow-up drafting and strict cap of 2 per application (ARCHITECTURE.md §6).
+    """
+    account = Account(email="followup_test@example.com")
+    api_test_db.add(account)
+    api_test_db.commit()
+
+    job = Job(account_id=account.id, company="Amazon", role="AI SDE", apply_link="http://amazon.jobs", source="direct")
+    api_test_db.add(job)
+    api_test_db.commit()
+
+    from app.models.application import Application
+
+    app = Application(
+        account_id=account.id,
+        job_id=job.id,
+        status="sent",
+        follow_up_count=0,
+        draft_content="Submitted cover letter mentioning Betopia Sales Agent.",
+    )
+    api_test_db.add(app)
+    api_test_db.commit()
+
+    # Draft 1st follow-up
+    res1 = client.post(f"/api/v1/applications/{app.id}/follow-up/draft?account_id={account.id}")
+    assert res1.status_code == 200
+    d1 = res1.json()
+    assert d1["follow_up_number"] == 1
+    assert d1["cap_reached"] is False
+
+    # Send 1st follow-up
+    send1 = client.post(f"/api/v1/applications/{app.id}/follow-up/send?account_id={account.id}")
+    assert send1.status_code == 200
+    assert send1.json()["follow_up_count"] == 1
+
+    # Draft 2nd follow-up
+    res2 = client.post(f"/api/v1/applications/{app.id}/follow-up/draft?account_id={account.id}")
+    assert res2.status_code == 200
+    d2 = res2.json()
+    assert d2["follow_up_number"] == 2
+    assert d2["cap_reached"] is True
+
+    # Send 2nd follow-up
+    send2 = client.post(f"/api/v1/applications/{app.id}/follow-up/send?account_id={account.id}")
+    assert send2.status_code == 200
+    assert send2.json()["follow_up_count"] == 2
+    assert send2.json()["follow_up_due"] is None  # Cap reached, no more due dates
+
+    # Attempt 3rd follow-up draft: MUST BE REJECTED WITH 400
+    res3 = client.post(f"/api/v1/applications/{app.id}/follow-up/draft?account_id={account.id}")
+    assert res3.status_code == 400
+    assert "Maximum follow-up cap of 2 reached" in res3.json()["detail"]
+
+
+def test_application_status_update(client: TestClient, api_test_db: Session):
+    """
+    Test status progression: draft -> sent -> interview -> offer.
+    """
+    account = Account(email="status_test@example.com")
+    api_test_db.add(account)
+    api_test_db.commit()
+
+    job = Job(account_id=account.id, company="Meta", role="Research Scientist", apply_link="http://meta.com", source="direct")
+    api_test_db.add(job)
+    api_test_db.commit()
+
+    from app.models.application import Application
+    app = Application(account_id=account.id, job_id=job.id, status="sent")
+    api_test_db.add(app)
+    api_test_db.commit()
+
+    # Move to interview
+    patch_res = client.patch(
+        f"/api/v1/applications/{app.id}/status?account_id={account.id}",
+        json={"status": "interview", "notes": "Technical screen scheduled with hiring manager."},
+    )
+    assert patch_res.status_code == 200
+    updated = patch_res.json()
+    assert updated["status"] == "interview"
+    assert "Technical screen" in updated["notes"]
+
+    # Verify Job row is synced
+    api_test_db.refresh(job)
+    assert job.status == "interviewing"
+

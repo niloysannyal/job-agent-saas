@@ -134,6 +134,19 @@ class Job(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+    # Application & follow-up tracking per ARCHITECTURE.md §6
+    applied_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    follow_up_due: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    notes: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -232,6 +245,9 @@ class JobBase(BaseModel):
     source: str
     source_job_id: Optional[str] = None
     apply_link: str
+    applied_at: Optional[datetime] = None
+    follow_up_due: Optional[datetime] = None
+    notes: Optional[str] = None
 
 
 class JobCreate(JobBase):
@@ -262,6 +278,9 @@ class JobUpdate(BaseModel):
     source: Optional[str] = None
     source_job_id: Optional[str] = None
     apply_link: Optional[str] = None
+    applied_at: Optional[datetime] = None
+    follow_up_due: Optional[datetime] = None
+    notes: Optional[str] = None
     raw_data: Optional[Dict[str, Any]] = None
 
 
