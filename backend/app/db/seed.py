@@ -6,7 +6,15 @@ from app.core.config import settings
 from app.db.session import get_session_factory
 from app.models.account import Account
 from app.models.cv_template import CvTemplate
+from app.models.interview import StarStory
 from app.models.llm_provider import LLMProviderConfig
+from app.models.profile import (
+    CompensationExpectation,
+    SpokenLanguage,
+    TargetDesignation,
+    TargetLocation,
+    UserProfile,
+)
 from app.models.subscription import Entitlement, SubscriptionPlan
 
 logger = logging.getLogger(__name__)
@@ -20,6 +28,9 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
     3. Default subscription plan (free tier).
     4. Default entitlement (all-access for Phase 0/1).
     5. Admin-configurable LLM provider config (OpenAI primary).
+    6. Niloy's user profile (basic info, narrative, preferences).
+    7. Target designations, locations, compensation, spoken languages.
+    8. STAR interview stories (verified production stories from USER_PROFILE.md).
     """
     close_session = False
     if session is None:
@@ -102,6 +113,200 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
             )
             session.add(openai_provider)
             logger.info("Seeded default LLM provider: OpenAI (gpt-4o-mini, priority=1)")
+
+        # 6. Niloy's user profile
+        profile = session.query(UserProfile).filter_by(account_id=account.id).first()
+        if not profile:
+            profile = UserProfile(
+                account_id=account.id,
+                full_name="Niloy Sannyal",
+                current_role="AI Engineer",
+                current_company="Betopia Limited",
+                education="B.Sc. in Information and Communication Engineering, University of Rajshahi",
+                location_city="Dhaka",
+                location_country="Bangladesh",
+                core_narrative=(
+                    "Niloy builds real AI systems, integrates them with business software, "
+                    "deploys them, and takes responsibility for keeping them working."
+                ),
+                primary_identity=(
+                    "AI/ML Engineer focused on production AI systems — Agentic AI, LLM "
+                    "applications, RAG, backend/API engineering, MLOps, applied ML — not "
+                    "someone who only experiments with models."
+                ),
+                one_liner=(
+                    "AI/ML Engineer building and deploying scalable AI-powered systems "
+                    "using Python, FastAPI, LLMs, RAG, Agentic AI, and MLOps."
+                ),
+                engineering_principle=(
+                    "The model is only one component — a useful AI product needs data, "
+                    "retrieval, state, orchestration, APIs, infrastructure, monitoring, "
+                    "and a reliable user workflow around the model."
+                ),
+                avoid_phrases=(
+                    "passionate AI enthusiast, generic claims with no engineering evidence, "
+                    "keyword stuffing, fabricated technologies, inflated metrics, fake leadership claims"
+                ),
+                working_style=(
+                    "Hands-on, curious, self-directed, comfortable taking ownership, "
+                    "execution-oriented; learns by building and debugging real systems "
+                    "rather than staying theoretical."
+                ),
+                leadership_example=(
+                    "Led the Betopia Sales Agent largely solo, covering requirement gathering, "
+                    "visiting SBUs and talking to salespeople, knowledge collection, AI/RAG "
+                    "development, agent development, UI/backend integration, CEO-level updates, "
+                    "salesperson reviews, deployment, CI/CD, monitoring, Odoo integration, "
+                    "and production debugging."
+                ),
+                dealbreakers="generic/low-substance roles that don't involve real production systems",
+                reason_for_leaving=(
+                    "Looking for a role with broader ownership and scale, ideally one that "
+                    "also moves my trajectory toward robotics/physical AI."
+                ),
+                tone_preferences=(
+                    "Direct, technically precise, no corporate fluff, no excessive motivational "
+                    "language. Concise and credible; avoid exaggerated claims and buzzwords. "
+                    "Every statement must be defensible if asked about in an interview."
+                ),
+                master_cv_latex=cv_source,
+            )
+            session.add(profile)
+            session.flush()
+            logger.info(f"Seeded user profile for {profile.full_name}")
+
+            # 7a. Target Designations (from USER_PROFILE.md §"Target roles")
+            designations = [
+                ("AI Engineering", 0),
+                ("Machine Learning Engineering", 1),
+                ("Generative AI", 2),
+                ("LLM Engineering", 3),
+                ("Agentic AI", 4),
+                ("Applied AI", 5),
+                ("Computer Vision", 6),
+                ("AI Backend Engineering", 7),
+                ("MLOps/AI Infrastructure", 8),
+                ("Production AI Systems", 9),
+                ("Robotics/Robotic AI", 10),
+            ]
+            for title, priority in designations:
+                session.add(TargetDesignation(
+                    account_id=account.id,
+                    profile_id=profile.id,
+                    title=title,
+                    priority=priority,
+                    is_active=True,
+                ))
+            logger.info(f"Seeded {len(designations)} target designations")
+
+            # 7b. Target Locations (from USER_PROFILE.md §"Target locations")
+            locations = [
+                ("EU (any)", "any", True),
+                ("Dhaka, Bangladesh", "onsite", False),
+            ]
+            for name, loc_type, relocation in locations:
+                session.add(TargetLocation(
+                    account_id=account.id,
+                    profile_id=profile.id,
+                    location_name=name,
+                    location_type=loc_type,
+                    relocation_willing=relocation,
+                    is_active=True,
+                ))
+            logger.info(f"Seeded {len(locations)} target locations")
+
+            # 7c. Compensation (placeholder — marked sensitive, user must fill in)
+            session.add(CompensationExpectation(
+                account_id=account.id,
+                profile_id=profile.id,
+                min_salary=None,
+                max_salary=None,
+                currency="USD",
+                period="yearly",
+                is_negotiable=True,
+                is_sensitive=True,
+            ))
+            logger.info("Seeded compensation expectation (placeholder)")
+
+            # 7d. Spoken Languages
+            languages = [
+                ("English", "fluent"),
+                ("Bengali", "native"),
+            ]
+            for lang, prof in languages:
+                session.add(SpokenLanguage(
+                    account_id=account.id,
+                    profile_id=profile.id,
+                    language=lang,
+                    proficiency=prof,
+                ))
+            logger.info(f"Seeded {len(languages)} spoken languages")
+
+        # 8. STAR Interview Stories (from USER_PROFILE.md §"Interview story bank")
+        existing_stories = session.query(StarStory).filter_by(account_id=account.id).count()
+        if existing_stories == 0:
+            stories = [
+                StarStory(
+                    account_id=account.id,
+                    title="Betopia Sales Agent — end-to-end ownership",
+                    situation=(
+                        "Betopia needed a production AI sales assistant embedded in Odoo CRM, "
+                        "with no existing team or infrastructure for it."
+                    ),
+                    action=(
+                        "Owned the project solo end-to-end — requirement gathering, visiting SBUs and "
+                        "salespeople, collecting won/lost cases and objection-handling knowledge, building "
+                        "the RAG/LLM pipeline, multi-provider routing with failover, the agent itself, "
+                        "backend and admin frontend, CI/CD, deployment, and ongoing production operation."
+                    ),
+                    result="Production system used by 700+ salespersons across Betopia Group.",
+                    good_for_tags="ownership, ambiguity, end-to-end execution, working solo",
+                    company="Betopia Limited",
+                    role="AI Engineer",
+                    is_verified=True,
+                    sort_order=0,
+                ),
+                StarStory(
+                    account_id=account.id,
+                    title="Self-onboarding onto an unfamiliar stack",
+                    situation=(
+                        "The Sales Agent required Odoo, Redis, Qdrant, and Next.js — none used "
+                        "hands-on before."
+                    ),
+                    action=(
+                        "Learned and integrated all four directly inside a live production build, "
+                        "rather than deferring the project or staying in familiar tools."
+                    ),
+                    result="All four are now core, reliable parts of the production system.",
+                    good_for_tags="learning speed, adaptability, comfort with the unfamiliar",
+                    company="Betopia Limited",
+                    role="AI Engineer",
+                    is_verified=True,
+                    sort_order=1,
+                ),
+                StarStory(
+                    account_id=account.id,
+                    title="Vision/document information extraction",
+                    situation=(
+                        "The Sales Agent needed to read Fiverr inbox screenshots, PDFs, and other "
+                        "documents and extract structured information reliably."
+                    ),
+                    action=(
+                        "Evaluated vision-capable models (including self-hosted options) for extraction "
+                        "accuracy, structured output, and cost/latency trade-offs, and built the "
+                        "extraction pipeline into the agent."
+                    ),
+                    result="Working document/image understanding inside the production agent.",
+                    good_for_tags="multimodal AI, practical model evaluation, production trade-offs",
+                    company="Betopia Limited",
+                    role="AI Engineer",
+                    is_verified=True,
+                    sort_order=2,
+                ),
+            ]
+            for story in stories:
+                session.add(story)
+            logger.info(f"Seeded {len(stories)} STAR interview stories")
 
         session.commit()
     except Exception as e:

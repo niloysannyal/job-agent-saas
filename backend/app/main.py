@@ -3,7 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.applications import router as applications_router
+from app.api.interview import router as interview_router
 from app.api.jobs import router as jobs_router
+from app.api.profile import router as profile_router
 from app.db.base import Base
 from app.db.seed import seed_initial_data
 from app.db.session import get_engine
@@ -41,6 +43,8 @@ def create_app() -> FastAPI:
     # Register API v1 prefix routes
     app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
     app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(profile_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(interview_router, prefix=settings.API_V1_PREFIX)
 
     return app
 

@@ -65,6 +65,42 @@ export default function App() {
   // Materials Inspection Modal
   const [viewingAppMaterials, setViewingAppMaterials] = useState(null);
 
+  // Profile & Narrative State
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({});
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [newDesignationTitle, setNewDesignationTitle] = useState('');
+  const [newLocationName, setNewLocationName] = useState('');
+  const [newLocationType, setNewLocationType] = useState('remote');
+  const [newRelocationWilling, setNewRelocationWilling] = useState(false);
+  const [compMin, setCompMin] = useState('');
+  const [compMax, setCompMax] = useState('');
+  const [compCurrency, setCompCurrency] = useState('USD');
+  const [compPeriod, setCompPeriod] = useState('yearly');
+  const [compNegotiable, setCompNegotiable] = useState(true);
+  const [newLanguageName, setNewLanguageName] = useState('');
+  const [newLanguageProficiency, setNewLanguageProficiency] = useState('Fluent');
+
+  // STAR Interview Coach State
+  const [stories, setStories] = useState([]);
+  const [loadingStories, setLoadingStories] = useState(false);
+  const [interviewTags, setInterviewTags] = useState([]);
+  const [selectedTag, setSelectedTag] = useState('');
+  const [verifiedStoriesOnly, setVerifiedStoriesOnly] = useState(false);
+  const [interviewSearch, setInterviewSearch] = useState('');
+  const [showAddStoryModal, setShowAddStoryModal] = useState(false);
+  const [newStory, setNewStory] = useState({
+    title: '',
+    company: '',
+    role: '',
+    situation: '',
+    action: '',
+    result: '',
+    good_for_tags: '',
+    is_verified: true,
+  });
+
   // Toast Helper
   const showToast = (msg, duration = 4000) => {
     setToastMessage(msg);
@@ -94,9 +130,306 @@ export default function App() {
     }
   };
 
+  // Fetch User Profile
+  const fetchProfile = async () => {
+    try {
+      setLoadingProfile(true);
+      const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+        if (data) {
+          setProfileForm({
+            full_name: data.full_name || '',
+            current_role: data.current_role || '',
+            current_company: data.current_company || '',
+            education: data.education || '',
+            location_city: data.location_city || '',
+            location_country: data.location_country || '',
+            portfolio_url: data.portfolio_url || '',
+            linkedin_url: data.linkedin_url || '',
+            github_url: data.github_url || '',
+            primary_identity: data.primary_identity || '',
+            core_narrative: data.core_narrative || '',
+            one_liner: data.one_liner || '',
+            engineering_principle: data.engineering_principle || '',
+            avoid_phrases: data.avoid_phrases || '',
+            working_style: data.working_style || '',
+            leadership_example: data.leadership_example || '',
+            dealbreakers: data.dealbreakers || '',
+            notice_period: data.notice_period || '',
+            visa_needs: data.visa_needs || '',
+            tone_preferences: data.tone_preferences || '',
+          });
+          if (data.compensation) {
+            setCompMin(data.compensation.min_salary != null ? String(data.compensation.min_salary) : '');
+            setCompMax(data.compensation.max_salary != null ? String(data.compensation.max_salary) : '');
+            setCompCurrency(data.compensation.currency || 'USD');
+            setCompPeriod(data.compensation.period || 'yearly');
+            setCompNegotiable(data.compensation.is_negotiable ?? true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  // Save Profile Updates
+  const handleSaveProfile = async (e) => {
+    e?.preventDefault();
+    try {
+      setIsSavingProfile(true);
+      const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm),
+      });
+      if (!res.ok) throw new Error('Failed to save profile');
+      showToast('Profile & Narrative grounding updated successfully!');
+      fetchProfile();
+    } catch (err) {
+      showToast('Failed to save profile changes.', 5000);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  // Target Designation Handlers
+  const handleAddDesignation = async (e) => {
+    e.preventDefault();
+    if (!newDesignationTitle.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/profile/designations?account_id=${accountId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newDesignationTitle.trim(),
+          priority: profile?.target_designations?.length || 0,
+        }),
+      });
+      if (res.ok) {
+        setNewDesignationTitle('');
+        showToast('Target designation added');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to add designation');
+    }
+  };
+
+  const handleDeleteDesignation = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/profile/designations/${id}?account_id=${accountId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showToast('Target designation removed');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to remove designation');
+    }
+  };
+
+  // Target Location Handlers
+  const handleAddLocation = async (e) => {
+    e.preventDefault();
+    if (!newLocationName.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/profile/locations?account_id=${accountId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location_name: newLocationName.trim(),
+          location_type: newLocationType,
+          relocation_willing: newRelocationWilling,
+        }),
+      });
+      if (res.ok) {
+        setNewLocationName('');
+        showToast('Target location added');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to add location');
+    }
+  };
+
+  const handleDeleteLocation = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/profile/locations/${id}?account_id=${accountId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showToast('Target location removed');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to remove location');
+    }
+  };
+
+  // Compensation Expectation Handler
+  const handleSaveCompensation = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/profile/compensation?account_id=${accountId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          min_salary: compMin ? parseFloat(compMin) : null,
+          max_salary: compMax ? parseFloat(compMax) : null,
+          currency: compCurrency,
+          period: compPeriod,
+          is_negotiable: compNegotiable,
+          is_sensitive: true,
+        }),
+      });
+      if (res.ok) {
+        showToast('Compensation expectations saved (marked sensitive)');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to save compensation');
+    }
+  };
+
+  // Spoken Language Handlers
+  const handleAddLanguage = async (e) => {
+    e.preventDefault();
+    if (!newLanguageName.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/profile/languages?account_id=${accountId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: newLanguageName.trim(),
+          proficiency: newLanguageProficiency.trim(),
+        }),
+      });
+      if (res.ok) {
+        setNewLanguageName('');
+        showToast('Language added');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to add language');
+    }
+  };
+
+  const handleDeleteLanguage = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/profile/languages/${id}?account_id=${accountId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showToast('Language removed');
+        fetchProfile();
+      }
+    } catch (err) {
+      showToast('Failed to remove language');
+    }
+  };
+
+  // STAR Interview Coach Handlers
+  const fetchInterviewData = async () => {
+    try {
+      setLoadingStories(true);
+      const params = new URLSearchParams({ account_id: accountId });
+      if (selectedTag) params.append('tag', selectedTag);
+      if (verifiedStoriesOnly) params.append('verified_only', 'true');
+
+      const [storiesRes, tagsRes] = await Promise.all([
+        fetch(`${API_BASE}/interview/stories?${params.toString()}`),
+        fetch(`${API_BASE}/interview/tags?account_id=${accountId}`),
+      ]);
+      if (storiesRes.ok) {
+        const storiesData = await storiesRes.json();
+        setStories(Array.isArray(storiesData) ? storiesData : []);
+      }
+      if (tagsRes.ok) {
+        const tagsData = await tagsRes.json();
+        setInterviewTags(Array.isArray(tagsData) ? tagsData : []);
+      }
+    } catch (err) {
+      console.error('Failed to load interview stories:', err);
+    } finally {
+      setLoadingStories(false);
+    }
+  };
+
+  const handleToggleStoryVerified = async (story) => {
+    try {
+      const res = await fetch(`${API_BASE}/interview/stories/${story.id}?account_id=${accountId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_verified: !story.is_verified }),
+      });
+      if (res.ok) {
+        showToast(story.is_verified ? 'Story unverified' : 'Story marked as verified ✓');
+        fetchInterviewData();
+      }
+    } catch (err) {
+      showToast('Failed to toggle verification status');
+    }
+  };
+
+  const handleDeleteStory = async (storyId) => {
+    if (!confirm('Are you sure you want to remove this STAR story?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/interview/stories/${storyId}?account_id=${accountId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        showToast('STAR story removed');
+        fetchInterviewData();
+      }
+    } catch (err) {
+      showToast('Failed to delete story');
+    }
+  };
+
+  const handleCreateStory = async (e) => {
+    e.preventDefault();
+    if (!newStory.title.trim() || !newStory.situation.trim() || !newStory.action.trim() || !newStory.result.trim()) {
+      showToast('Please fill in Title, Situation, Action, and Result.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/interview/stories?account_id=${accountId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStory),
+      });
+      if (res.ok) {
+        setShowAddStoryModal(false);
+        setNewStory({
+          title: '', company: '', role: '',
+          situation: '', action: '', result: '',
+          good_for_tags: '', is_verified: true,
+        });
+        showToast('STAR story saved to interview story bank!');
+        fetchInterviewData();
+      }
+    } catch (err) {
+      showToast('Failed to create STAR story');
+    }
+  };
+
   useEffect(() => {
     fetchMonitorData();
+    fetchProfile();
+    fetchInterviewData();
   }, [accountId]);
+
+  useEffect(() => {
+    if (currentView === 'interview') {
+      fetchInterviewData();
+    }
+  }, [selectedTag, verifiedStoriesOnly]);
 
   // Update Application Pipeline Status
   const handleUpdateStatus = async (appId, newStatus) => {
@@ -421,6 +754,21 @@ export default function App() {
     return list;
   }, [applications, monitorFilter, monitorSearch]);
 
+  const displayedStories = useMemo(() => {
+    let list = [...stories];
+    if (interviewSearch.trim()) {
+      const q = interviewSearch.toLowerCase();
+      list = list.filter(s =>
+        s.title.toLowerCase().includes(q) ||
+        s.situation.toLowerCase().includes(q) ||
+        s.action.toLowerCase().includes(q) ||
+        s.result.toLowerCase().includes(q) ||
+        (s.good_for_tags && s.good_for_tags.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [stories, interviewSearch]);
+
   return (
     <div className="app-container">
       {/* Header Area */}
@@ -471,6 +819,30 @@ export default function App() {
               ⏰ {monitorSummary.follow_ups_due} DUE
             </span>
           )}
+        </button>
+
+        <button
+          className={`nav-btn ${currentView === 'profile' ? 'active' : ''}`}
+          onClick={() => {
+            setCurrentView('profile');
+            fetchProfile();
+          }}
+          id="tab-profile-settings"
+        >
+          <span>🎯 Profile & Grounding</span>
+          <span className="nav-badge">{profile?.target_designations?.length || 0} Roles</span>
+        </button>
+
+        <button
+          className={`nav-btn ${currentView === 'interview' ? 'active' : ''}`}
+          onClick={() => {
+            setCurrentView('interview');
+            fetchInterviewData();
+          }}
+          id="tab-interview-coach"
+        >
+          <span>🎙️ STAR Interview Coach</span>
+          <span className="nav-badge">{stories.length} Stories</span>
         </button>
       </nav>
 
@@ -1082,6 +1454,619 @@ export default function App() {
     </div>
   )}
 
+      {/* VIEW 3: Profile & Positioning Settings */}
+      {currentView === 'profile' && (
+        <div className="profile-container" id="profile-view-section">
+          <div className="pipeline-controls" style={{ justifyContent: 'space-between' }}>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>
+                🎯 User Profile & Truth Grounding
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                All CV tailoring and outreach generation is grounded strictly on this data. No facts are ever hallucinated.
+              </p>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={handleSaveProfile}
+              disabled={isSavingProfile}
+              id="btn-save-profile"
+            >
+              {isSavingProfile ? 'Saving...' : '💾 Save Profile Changes'}
+            </button>
+          </div>
+
+          <div className="profile-grid">
+            {/* Left Column: Core Identity & Working Style */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">👤 Identity & Contact Info</div>
+                </div>
+
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={profileForm.full_name || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label>Current Role</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.current_role || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, current_role: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Current Company</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.current_company || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, current_company: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Education</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={profileForm.education || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, education: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label>City</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.location_city || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, location_city: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Country</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.location_country || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, location_country: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                  <div className="form-group">
+                    <label>Portfolio URL</label>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={profileForm.portfolio_url || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, portfolio_url: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>LinkedIn URL</label>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={profileForm.linkedin_url || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, linkedin_url: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>GitHub URL</label>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={profileForm.github_url || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, github_url: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Working Style & Search Preferences */}
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">⚙️ Working Style & Constraints</div>
+                </div>
+
+                <div className="form-group">
+                  <label>Working Style</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    value={profileForm.working_style || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, working_style: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Leadership Example</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    value={profileForm.leadership_example || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, leadership_example: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label>Notice Period</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.notice_period || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, notice_period: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Visa / Relocation Needs</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={profileForm.visa_needs || ''}
+                      onChange={(e) => setProfileForm({ ...profileForm, visa_needs: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Dealbreakers</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={profileForm.dealbreakers || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, dealbreakers: e.target.value })}
+                    placeholder="e.g. Non-engineering roles, gambling companies..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Tone & Style Preferences</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="2"
+                    value={profileForm.tone_preferences || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, tone_preferences: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Grounding Narrative & Criteria Managers */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">🧠 Positioning Narrative & Philosophy</div>
+                </div>
+
+                <div className="form-group">
+                  <label>Primary Identity</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="2"
+                    value={profileForm.primary_identity || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, primary_identity: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Core Narrative</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    value={profileForm.core_narrative || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, core_narrative: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>One-Liner</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={profileForm.one_liner || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, one_liner: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Engineering Principle</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    value={profileForm.engineering_principle || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, engineering_principle: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Avoid Phrases (Anti-Fluff Rubric)</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="2"
+                    value={profileForm.avoid_phrases || ''}
+                    onChange={(e) => setProfileForm({ ...profileForm, avoid_phrases: e.target.value })}
+                    placeholder="Banned buzzwords and inflated claims..."
+                  />
+                </div>
+              </div>
+
+              {/* Target Designations Manager */}
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">🎯 Target Designations ({profile?.target_designations?.length || 0})</div>
+                </div>
+                <div className="badge-list">
+                  {(profile?.target_designations || []).map((d) => (
+                    <span key={d.id} className="item-chip">
+                      <span>{d.title}</span>
+                      <button
+                        className="item-chip-remove"
+                        onClick={() => handleDeleteDesignation(d.id)}
+                        title="Remove role"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <form className="add-inline-form" onSubmit={handleAddDesignation}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    placeholder="Add target title (e.g. AI Engineer)..."
+                    value={newDesignationTitle}
+                    onChange={(e) => setNewDesignationTitle(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-secondary btn-sm">
+                    + Add Role
+                  </button>
+                </form>
+              </div>
+
+              {/* Target Locations Manager */}
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">🌍 Target Locations ({profile?.target_locations?.length || 0})</div>
+                </div>
+                <div className="badge-list">
+                  {(profile?.target_locations || []).map((l) => (
+                    <span key={l.id} className="item-chip">
+                      <span>{l.location_name} ({l.location_type})</span>
+                      <button
+                        className="item-chip-remove"
+                        onClick={() => handleDeleteLocation(l.id)}
+                        title="Remove location"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <form className="add-inline-form" onSubmit={handleAddLocation}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 2 }}
+                    placeholder="Location (e.g. EU Remote, London)..."
+                    value={newLocationName}
+                    onChange={(e) => setNewLocationName(e.target.value)}
+                  />
+                  <select
+                    className="form-select"
+                    style={{ flex: 1 }}
+                    value={newLocationType}
+                    onChange={(e) => setNewLocationType(e.target.value)}
+                  >
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="onsite">On-site</option>
+                    <option value="any">Any</option>
+                  </select>
+                  <button type="submit" className="btn btn-secondary btn-sm">
+                    + Add
+                  </button>
+                </form>
+              </div>
+
+              {/* Compensation Expectations */}
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">
+                    <span>💰 Compensation Expectations</span>
+                    <span style={{ fontSize: '11px', color: 'var(--amber-400)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                      🔒 Sensitive Data
+                    </span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                  Kept strictly confidential. Never disclosed in outbound applications without explicit confirmation.
+                </p>
+                <form onSubmit={handleSaveCompensation} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+                    <div className="form-group">
+                      <label>Min Salary</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={compMin}
+                        onChange={(e) => setCompMin(e.target.value)}
+                        placeholder="70000"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Max Salary</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={compMax}
+                        onChange={(e) => setCompMax(e.target.value)}
+                        placeholder="100000"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Currency</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={compCurrency}
+                        onChange={(e) => setCompCurrency(e.target.value)}
+                        placeholder="USD"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Period</label>
+                      <select
+                        className="form-select"
+                        value={compPeriod}
+                        onChange={(e) => setCompPeriod(e.target.value)}
+                      >
+                        <option value="yearly">Yearly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="hourly">Hourly</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer', color: '#cbd5e1' }}>
+                      <input
+                        type="checkbox"
+                        checked={compNegotiable}
+                        onChange={(e) => setCompNegotiable(e.target.checked)}
+                      />
+                      Negotiable based on equity or benefits
+                    </label>
+                    <button type="submit" className="btn btn-secondary btn-sm">
+                      Update Compensation
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Spoken Languages */}
+              <div className="settings-panel">
+                <div className="panel-header">
+                  <div className="panel-title">🗣️ Spoken Languages ({profile?.spoken_languages?.length || 0})</div>
+                </div>
+                <div className="badge-list">
+                  {(profile?.spoken_languages || []).map((lang) => (
+                    <span key={lang.id} className="item-chip">
+                      <span>{lang.language} ({lang.proficiency})</span>
+                      <button
+                        className="item-chip-remove"
+                        onClick={() => handleDeleteLanguage(lang.id)}
+                        title="Remove language"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <form className="add-inline-form" onSubmit={handleAddLanguage}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 2 }}
+                    placeholder="Language (e.g. German, French)..."
+                    value={newLanguageName}
+                    onChange={(e) => setNewLanguageName(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    placeholder="Proficiency..."
+                    value={newLanguageProficiency}
+                    onChange={(e) => setNewLanguageProficiency(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-secondary btn-sm">
+                    + Add
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 4: STAR Interview Coach */}
+      {currentView === 'interview' && (
+        <div className="interview-container" id="interview-view-section">
+          {/* Interview Filter & Action Bar */}
+          <div className="interview-filter-bar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div className="tag-cloud">
+                <button
+                  className={`tag-pill ${selectedTag === '' ? 'active' : ''}`}
+                  onClick={() => setSelectedTag('')}
+                >
+                  All Categories ({stories.length})
+                </button>
+                {interviewTags.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`tag-pill ${selectedTag === tag ? 'active' : ''}`}
+                    onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                type="text"
+                className="filter-search-input"
+                style={{ width: '220px' }}
+                placeholder="Search stories & results..."
+                value={interviewSearch}
+                onChange={(e) => setInterviewSearch(e.target.value)}
+              />
+              <label className="toggle-label" style={{ fontSize: '12px' }}>
+                <input
+                  type="checkbox"
+                  checked={verifiedStoriesOnly}
+                  onChange={(e) => setVerifiedStoriesOnly(e.target.checked)}
+                />
+                Verified Only
+              </label>
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowAddStoryModal(true)}
+                id="btn-add-star-story"
+              >
+                + Add STAR Story
+              </button>
+            </div>
+          </div>
+
+          {/* Stories List */}
+          {loadingStories ? (
+            <div className="loading-state">
+              <span className="spinner"></span>
+              <p>Loading STAR interview story bank...</p>
+            </div>
+          ) : displayedStories.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-state-icon">🎙️</span>
+              <p>No STAR interview stories match your current filter.</p>
+              <p style={{ fontSize: '12px' }}>Click "+ Add STAR Story" to expand your interview answer bank.</p>
+            </div>
+          ) : (
+            <div className="star-stories-grid">
+              {displayedStories.map((story) => (
+                <article key={story.id} className="star-card" id={`story-${story.id}`}>
+                  <div className="star-card-header">
+                    <div className="star-title-wrap">
+                      <div className="star-title">{story.title}</div>
+                      <div className="star-meta">
+                        {story.role && <span>{story.role}</span>}
+                        {story.role && story.company && <span> • </span>}
+                        {story.company && <span>{story.company}</span>}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span className={`star-verified-badge ${story.is_verified ? 'verified' : 'unverified'}`}>
+                        {story.is_verified ? '✓ Verified Fact' : '⚠️ Unverified'}
+                      </span>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleToggleStoryVerified(story)}
+                        title="Toggle verification flag"
+                      >
+                        {story.is_verified ? 'Unverify' : 'Mark Verified'}
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ color: 'var(--rose-400)' }}
+                        onClick={() => handleDeleteStory(story.id)}
+                        title="Remove story"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3-Column STAR breakdown */}
+                  <div className="star-sections">
+                    <div className="star-box">
+                      <div className="star-letter-badge" style={{ color: 'var(--cyan-400)' }}>
+                        <span>S/T</span>
+                        <span>Situation & Task</span>
+                      </div>
+                      <div className="star-box-text">{story.situation}</div>
+                    </div>
+
+                    <div className="star-box">
+                      <div className="star-letter-badge" style={{ color: 'var(--emerald-400)' }}>
+                        <span>A</span>
+                        <span>Action & Leadership</span>
+                      </div>
+                      <div className="star-box-text">{story.action}</div>
+                    </div>
+
+                    <div className="star-box box-result">
+                      <div className="star-letter-badge" style={{ color: '#a7f3d0' }}>
+                        <span>R</span>
+                        <span>Quantified Result</span>
+                      </div>
+                      <div className="star-box-text" style={{ fontWeight: '500' }}>{story.result}</div>
+                    </div>
+                  </div>
+
+                  {/* Story Footer with Tags */}
+                  {story.good_for_tags && (
+                    <div className="star-card-footer">
+                      <div className="star-tags-wrap">
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Good For:
+                        </span>
+                        {story.good_for_tags.split(',').map((t, idx) => {
+                          const tagClean = t.trim();
+                          if (!tagClean) return null;
+                          return (
+                            <span
+                              key={idx}
+                              className="star-tag-chip"
+                              onClick={() => setSelectedTag(tagClean)}
+                              style={{ cursor: 'pointer' }}
+                              title={`Filter by #${tagClean}`}
+                            >
+                              #{tagClean}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {/* Security & Role Inspection Modal */}
       {inspectingJob && (
@@ -1416,6 +2401,129 @@ export default function App() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add STAR Story Modal */}
+      {showAddStoryModal && (
+        <div className="modal-overlay" onClick={() => setShowAddStoryModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} role="dialog" style={{ maxWidth: '650px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 style={{ fontSize: '18px', color: '#fff' }}>🎙️ Add New STAR Interview Story</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+                  Capture a verified accomplishment using Situation, Action, and Result format.
+                </p>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowAddStoryModal(false)}>
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStory}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group">
+                  <label>Story Title *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Betopia Sales Agent End-to-End Ownership"
+                    value={newStory.title}
+                    onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label>Company</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Betopia Limited"
+                      value={newStory.company}
+                      onChange={(e) => setNewStory({ ...newStory, company: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Role</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. AI Engineer"
+                      value={newStory.role}
+                      onChange={(e) => setNewStory({ ...newStory, role: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Situation & Task *</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    placeholder="Context, problem, constraint, or challenge faced..."
+                    value={newStory.situation}
+                    onChange={(e) => setNewStory({ ...newStory, situation: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Action & Implementation *</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="3"
+                    placeholder="Specific engineering steps, tools used, and ownership demonstrated..."
+                    value={newStory.action}
+                    onChange={(e) => setNewStory({ ...newStory, action: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Quantifiable Result *</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="2"
+                    placeholder="Measurable business or technical outcome (e.g. 700+ users, <100ms latency)..."
+                    value={newStory.result}
+                    onChange={(e) => setNewStory({ ...newStory, result: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Good For Question Tags (comma-separated)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="ownership, ambiguity, rag, latency, production ai..."
+                    value={newStory.good_for_tags}
+                    onChange={(e) => setNewStory({ ...newStory, good_for_tags: e.target.value })}
+                  />
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer', color: '#cbd5e1' }}>
+                  <input
+                    type="checkbox"
+                    checked={newStory.is_verified}
+                    onChange={(e) => setNewStory({ ...newStory, is_verified: e.target.checked })}
+                  />
+                  Mark as verified truth (can be referenced in applications)
+                </label>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddStoryModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save STAR Story
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

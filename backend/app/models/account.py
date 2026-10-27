@@ -10,8 +10,10 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.models.application import Application
     from app.models.cv_template import AccountCvVersion, CvTemplate
+    from app.models.interview import StarStory
     from app.models.job import Job
     from app.models.llm_provider import LLMProviderConfig
+    from app.models.profile import UserProfile
     from app.models.subscription import Entitlement
 
 
@@ -86,6 +88,17 @@ class Account(Base):
     )
     llm_providers: Mapped[List["LLMProviderConfig"]] = relationship(
         "LLMProviderConfig",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    profile: Mapped[Optional["UserProfile"]] = relationship(
+        "UserProfile",
+        back_populates="account",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    star_stories: Mapped[List["StarStory"]] = relationship(
+        "StarStory",
         back_populates="account",
         cascade="all, delete-orphan",
     )

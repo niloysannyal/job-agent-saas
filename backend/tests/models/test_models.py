@@ -17,10 +17,27 @@ from app.models.cv_template import (
     CvTemplate,
     CvTemplateCreate,
 )
+from app.models.interview import (
+    StarStory,
+    StarStoryCreate,
+    StarStoryRead,
+)
 from app.models.job import Job, JobPosting
 from app.models.llm_provider import (
     LLMProviderConfig,
     LLMProviderCreate,
+)
+from app.models.profile import (
+    CompensationExpectation,
+    CompensationCreate,
+    SpokenLanguage,
+    SpokenLanguageCreate,
+    TargetDesignation,
+    TargetDesignationCreate,
+    TargetLocation,
+    TargetLocationCreate,
+    UserProfile,
+    UserProfileCreate,
 )
 from app.models.subscription import (
     Entitlement,
@@ -388,4 +405,111 @@ def test_seed_initial_data(db_session: Session):
     assert provider is not None
     assert provider.priority == 1
     assert provider.model_name == "gpt-4o-mini"
+
+    # 6. User Profile
+    profile = db_session.query(UserProfile).filter_by(account_id=account.id).first()
+    assert profile is not None
+    assert profile.full_name == "Niloy Sannyal"
+    assert "Betopia" in profile.current_company
+    assert len(profile.target_designations) >= 5
+    assert len(profile.target_locations) >= 2
+    assert profile.compensation is not None
+    assert len(profile.spoken_languages) >= 2
+
+    # 7. STAR stories
+    stories = db_session.query(StarStory).filter_by(account_id=account.id).all()
+    assert len(stories) >= 3
+    assert all(s.is_verified for s in stories)
+
+
+def test_user_profile_and_relations(db_session: Session):
+    """Test UserProfile and related models (designations, locations, compensation, languages)."""
+    account = Account(email="alice@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    profile = UserProfile(
+        account_id=account.id,
+        full_name="Alice Smith",
+        current_role="Senior ML Engineer",
+        current_company="Acme AI",
+        core_narrative="Alice builds production ML systems.",
+    )
+    db_session.add(profile)
+    db_session.commit()
+
+    # Add Target Designation
+    desig = TargetDesignation(
+        account_id=account.id,
+        profile_id=profile.id,
+        title="AI Engineer",
+        priority=1,
+    )
+    db_session.add(desig)
+
+    # Add Target Location
+    loc = TargetLocation(
+        account_id=account.id,
+        profile_id=profile.id,
+        location_name="Remote EU",
+        location_type="remote",
+    )
+    db_session.add(loc)
+
+    # Add Compensation
+    comp = CompensationExpectation(
+        account_id=account.id,
+        profile_id=profile.id,
+        min_salary=70000.0,
+        max_salary=90000.0,
+        currency="USD",
+        period="yearly",
+    )
+    db_session.add(comp)
+
+    # Add Language
+    lang = SpokenLanguage(
+        account_id=account.id,
+        profile_id=profile.id,
+        language="English",
+        proficiency="Fluent",
+    )
+    db_session.add(lang)
+    db_session.commit()
+
+    db_session.refresh(profile)
+    assert len(profile.target_designations) == 1
+    assert profile.target_designations[0].title == "AI Engineer"
+    assert len(profile.target_locations) == 1
+    assert profile.compensation.min_salary == 70000.0
+    assert len(profile.spoken_languages) == 1
+
+
+def test_star_story_model(db_session: Session):
+    """Test StarStory model creation, tags, and account cascade."""
+    account = Account(email="bob@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    story = StarStory(
+        account_id=account.id,
+        title="Scaling Vector Search",
+        situation="Query latency spiked to 500ms under load.",
+        action="Introduced HNSW indexing with quantized vectors.",
+        result="Reduced latency to 25ms, a 20x improvement.",
+        good_for_tags="performance, vector search, scale, optimization",
+        company="VectorCorp",
+        role="Search Engineer",
+        is_verified=True,
+    )
+    db_session.add(story)
+    db_session.commit()
+
+    db_session.refresh(story)
+    assert story.id is not None
+    assert story.account_id == account.id
+    assert story.title == "Scaling Vector Search"
+    assert "vector search" in story.good_for_tags
+    assert story.is_verified is True
+
 

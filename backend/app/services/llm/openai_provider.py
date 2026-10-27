@@ -20,7 +20,7 @@ class OpenAIProvider(LLMProvider):
         model_name: str = "gpt-4o-mini",
         default_config: Optional[Dict[str, Any]] = None,
     ):
-        self.api_key = api_key or settings.OPENAI_API_KEY
+        self.api_key = api_key if api_key is not None else settings.OPENAI_API_KEY
         self.model_name = model_name
         self.default_config = default_config or {"temperature": 0.2, "max_tokens": 4096}
         self.base_url = "https://api.openai.com/v1/chat/completions"

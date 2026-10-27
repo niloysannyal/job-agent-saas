@@ -156,7 +156,7 @@ def get_embedding_client(
     Factory returning OpenAIEmbeddingClient if API key is provided and valid,
     otherwise MockEmbeddingClient for unit tests and offline environments.
     """
-    key = api_key or settings.OPENAI_API_KEY
+    key = api_key if api_key is not None else settings.OPENAI_API_KEY
     if key and key.strip() and not key.startswith("mock-") and key != "test-key":
         return OpenAIEmbeddingClient(
             api_key=key.strip(),
