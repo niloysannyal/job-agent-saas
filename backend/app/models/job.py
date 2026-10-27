@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -314,4 +315,16 @@ class JobRead(JobBase):
     updated_at: datetime
     raw_data: Optional[Dict[str, Any]] = None
 
+    @field_validator("raw_data", mode="before")
+    @classmethod
+    def parse_raw_data(cls, v: Any) -> Optional[Dict[str, Any]]:
+        if isinstance(v, str):
+            try:
+                import json
+                return json.loads(v)
+            except Exception:
+                return None
+        return v
+
     model_config = ConfigDict(from_attributes=True)
+

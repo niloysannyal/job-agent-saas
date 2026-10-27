@@ -5,13 +5,14 @@ CompensationExpectation, and SpokenLanguage.
 All endpoints are scoped to account_id (multi-tenant, Phase 0 trusted parameter —
 see ARCHITECTURE.md §13 for the Phase 3 auth migration plan).
 """
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.session import get_db
+from app.models.account import Account
 from app.models.profile import (
     CompensationExpectation,
     CompensationBase,
@@ -35,9 +36,52 @@ from app.models.profile import (
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
+def _get_or_create_profile(db: Session, account_id: str) -> UserProfile:
+    """Ensure a UserProfile row exists for an account, auto-creating a clean default if needed."""
+    profile = db.scalars(
+        select(UserProfile).where(UserProfile.account_id == account_id)
+    ).first()
+    if not profile:
+        profile = UserProfile(account_id=account_id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+    return profile
+
+
 # ---------------------------------------------------------------------------
-# UserProfile CRUD
+# UserProfile CRUD & Account Discovery
 # ---------------------------------------------------------------------------
+
+@router.get(
+    "/current",
+    summary="Discover active account and associated profile",
+)
+def get_current_account(
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """Return the default/active tenant account and profile for frontend bootstrapping."""
+    account = db.scalars(select(Account).order_by(Account.created_at)).first()
+    if not account:
+        return {"account_id": None, "email": None, "profile": None}
+
+    stmt = (
+        select(UserProfile)
+        .where(UserProfile.account_id == account.id)
+        .options(
+            selectinload(UserProfile.target_designations),
+            selectinload(UserProfile.target_locations),
+            selectinload(UserProfile.compensation),
+            selectinload(UserProfile.spoken_languages),
+        )
+    )
+    profile = db.scalars(stmt).first()
+    return {
+        "account_id": account.id,
+        "email": account.email,
+        "profile": UserProfileRead.model_validate(profile) if profile else None,
+    }
+
 
 @router.get(
     "",
@@ -63,6 +107,7 @@ def get_profile(
     if not profile:
         return None
     return profile
+
 
 
 @router.post(
@@ -103,15 +148,8 @@ def update_profile(
     payload: UserProfileUpdate = ...,
     db: Session = Depends(get_db),
 ) -> UserProfileRead:
-    """Partial-update the user profile for an account."""
-    profile = db.scalars(
-        select(UserProfile).where(UserProfile.account_id == account_id)
-    ).first()
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No profile found for this account.",
-        )
+    """Partial-update the user profile for an account (auto-creates if missing)."""
+    profile = _get_or_create_profile(db, account_id)
 
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -139,7 +177,7 @@ def list_designations(
         select(UserProfile).where(UserProfile.account_id == account_id)
     ).first()
     if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+        return []
     stmt = (
         select(TargetDesignation)
         .where(TargetDesignation.profile_id == profile.id)
@@ -159,11 +197,7 @@ def add_designation(
     payload: TargetDesignationCreate = ...,
     db: Session = Depends(get_db),
 ) -> TargetDesignationRead:
-    profile = db.scalars(
-        select(UserProfile).where(UserProfile.account_id == account_id)
-    ).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+    profile = _get_or_create_profile(db, account_id)
     designation = TargetDesignation(
         account_id=account_id,
         profile_id=profile.id,
@@ -173,6 +207,7 @@ def add_designation(
     db.commit()
     db.refresh(designation)
     return designation
+
 
 
 @router.delete(
@@ -214,7 +249,7 @@ def list_locations(
         select(UserProfile).where(UserProfile.account_id == account_id)
     ).first()
     if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+        return []
     stmt = select(TargetLocation).where(TargetLocation.profile_id == profile.id)
     return list(db.scalars(stmt).all())
 
@@ -230,11 +265,7 @@ def add_location(
     payload: TargetLocationCreate = ...,
     db: Session = Depends(get_db),
 ) -> TargetLocationRead:
-    profile = db.scalars(
-        select(UserProfile).where(UserProfile.account_id == account_id)
-    ).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+    profile = _get_or_create_profile(db, account_id)
     location = TargetLocation(
         account_id=account_id,
         profile_id=profile.id,
@@ -299,11 +330,7 @@ def upsert_compensation(
     payload: CompensationCreate = ...,
     db: Session = Depends(get_db),
 ) -> CompensationRead:
-    profile = db.scalars(
-        select(UserProfile).where(UserProfile.account_id == account_id)
-    ).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+    profile = _get_or_create_profile(db, account_id)
 
     comp = db.scalars(
         select(CompensationExpectation).where(
@@ -344,7 +371,7 @@ def list_languages(
         select(UserProfile).where(UserProfile.account_id == account_id)
     ).first()
     if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+        return []
     stmt = select(SpokenLanguage).where(SpokenLanguage.profile_id == profile.id)
     return list(db.scalars(stmt).all())
 
@@ -360,11 +387,7 @@ def add_language(
     payload: SpokenLanguageCreate = ...,
     db: Session = Depends(get_db),
 ) -> SpokenLanguageRead:
-    profile = db.scalars(
-        select(UserProfile).where(UserProfile.account_id == account_id)
-    ).first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="No profile found.")
+    profile = _get_or_create_profile(db, account_id)
     lang = SpokenLanguage(
         account_id=account_id,
         profile_id=profile.id,
@@ -377,6 +400,7 @@ def add_language(
 
 
 @router.delete(
+
     "/languages/{language_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove a spoken language",

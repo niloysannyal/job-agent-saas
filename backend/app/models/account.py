@@ -41,12 +41,25 @@ class Account(Base):
         nullable=False,
         default="free",
     )
+    # Role: 'superadmin' | 'tenant'
+    role: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="tenant",
+    )
+    # Status: 'active' | 'invited' | 'suspended'
+    status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="active",
+    )
     # Template limit per ARCHITECTURE.md §5 (default = unlimited, None)
     account_template_limit: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True,
         default=None,
     )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -109,6 +122,8 @@ class Account(Base):
 class AccountBase(BaseModel):
     email: str
     plan_tier: str = "free"
+    role: str = "tenant"
+    status: str = "active"
     account_template_limit: Optional[int] = None
 
 
@@ -119,7 +134,10 @@ class AccountCreate(AccountBase):
 class AccountUpdate(BaseModel):
     email: Optional[str] = None
     plan_tier: Optional[str] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
     account_template_limit: Optional[int] = None
+
 
 
 class AccountRead(AccountBase):

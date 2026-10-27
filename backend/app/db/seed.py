@@ -39,17 +39,27 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
         close_session = True
 
     try:
-        # 1. Tenant #1: Niloy
+        # 1. Tenant #1: Niloy (deterministic default tenant UUID)
+        DEFAULT_TENANT_ID = "6e488188-0015-4657-94c9-92d01413dcfb"
         account = session.query(Account).filter_by(email="niloy@example.com").first()
         if not account:
             account = Account(
+                id=DEFAULT_TENANT_ID,
                 email="niloy@example.com",
                 plan_tier="free",
+                role="superadmin",
+                status="active",
                 account_template_limit=None,
             )
             session.add(account)
             session.flush()
             logger.info(f"Seeded default tenant #1: {account.id} ({account.email})")
+        else:
+            account.role = "superadmin"
+            account.status = "active"
+            session.flush()
+
+
 
         # 2. Admin default template #1 (01_MASTER_CV)
         master_cv_path = settings.resolve_cv_path()
