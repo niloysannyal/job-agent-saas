@@ -6,21 +6,25 @@ These are *how-to-code* rules. For *what we're building*, see `GEMINI.md` and
 ## Folder structure — put new code in the right place
 ```
 backend/app/
-  api/              # FastAPI routers only — no business logic here
-  core/             # config, security, startup wiring
-  models/           # SQLAlchemy models + Pydantic schemas, matching ARCHITECTURE.md §7
+  api/              # FastAPI routers (jobs, applications, profile, interview, admin)
+  core/             # config, security (auth, RBAC), startup wiring
+  models/           # SQLAlchemy models + Pydantic schemas (account, job, application, cv_template, profile, interview, subscription, llm_provider)
   services/
     job_sources/    # one file per source, each implementing JobSource.fetch()
     llm/            # provider-abstraction interface + one file per provider
     cv_tailor/      # CV tailoring pipeline, reads cv_templates/
-    matching/       # Qdrant embedding + similarity scoring
-  db/               # session, migrations (Alembic)
+    matching/       # Qdrant embedding + similarity scoring + language gate
+  db/               # session, migrations (Alembic), seed data
   workers/          # async/background tasks (Celery or Arq) — not needed yet,
-                     # but new background jobs go here when they're added
-backend/tests/      # mirror the app/ structure; one test file per module
+                    # but new background jobs go here when they're added
+backend/tests/      # mirror the app/ structure; one test file per module (142 tests)
+frontend/           # React + Vite SPA (Obsidian & Cyber Emerald theme)
+  src/components/   # Dashboard, Jobs, ApplicationStudio, Pipeline, InterviewCoach, Profile, AdminView
 cv_templates/       # admin-curated LaTeX templates, never user-uploaded code
 docs/               # reference docs — read, don't edit as a side effect of a task
+graphify-out/       # Graphify knowledge graph (graph.json, callflow HTML, tree, wiki)
 ```
+
 
 ## Interfaces to honor, not bypass
 - **`JobSource`**: every job-data integration (Adzuna, Remotive, RemoteOK,

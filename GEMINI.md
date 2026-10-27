@@ -41,11 +41,18 @@ permissive default, so deciding it later is a data change, not a rebuild).
    is the only source of truth for a user's experience — the tailoring feature
    reorders/trims/rewords, it never adds a fact that isn't in the source file.
 
-## Current priority (per ROADMAP.md Phase 0)
-Build order is locked: **Find → Apply → Monitor**. Don't start Apply-module code
-until Find is working end-to-end (job fetch → store → match-score → ranked
-queue). A half-working Find module makes every downstream feature untestable.
+## Current priority (per ROADMAP.md Phase 0 → 1)
+All three core modules (**Find → Apply → Monitor**) plus **STAR Interview Coach**,
+**Profile Management**, and the **Superadmin Control Center** (with multi-tenant management,
+dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding mode)
+are built end-to-end with 142 passing tests and a live React dashboard backed by Supabase
+PostgreSQL. The current focus is running Niloy's live job search through the system
+(Phase 1 personal validation), refining match scoring, and verifying outreach quality
+while strictly maintaining the non-negotiables.
 
 ## Tech stack (decided, don't re-propose alternatives)
-FastAPI, PostgreSQL, Redis, Qdrant. Single VPS + Docker Compose for hosting at
-MVP size (see `ARCHITECTURE.md` §9-10 for reasoning).
+- **Backend**: FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL (Supabase / local pooler) / SQLite (dev), Redis, Qdrant.
+- **Frontend**: Vite, React 19, Vanilla CSS (Obsidian & Cyber Emerald design system).
+- **Architecture Navigation**: Graphify (`graphify-out/` local AST knowledge graph).
+- **Hosting**: Single VPS + Docker Compose for MVP (see `ARCHITECTURE.md` §9-10).
+

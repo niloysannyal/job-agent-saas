@@ -117,24 +117,16 @@ do; postings never grant tool access or change agent behavior.
 3. Upgrade path (unchanged): move coarse ranking to LLM-scored fit later if
    embedding similarity alone proves too coarse.
 
-**Current implementation status (as of 2026-10-19 — two known gaps, both
-deliberate for now, not forgotten):**
-- **Language gate covers only 5 hardcoded languages** (German, French, Spanish,
-  Dutch, Italian) with a fixed requirement-keyword list. A posting requiring a
-  language outside this list (Portuguese, Mandarin, Arabic, etc.) is **not**
-  caught — a false negative, not a false positive. Low risk for Niloy's own
-  target markets right now, but must be revisited before this gate is trusted
-  for other users with different language profiles. Fix path: make the covered-
-  language list and keyword patterns configurable per account, not hardcoded.
-- **Only the language sub-case of the deal-breaker gate is implemented.** The
-  general free-text "Dealbreakers:" line in USER_PROFILE.md (e.g. "generic/
-  low-substance roles") is captured but not acted on — no posting is vetoed on
-  it yet. This is a real capability gap against this section's own design, not
-  a style choice. Fix path (deferred, see ROADMAP.md): either an LLM-evaluated
-  rubric against the free-text dealbreakers, or formalizing them into structured
-  fields (`min_base_salary`, `visa_sponsorship_required`, `remote_only`,
-  `excluded_stacks`, etc.) that can be checked deterministically. Don't guess
-  which approach without revisiting actual Phase 1 usage data first.
+**Implementation status (updated 2026-10-26):**
+- **Language gate:** Expanded from 5 to 14 canonical languages in `KNOWN_LANGUAGES`
+  (German, French, Spanish, Dutch, Italian, Polish, Swedish, Danish, Norwegian,
+  Finnish, Japanese, Mandarin, Chinese, etc.). Dynamically checked against the
+  user's declared spoken languages in the `SpokenLanguage` table (seeded with
+  English and Bengali for Niloy).
+- **Dealbreaker & fit evaluation:** `POST /api/v1/applications/evaluate-fit`
+  evaluates posting compatibility against user profile target roles, skills,
+  and free-text dealbreakers before CV tailoring, flagging dealbreaker red flags.
+
 
 ## 5. Module 2 — Apply for the Job
 
@@ -191,15 +183,38 @@ submitted for that application. Draft-only, never auto-sent, and capped (default
 at most twice per application) so the feature can't turn into spam on the user's
 behalf. Same human-in-the-loop gate as every other outbound message (§3).
 
+## 6.1 STAR Interview Coach (added 2026-10-26)
+- **Story Bank (`star_stories`):** Structured database of user interview experiences (Situation,
+  Task, Action, Result) with tag-based filtering and fact-verification flags.
+- **Role Preparation (`GET /api/v1/interview/prep/{job_id}`):** Generates targeted interview
+  prep matching the specific job's tech stack and domain against relevant user stories.
+- **Answer Critique (`POST /api/v1/interview/critique`):** LLM evaluates user draft answers
+  against the STAR methodology, checking structure, impact, clarity, and truthful alignment
+  with the verified fact ledger.
+
 ## 7. Data model — multi-tenant from day one (puzzle piece)
 Every table carries an `account_id` from the start, even with one account:
-- `accounts` (id, email, plan_tier *[default: 'free', unenforced]*, created_at)
+- `accounts` (id, email, plan_tier *[default: 'free', unenforced]*, role *['superadmin' | 'tenant', default 'tenant']*, status *['active' | 'suspended', default 'active']*, created_at)
+- `user_profiles`, `target_designations`, `target_locations`, `compensation_expectations`,
+  `spoken_languages` (user preference models & dealbreakers)
 - `cv_templates`, `account_cv_versions` (which tailored CV went to which job)
 - `jobs` (account_id, company, role, salary, deadline, location_type, country,
-  visa_required, target_company, match_score, status, source, apply_link, found_at)
+  visa_required, target_company, match_score, status, source, apply_link, found_at,
+  integrity_status, integrity_flags, integrity_clean_text, vetoed, veto_reason)
 - `applications` (job_id, channel, draft_content, sent_at, status, follow_up_due,
   follow_up_count *[default 0, cap enforced in app logic per §6]*)
+- `star_stories` (account_id, story_title, situation, task, action, result, good_for_tags,
+  is_verified, sort_order)
 - `subscription_plans`, `entitlements` — **exist now, unused/all-access by default.**
+- `llm_providers` (admin-configurable LLM providers & API keys, priority-ordered failover chain)
+
+### 7.1 Superadmin Control Center & Impersonation Engine (built 2026-10-27)
+- **Role-Based Access Control (`app/core/auth.py`):** `require_superadmin` dependency guards all `/api/v1/admin/*` endpoints, enforcing 403 Forbidden on standard tenants.
+- **Tenant Management (`/api/v1/admin/tenants`):** Superadmin directory listing aggregated radar jobs, tailored applications, and CV version counts per tenant, with invite, tier upgrade, suspension, and cascade deletion.
+- **One-Click QA Dogfooding Mode (`/api/v1/admin/tenants/{id}/impersonate`):** Allows the superadmin (Niloy) to switch into any tenant's workspace for testing with a persistent Cyber Emerald QA top banner (`🧪 QA DOGFOOD MODE`), leaving superadmin credentials untouched.
+- **Dynamic LLM Failover Manager (`/api/v1/admin/llm-providers`):** CRUD interface for OpenAI, Claude, Groq, Ollama, DeepSeek with runtime ping tests (`/test`) and automatic priority failover.
+- **Legal Sourcing Inspector (`/api/v1/admin/jobs/sources`):** Monitors health and cached opportunities of all 6 compliance-vetted adapters (Adzuna, Remotive, RemoteOK, Greenhouse, Lever, Freehire) with manual query ingestion triggers.
+- **Injection Audit Dashboard (`/api/v1/admin/jobs/flagged`):** Live audit log of adversarial prompt injections and invisible unicode characters intercepted by `PostingIntegrityGate`.
 
 ## 8. Data retention & security (decision made)
 - Encrypt CV files and PII at rest (standard DB-level encryption is enough at this
@@ -213,16 +228,20 @@ Every table carries an `account_id` from the start, even with one account:
   size.
 
 ## 9. Tech stack (confirmed)
-- **Backend:** FastAPI.
-- **Primary DB:** PostgreSQL.
+- **Backend:** FastAPI, SQLAlchemy 2.0, Alembic.
+- **Primary DB:** PostgreSQL / SQLite (dev).
 - **Cache / state:** Redis.
 - **Vector search:** Qdrant.
+- **Frontend:** React 19 + Vite SPA, Obsidian & Cyber Emerald theme.
+- **Architecture Navigation:** Graphify (`graphify-out/` local AST knowledge graph,
+  interactive HTML, Mermaid callflow diagrams, D3 collapsible tree, community wiki).
 - **Task queue:** add Celery or Arq once CV generation/email sending needs to run
   async — not needed for a single-user MVP, but the schema doesn't block it.
 - **PDF tooling (added 2026-10-18):** LaTeX compiler (`lualatex` recommended over
   `pdflatex` for modern font packages — see ai-job-search-dev/ai-job-search's
   SETUP.md for the specific font-expansion failure mode this avoids), plus
   `pdftotext` (Poppler) or `pypdf` for the ATS text-layer check in §5.
+
 
 ## 10. Hosting (OPEN — still genuinely undecided)
 1. **Single VPS + Docker Compose** (Hetzner, DigitalOcean) — matches existing Caddy
@@ -286,5 +305,8 @@ without a schema change later.
 | 2026-10-19 | Corrected freehire.me from Layer 1 ("fully legal") to Layer 1b (Niloy-only, like LinkedIn) | Its own ToS restricts the keyless API to personal/non-commercial use; commercial multi-tenant use needs a paid plan or self-hosting, plus attribution credit |
 | 2026-10-19 | Confirmed `account_id` is an unverified, trusted query parameter with zero auth — flagged as an absolute Phase 3 blocker (§13) | Found while reviewing the GET /jobs endpoint; harmless at single-user scale but must be fixed before any other user's data could be exposed |
 | 2026-10-18 | Niloy may run a parallel private fork of ai-job-search-dev/ai-job-search for his own job search during the build | Decouples "start applying now" from "SaaS build takes a month"; feeds real lessons back before Phase 1 ends |
+| 2026-10-27 | Connected live Supabase PostgreSQL via connection pooler (`DATABASE_URL`) | Production cloud persistence with zero data loss across dev restarts |
+| 2026-10-27 | Added `role` and `status` to `accounts` table via Alembic migration `7b8e2b6659a9` | Native multi-tenant RBAC foundation for superadmin and tenant isolation |
+| 2026-10-27 | Built Superadmin Control Center & QA Dogfooding Mode (`AdminView.jsx`, `/api/v1/admin/*`) | Full platform governance, live provider ping, and seamless tenant impersonation |
 | — | Pricing model, team structure beyond solo | Still OPEN — intentionally deferred, schema supports it |
 | — | Hosting choice (§10) | Still OPEN |

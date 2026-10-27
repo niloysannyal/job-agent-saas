@@ -26,37 +26,37 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
       header pagination unhandled; Lever: limit/skip pagination unhandled).
       Low priority until a target company's board actually exceeds one page, but
       don't let it get forgotten once real usage starts.
-- [x] Posting integrity gate (ARCHITECTURE.md §4) — built 2026-10-xx, runs before
-      any posting is persisted or sent to an LLM; not yet wired into the
-      job-ingestion pipeline since that orchestration layer doesn't exist yet
-- [x] Match scoring via Qdrant embedding similarity against MASTER_CV.tex +
-      USER_PROFILE.md target roles — built 2026-10-19 (mocked embedding/Qdrant
-      in tests)
-- [x] **Wire matching into the pipeline.** Wired synchronously at the end of
-      `job_ingestion.py` — newly persisted clean jobs are automatically scored and
-      gated upon ingestion, while flagged jobs are skipped from scoring until
-      human review (built 2026-10-19). Ready to transition to a background worker
-      later when volume demands it (ARCHITECTURE.md §9).
-- [x] Language gate — built 2026-10-19, but hardcoded to 5 languages
-      (ARCHITECTURE.md §4 — needs to be configurable before trusted for other
-      users)
-- [ ] **General dealbreaker gate — not implemented.** Only the language
-      sub-case exists. USER_PROFILE.md's free-text "Dealbreakers:" line is
-      captured but nothing is vetoed on it yet. Decide the approach (LLM rubric
-      vs. structured fields) after Phase 1 real-usage data, per ARCHITECTURE.md
-      §4 — don't guess at this without evidence.
-- [x] Queue endpoint ranked by match score (`GET /api/v1/jobs` with default gating and review overrides) — built 2026-10-25
-- [x] Queue UI view (frontend dashboard in Obsidian & Cyber Emerald theme showing company, role, radial match score gauges, posting guard inspection, and RemoteOK/freehire attribution — built 2026-10-26)
+- [x] Posting integrity gate (ARCHITECTURE.md §4) — runs before any posting is persisted or sent to an LLM; fully wired into `JobIngestionService.ingest()`, flagging injection/instructions and marking status as `clean` or `flagged`.
+- [x] Match scoring via Qdrant embedding similarity against MASTER_CV.tex + USER_PROFILE.md target roles — built 2026-10-19.
+- [x] **Wire matching into the pipeline.** Wired synchronously at the end of `job_ingestion.py` — newly persisted clean jobs are automatically scored and gated upon ingestion, while flagged jobs are skipped from scoring until human review (built 2026-10-19). Ready to transition to a background worker later when volume demands it (ARCHITECTURE.md §9).
+- [x] Language gate — evaluated by `LanguageGate` with 14 known languages, dynamically checked against the user's declared spoken languages (`SpokenLanguage` table). Hard-vetoes postings requiring undeclared languages.
+- [x] Dealbreaker evaluation & Fit Evaluator — `POST /api/v1/applications/evaluate-fit` evaluates fit against profile target roles, skills, and free-text dealbreakers, returning matched skills, missing requirements, and dealbreaker red flags before tailoring.
+- [x] Queue endpoint ranked by match score (`GET /api/v1/jobs` with default gating and review overrides) — built 2026-10-25.
+- [x] Queue UI view (frontend dashboard in Obsidian & Cyber Emerald theme showing company, role, radial match score gauges, posting guard inspection, and RemoteOK/freehire attribution — built 2026-10-26).
 
 **Apply (build second):**
 - [x] CV template gallery (seeded with `01_MASTER_CV.tex` as admin default template #1)
 - [x] CV tailoring pipeline (LLM interface behind provider-abstraction layer with Drafter + Reviewer two-pass generation, truth verification against verified fact ledger, and ATS text-layer check — built 2026-10-26)
-- [x] Draft generation per channel (mail / form answers / DM — built 2026-10-26)
+- [x] Draft generation per channel (mail / form answers / DM / portal — built 2026-10-26)
 - [x] Draft → review → Send UI (human-in-the-loop strictly enforced: application created in 'draft' with sent_at=None, confirmed only via human review gate — built 2026-10-26)
 
 **Monitor (build third):**
 - [x] Jobs table extended with status/follow-up fields (`applied_at`, `follow_up_due`, `notes`, Alembic migration `9fa848922c02` — built 2026-10-26)
 - [x] Status summary view and Monitor pipeline dashboard (Total / Draft / Sent / Follow-ups Due / Responded / Interview / Offer / Rejected with 10-day follow-up drafting strictly capped at 2 and human-in-the-loop review gate — built 2026-10-26)
+
+**Profile & Interview Coach (Phase 0 additions):**
+- [x] Profile Management API & UI (`/api/v1/profile` + `ProfileView.jsx`) — CRUD for `UserProfile`, `TargetDesignation`, `TargetLocation`, `CompensationExpectation`, `SpokenLanguage`, and dealbreaker preferences.
+- [x] STAR Interview Coach (`/api/v1/interview` + `InterviewCoachView.jsx`) — STAR story bank manager, question generator matching role requirements, and AI answer critique adhering to the verified fact ledger.
+
+**Superadmin Control & Multi-Tenant RBAC (Phase 0 additions):**
+- [x] Multi-tenant role & status migration (`role`, `status` on `accounts` via Alembic `7b8e2b6659a9` on Supabase PostgreSQL).
+- [x] Superadmin Control Center API (`/api/v1/admin/metrics`, `tenants`, `impersonate`, `llm-providers`, `sources`, `templates`, `flagged`).
+- [x] Superadmin UI (`AdminView.jsx`) with Bento metrics, tenant management, dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding mode with persistent banner.
+- [x] 142 total passing backend tests.
+
+**Architecture & Tooling:**
+- [x] Graphify Knowledge Graph (`graphify-out/`) — deterministic AST code parsing, interactive node graph (`graph.html`), Mermaid call-flow diagram (`job-agent-saas-callflow.html`), D3 collapsible tree (`GRAPH_TREE.html`), and 59 community wiki articles for fast agent reasoning.
+
 
 **Infra (in parallel, not blocking):**
 - [ ] Single VPS + Docker Compose set up (reuse Caddy VPS experience)
