@@ -188,10 +188,32 @@ class MatchingService:
                 result.vetoed_count += 1
 
             # Compute Cosine Similarity embedding score
-            if desc.strip():
-                job_vec = await self.embedder.embed(desc)
+            if desc.strip() or (job.role and job.role.strip()):
+                embed_text = f"Role: {job.role}\nCompany: {job.company}\nDescription:\n{desc}"
+                job_vec = await self.embedder.embed(embed_text)
                 similarity = compute_cosine_similarity(vec, job_vec)
-                job.match_score = round(similarity, 4)
+                
+                # Calibrate cosine similarity to realistic 0-100 percentage
+                # Baseline for unrelated content is ~0.25; strong match is ~0.75+
+                calibrated = (similarity - 0.25) / (0.75 - 0.25) * 100.0
+                score = max(15.0, min(95.0, calibrated))
+
+                # Role & target designation alignment boost
+                job_title_lower = (job.role or "").lower()
+                target_roles = parsed_profile.target_roles_text.lower()
+                matched_role = False
+                for line in target_roles.splitlines():
+                    cleaned_line = line.strip().strip("- *").lower()
+                    if cleaned_line and (cleaned_line in job_title_lower or job_title_lower in cleaned_line):
+                        matched_role = True
+                        break
+
+                if matched_role:
+                    score = min(99.0, score + 8.0)
+                elif any(kw in job_title_lower for kw in ["ai", "llm", "engineer", "machine learning", "mlops", "python"]):
+                    score = min(95.0, score + 3.0)
+
+                job.match_score = round(score, 1)
             else:
                 job.match_score = 0.0
 

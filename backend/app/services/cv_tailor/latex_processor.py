@@ -6,26 +6,28 @@ def extract_preamble_and_body(latex_source: str) -> Tuple[str, str]:
     """
     Splits a LaTeX document into preamble (from \\documentclass to \\begin{document})
     and body (from \\begin{document} to \\end{document}).
+    Strips any control comments preceding \\documentclass.
     """
     begin_doc = "\\begin{document}"
     if begin_doc not in latex_source:
         raise ValueError("Invalid LaTeX document: missing \\begin{document}")
 
-    parts = latex_source.split(begin_doc, 1)
-    preamble = parts[0] + begin_doc
+    # Find the first un-commented \documentclass line
+    docclass_start = None
+    for line_match in re.finditer(r"(?m)^[ \t]*\\documentclass", latex_source):
+        docclass_start = line_match.start()
+        break
+
+    if docclass_start is not None:
+        trimmed_source = latex_source[docclass_start:]
+    else:
+        trimmed_source = latex_source
+
+    parts = trimmed_source.split(begin_doc, 1)
+    preamble = parts[0].strip() + "\n" + begin_doc
     body = parts[1]
 
-    # Remove any control notes starting with %% from preamble top
-    cleaned_preamble_lines = []
-    found_docclass = False
-    for line in preamble.splitlines():
-        if "\\documentclass" in line:
-            found_docclass = True
-        if found_docclass:
-            cleaned_preamble_lines.append(line)
-
-    cleaned_preamble = "\n".join(cleaned_preamble_lines)
-    return cleaned_preamble, body
+    return preamble, body
 
 
 def strip_control_comments(text: str) -> str:

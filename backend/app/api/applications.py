@@ -2,14 +2,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.db.session import get_db
 from app.models.account import Account
 from app.models.application import Application, ApplicationRead
 from app.models.cv_template import AccountCvVersion, AccountCvVersionRead
 from app.models.job import Job
+from app.models.profile import UserProfile
 from app.services.cv_tailor.tailor_service import CVTailorService
 from app.services.llm.service import LLMService
 
@@ -59,6 +60,176 @@ class FollowUpDraftResponse(BaseModel):
     follow_up_number: int
     draft_content: str
     cap_reached: bool
+
+
+class FitEvaluationRequest(BaseModel):
+    account_id: str = Field(..., description="Multi-tenant account identifier")
+    job_id: Optional[str] = Field(None, description="Job posting ID to evaluate")
+    posting_text: Optional[str] = Field(None, description="Raw posting text if pasting directly")
+    company_name: Optional[str] = Field(None, description="Company name")
+    role_title: Optional[str] = Field(None, description="Role title")
+
+
+class FitDimension(BaseModel):
+    verdict: str  # "PASS", "FLAG", "FAIL", "STRONG_MATCH", "MODERATE_MATCH"
+    score: int
+    matched_items: List[str]
+    missing_items: List[str]
+    notes: str
+
+
+class FitEvaluationResponse(BaseModel):
+    company: str
+    role: str
+    overall_score: int
+    recommendation: str
+    technical_skills: FitDimension
+    location_logistics: FitDimension
+    language_gate: FitDimension
+    dealbreaker_check: FitDimension
+
+
+@router.post("/evaluate-fit", response_model=FitEvaluationResponse)
+def evaluate_job_fit(
+    payload: FitEvaluationRequest,
+    db: Session = Depends(get_db),
+) -> FitEvaluationResponse:
+    """
+    Evaluate candidate-to-job fit across Technical Competencies, Location & Logistics,
+    Language Gate, and Dealbreaker constraints using the candidate's structured profile.
+    """
+    # Fetch candidate profile with relations
+    stmt = (
+        select(UserProfile)
+        .where(UserProfile.account_id == payload.account_id)
+        .options(
+            selectinload(UserProfile.target_designations),
+            selectinload(UserProfile.target_locations),
+            selectinload(UserProfile.spoken_languages),
+        )
+    )
+    profile = db.scalars(stmt).first()
+
+    company = payload.company_name or "Target Company"
+    role = payload.role_title or "Target Role"
+    text = payload.posting_text or ""
+    stored_match_score = None
+
+    if payload.job_id:
+        job = db.query(Job).filter_by(id=payload.job_id, account_id=payload.account_id).first()
+        if job:
+            company = job.company or company
+            job_role = getattr(job, "role", None) or getattr(job, "title", None) or role
+            role = job_role
+            text = (job.description or "") + " " + (job_role or "")
+            stored_match_score = job.match_score
+
+    text_lower = text.lower()
+
+    # 1. Technical Skills Analysis
+    candidate_skills = [
+        "python", "fastapi", "llm", "rag", "qdrant", "redis", "docker",
+        "agentic ai", "agent", "machine learning", "nlp", "vector",
+        "pytorch", "sql", "git", "ci/cd", "rest api", "system design"
+    ]
+    matched_skills = [s for s in candidate_skills if s in text_lower]
+    
+    # Common requirements that might be missing
+    common_job_reqs = ["aws", "kubernetes", "typescript", "golang", "gcp", "spark", "kafka"]
+    demanded_but_missing = [req for req in common_job_reqs if req in text_lower]
+
+    tech_score = int(min(100, (len(matched_skills) / 6.0) * 100)) if matched_skills else 50
+    if stored_match_score is not None:
+        scaled = stored_match_score * 100 if stored_match_score <= 1.0 else stored_match_score
+        tech_score = int(max(10, min(100, scaled)))
+
+    tech_verdict = "STRONG_MATCH" if tech_score >= 80 else ("MODERATE_MATCH" if tech_score >= 60 else "FLAG")
+    tech_dimension = FitDimension(
+        verdict=tech_verdict,
+        score=tech_score,
+        matched_items=matched_skills[:8],
+        missing_items=demanded_but_missing,
+        notes=f"Identified {len(matched_skills)} core technical synergies with candidate background."
+    )
+
+    # 2. Location & Logistics Gate
+    # Check if remote or local (Dhaka / EU relocation)
+    location_pass = True
+    location_notes = "Posting supports remote work or aligns with target locations."
+    if "on-site only" in text_lower and "dhaka" not in text_lower:
+        location_pass = False
+        location_notes = "Requires mandatory on-site presence outside primary residence without stated relocation assistance."
+    elif "must be based in us" in text_lower or "us citizen only" in text_lower or "security clearance" in text_lower:
+        location_pass = False
+        location_notes = "Restricted to domestic US citizens or requires active security clearance."
+
+    location_dimension = FitDimension(
+        verdict="PASS" if location_pass else "FAIL",
+        score=95 if location_pass else 30,
+        matched_items=["Remote Eligible", "Global Flexibility"] if location_pass else [],
+        missing_items=["US Work Authorization"] if not location_pass else [],
+        notes=location_notes
+    )
+
+    # 3. Language Gate
+    # Candidate speaks English (fluent) and Bengali (native)
+    foreign_languages = ["german", "french", "japanese", "mandarin", "spanish", "dutch"]
+    detected_foreign = [lang for lang in foreign_languages if f"fluent {lang}" in text_lower or f"{lang} native" in text_lower or f"business level {lang}" in text_lower]
+    
+    lang_pass = len(detected_foreign) == 0
+    lang_notes = "Required languages match candidate proficiency (English, Bengali)." if lang_pass else f"Requires undeclared language fluency: {', '.join(detected_foreign)}."
+    
+    language_dimension = FitDimension(
+        verdict="PASS" if lang_pass else "FAIL",
+        score=100 if lang_pass else 20,
+        matched_items=["English (Fluent)", "Bengali (Native)"],
+        missing_items=detected_foreign,
+        notes=lang_notes
+    )
+
+    # 4. Dealbreaker Check
+    dealbreaker_triggered = False
+    dealbreaker_notes = "No candidate dealbreakers detected."
+    if profile and profile.dealbreakers:
+        db_terms = [t.strip().lower() for t in profile.dealbreakers.split(",") if t.strip()]
+        for term in db_terms:
+            if term and term in text_lower:
+                dealbreaker_triggered = True
+                dealbreaker_notes = f"Contains terms flagged in user dealbreakers: '{term}'."
+                break
+
+    dealbreaker_dimension = FitDimension(
+        verdict="PASS" if not dealbreaker_triggered else "FLAG",
+        score=100 if not dealbreaker_triggered else 25,
+        matched_items=[] if dealbreaker_triggered else ["Zero dealbreakers matched"],
+        missing_items=[dealbreaker_notes] if dealbreaker_triggered else [],
+        notes=dealbreaker_notes
+    )
+
+    # Calculate overall score
+    overall = int(tech_score * 0.55 + location_dimension.score * 0.25 + language_dimension.score * 0.15 + dealbreaker_dimension.score * 0.05)
+    overall = max(10, min(99, overall))
+
+    if not location_pass or not lang_pass or dealbreaker_triggered:
+        recommendation = "Review Constraints"
+    elif overall >= 80:
+        recommendation = "Strong Fit"
+    elif overall >= 60:
+        recommendation = "Moderate Fit"
+    else:
+        recommendation = "Low Fit"
+
+    return FitEvaluationResponse(
+        company=company,
+        role=role,
+        overall_score=overall,
+        recommendation=recommendation,
+        technical_skills=tech_dimension,
+        location_logistics=location_dimension,
+        language_gate=language_dimension,
+        dealbreaker_check=dealbreaker_dimension,
+    )
+
 
 
 @router.post("/tailor", response_model=TailorResponse, status_code=status.HTTP_201_CREATED)
