@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.api.admin import router as admin_router
 from app.api.applications import router as applications_router
 from app.api.interview import router as interview_router
 from app.api.jobs import router as jobs_router
@@ -45,8 +46,10 @@ def create_app() -> FastAPI:
     app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
     app.include_router(profile_router, prefix=settings.API_V1_PREFIX)
     app.include_router(interview_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
 
     return app
+
 
 
 app = create_app()
