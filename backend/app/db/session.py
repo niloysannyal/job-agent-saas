@@ -8,12 +8,29 @@ _engine = None
 _SessionFactory = None
 
 
+def normalize_db_url(url: str | None) -> str:
+    """Normalize database URL for driver compatibility."""
+    if not url:
+        return "sqlite:///./job_agent.db"
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url
+
+
 def get_engine():
     global _engine
     if _engine is None:
-        db_url = settings.DATABASE_URL or "sqlite:///./app.db"
-        connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
-        _engine = create_engine(db_url, connect_args=connect_args)
+        db_url = normalize_db_url(settings.DATABASE_URL)
+        if db_url.startswith("sqlite"):
+            _engine = create_engine(db_url, connect_args={"check_same_thread": False})
+        else:
+            _engine = create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_recycle=300,
+            )
     return _engine
 
 
@@ -32,3 +49,4 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+

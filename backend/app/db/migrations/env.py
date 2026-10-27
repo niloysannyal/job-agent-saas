@@ -12,7 +12,7 @@ if BASE_DIR not in sys.path:
 
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import get_engine
+from app.db.session import get_engine, normalize_db_url
 import app.models  # Ensure all SQLAlchemy models are registered on Base.metadata
 
 config = context.config
@@ -24,7 +24,8 @@ target_metadata = Base.metadata
 
 
 def get_database_url() -> str:
-    return settings.DATABASE_URL or "sqlite:///./job_agent.db"
+    return normalize_db_url(settings.DATABASE_URL)
+
 
 
 def run_migrations_offline() -> None:

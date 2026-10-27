@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Base repository root directory (for resolving relative file paths across environments)
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+CANONICAL_DB_FILE = (REPO_ROOT / "backend" / "job_agent.db").as_posix()
 
 
 class Settings(BaseSettings):
@@ -15,8 +16,9 @@ class Settings(BaseSettings):
     ADZUNA_APP_KEY: Optional[str] = None
     ADZUNA_BASE_URL: str = "https://api.adzuna.com/v1/api"
 
-    # Database (defaults to local SQLite for development, overridden by DATABASE_URL in .env)
-    DATABASE_URL: Optional[str] = "sqlite:///./job_agent.db"
+    # Database (defaults to canonical SQLite in backend directory, overridden by DATABASE_URL in .env)
+    DATABASE_URL: Optional[str] = f"sqlite:///{CANONICAL_DB_FILE}"
+
 
     # OpenAI & LLM Settings
     OPENAI_API_KEY: Optional[str] = None
@@ -48,10 +50,11 @@ class Settings(BaseSettings):
         return candidate if candidate.exists() else self.USER_PROFILE_PATH
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(str(REPO_ROOT / "backend" / ".env"), ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
 
 
 settings = Settings()

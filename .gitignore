@@ -71,3 +71,8 @@ out/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Graphify internal cache
+graphify-out/cache/
+.graphify_*
+
