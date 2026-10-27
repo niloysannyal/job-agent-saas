@@ -8,6 +8,7 @@ from app.services.job_sources.remoteok import RemoteOKJobSource
 from app.services.job_sources.greenhouse import GreenhouseJobSource
 from app.services.job_sources.lever import LeverJobSource
 from app.services.job_sources.freehire import FreehireJobSource
+from app.services.job_sources.linkedin import LinkedInJobSource
 from app.services.job_sources.exceptions import (
     JobSourceConfigError,
     JobSourceError,
@@ -27,6 +28,7 @@ def get_available_sources(source_names: Optional[Sequence[str]] = None) -> List[
         "greenhouse": lambda: GreenhouseJobSource(),
         "lever": lambda: LeverJobSource(),
         "freehire": lambda: FreehireJobSource(),
+        "linkedin": lambda: LinkedInJobSource(),
     }
     if source_names is not None:
         selected_sources: List[JobSource] = []
@@ -43,6 +45,7 @@ def get_available_sources(source_names: Optional[Sequence[str]] = None) -> List[
         GreenhouseJobSource(),
         LeverJobSource(),
         FreehireJobSource(),
+        LinkedInJobSource(),
     ]
     # Include Adzuna if credentials configured
     if settings.ADZUNA_APP_ID and settings.ADZUNA_APP_KEY:
@@ -59,6 +62,7 @@ __all__ = [
     "GreenhouseJobSource",
     "LeverJobSource",
     "FreehireJobSource",
+    "LinkedInJobSource",
     "JobSourceError",
     "JobSourceConfigError",
     "JobSourceHTTPError",

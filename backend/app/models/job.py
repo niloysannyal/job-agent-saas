@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -178,6 +178,11 @@ class Job(Base):
         back_populates="job",
     )
 
+    @property
+    def title(self) -> str:
+        """Alias for role to maintain consistency across frontend and APIs."""
+        return self.role
+
 
 # --- DTO and Pydantic Schemas ---
 
@@ -226,7 +231,24 @@ class JobPosting(BaseModel):
 class JobBase(BaseModel):
     company: str
     role: str
+    title: Optional[str] = None
     description: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def sync_role_and_title(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "title" not in data or not data["title"]:
+                data["title"] = data.get("role", "")
+            elif "role" not in data or not data["role"]:
+                data["role"] = data.get("title", "")
+        elif hasattr(data, "role"):
+            if not getattr(data, "title", None):
+                try:
+                    data.title = getattr(data, "role", "")
+                except Exception:
+                    pass
+        return data
     salary: Optional[str] = None
     salary_min: Optional[float] = None
     salary_max: Optional[float] = None
