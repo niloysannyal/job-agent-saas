@@ -521,9 +521,9 @@ export default function App() {
       <Sidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        counts={sidebarCounts}
         profileName={profile?.full_name || 'Niloy Sannyal'}
-        tenantEmail="niloy@example.com"
+        tenantEmail={profile?.email || 'niloy@example.com'}
+        showToast={showToast}
       />
 
       {/* MAIN CONTENT AREA */}

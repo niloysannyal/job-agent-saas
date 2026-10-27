@@ -1,61 +1,96 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard,
-  User,
   Briefcase,
   FileEdit,
   Kanban,
   GraduationCap,
   Sparkles,
-  ShieldCheck,
+  User,
+  FileText,
+  Sliders,
+  LogOut,
+  ChevronUp,
+  Users,
 } from 'lucide-react';
 
 export default function Sidebar({
   activeSection,
   setActiveSection,
-  counts = {},
   profileName = 'Niloy Sannyal',
   tenantEmail = 'niloy@example.com',
+  onLogout,
+  showToast,
 }) {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navItems = [
     {
       id: 'dashboard',
       label: 'Dashboard',
       icon: LayoutDashboard,
-      badge: null,
-    },
-    {
-      id: 'profile',
-      label: 'Profile & Grounding',
-      icon: User,
-      badge: counts.designations ? `${counts.designations} Roles` : null,
     },
     {
       id: 'jobs',
       label: 'Jobs & Radar',
       icon: Briefcase,
-      badge: counts.jobs != null ? String(counts.jobs) : null,
     },
     {
       id: 'studio',
       label: 'Application Studio',
       icon: FileEdit,
-      badge: counts.tailoredDrafts ? `${counts.tailoredDrafts} Draft` : null,
     },
     {
       id: 'pipeline',
       label: 'Application Pipeline',
       icon: Kanban,
-      badge: counts.pipeline != null ? String(counts.pipeline) : null,
-      alertBadge: counts.followUpsDue > 0 ? `${counts.followUpsDue} Due` : null,
     },
     {
       id: 'interview',
       label: 'STAR Interview Coach',
       icon: GraduationCap,
-      badge: counts.stories ? `${counts.stories} Stories` : null,
     },
   ];
+
+  // Derive user initials (e.g., "NS" for Niloy Sannyal)
+  const initials = profileName
+    .split(' ')
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'NS';
+
+  const handleSelectOption = (sectionId, message) => {
+    setShowProfileMenu(false);
+    if (sectionId) {
+      setActiveSection(sectionId);
+    }
+    if (message && showToast) {
+      showToast(message);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowProfileMenu(false);
+    if (onLogout) {
+      onLogout();
+    } else if (showToast) {
+      showToast('Logged out of session. (Multi-tenant mode ready)');
+    }
+  };
 
   return (
     <aside className="app-sidebar" aria-label="Sidebar Navigation">
@@ -65,18 +100,12 @@ export default function Sidebar({
           <Sparkles className="icon-sparkles" />
         </div>
         <div className="brand-meta">
-          <h1 className="brand-title">AI Career OS</h1>
-          <span className="brand-account">{profileName}</span>
+          <h1 className="brand-title">JobEazy</h1>
+          <span className="brand-account">Autonomous Job Agent</span>
         </div>
       </div>
 
-      {/* Tenant Pill */}
-      <div className="sidebar-tenant-badge">
-        <span className="tenant-status-dot"></span>
-        <span className="tenant-email">{tenantEmail}</span>
-      </div>
-
-      {/* Nav Menu */}
+      {/* Nav Menu (Clean, No badge counters, Profile moved to bottom) */}
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -92,34 +121,92 @@ export default function Sidebar({
                 <Icon className="nav-icon" />
                 <span className="nav-label">{item.label}</span>
               </div>
-              <div className="nav-item-badges">
-                {item.alertBadge && (
-                  <span className="badge-alert" title={`${item.alertBadge} follow-ups scheduled`}>
-                    ⏰ {item.alertBadge}
-                  </span>
-                )}
-                {item.badge && !item.alertBadge && (
-                  <span className="badge-counter">{item.badge}</span>
-                )}
-              </div>
             </button>
           );
         })}
       </nav>
 
-      {/* System Status Footer */}
-      <div className="sidebar-footer">
-        <div className="engine-indicator">
-          <div className="indicator-dot"></div>
-          <div className="indicator-text">
-            <strong>OpenAI Embeddings</strong>
-            <span>text-embedding-3-small</span>
+      {/* Profile & Account Section at Bottom Left */}
+      <div className="sidebar-profile-footer" ref={profileMenuRef}>
+        {/* Popover Menu */}
+        {showProfileMenu && (
+          <div className="profile-popover-menu animate-fadeIn">
+            <div className="popover-user-header">
+              <div className="popover-avatar">{initials}</div>
+              <div className="popover-user-info">
+                <strong>{profileName}</strong>
+                <span>{tenantEmail}</span>
+              </div>
+            </div>
+
+            <div className="popover-divider" />
+
+            <button
+              className={`popover-item ${activeSection === 'profile' ? 'active' : ''}`}
+              onClick={() => handleSelectOption('profile')}
+            >
+              <User className="popover-icon" />
+              <span>Profile & Grounding</span>
+            </button>
+
+            <button
+              className="popover-item"
+              onClick={() => handleSelectOption('profile', 'Opened Master LaTeX CV')}
+            >
+              <FileText className="popover-icon" />
+              <span>Master CV & LaTeX</span>
+            </button>
+
+            <button
+              className="popover-item"
+              onClick={() => handleSelectOption('profile', 'Opened Career Preferences')}
+            >
+              <Sliders className="popover-icon" />
+              <span>Grounding & Tone</span>
+            </button>
+
+            <div className="popover-divider" />
+
+            <button
+              className="popover-item"
+              onClick={() => handleSelectOption(null, 'Switching accounts (Multi-tenant mode ready)')}
+            >
+              <Users className="popover-icon" />
+              <span>Switch Account</span>
+            </button>
+
+            <button
+              className="popover-item popover-logout"
+              onClick={handleLogoutClick}
+            >
+              <LogOut className="popover-icon" />
+              <span>Sign Out</span>
+            </button>
           </div>
-        </div>
-        <div className="human-gate-tag">
-          <ShieldCheck className="gate-icon" />
-          <span>Strict Human-in-the-Loop Gate</span>
-        </div>
+        )}
+
+        {/* Profile Card Button */}
+        <button
+          className={`sidebar-profile-card ${showProfileMenu ? 'menu-open' : ''} ${
+            activeSection === 'profile' ? 'active-profile' : ''
+          }`}
+          onClick={() => setShowProfileMenu((prev) => !prev)}
+          title="Account settings & profile"
+          aria-haspopup="true"
+          aria-expanded={showProfileMenu}
+        >
+          <div className="profile-avatar-wrap">
+            <div className="profile-avatar">{initials}</div>
+            <span className="profile-online-dot" />
+          </div>
+
+          <div className="profile-meta-text">
+            <strong className="profile-name">{profileName}</strong>
+            <span className="profile-email">{tenantEmail}</span>
+          </div>
+
+          <ChevronUp className={`profile-chevron ${showProfileMenu ? 'rotate-180' : ''}`} />
+        </button>
       </div>
     </aside>
   );
