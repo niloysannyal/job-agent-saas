@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronUp,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -19,6 +20,7 @@ export default function Sidebar({
   setActiveSection,
   profileName = 'Niloy Sannyal',
   tenantEmail = 'niloy@example.com',
+  isSuperadmin = true,
   onLogout,
   showToast,
 }) {
@@ -63,6 +65,16 @@ export default function Sidebar({
       icon: GraduationCap,
     },
   ];
+
+  if (isSuperadmin) {
+    navItems.push({
+      id: 'admin',
+      label: 'Admin Control',
+      icon: ShieldCheck,
+      badge: 'Superadmin',
+    });
+  }
+
 
   // Derive user initials (e.g., "NS" for Niloy Sannyal)
   const initials = profileName

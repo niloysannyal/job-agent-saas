@@ -8,6 +8,7 @@ import JobsView from './components/JobsView';
 import ApplicationStudio from './components/ApplicationStudio';
 import PipelineView from './components/PipelineView';
 import InterviewCoachView from './components/InterviewCoachView';
+import AdminView from './components/AdminView';
 import JobDetailModal from './components/JobDetailModal';
 import FollowUpModal from './components/FollowUpModal';
 import MaterialsModal from './components/MaterialsModal';
@@ -18,8 +19,10 @@ const DEFAULT_ACCOUNT_ID = '6e488188-0015-4657-94c9-92d01413dcfb';
 const API_BASE = '/api/v1';
 
 export default function App() {
+  const [superadminId, setSuperadminId] = useState(DEFAULT_ACCOUNT_ID);
   const [accountId, setAccountId] = useState(DEFAULT_ACCOUNT_ID);
-  const [activeSection, setActiveSection] = useState('dashboard'); // dashboard | profile | jobs | studio | pipeline | interview
+  const [impersonatedTenant, setImpersonatedTenant] = useState(null);
+  const [activeSection, setActiveSection] = useState('dashboard'); // dashboard | profile | jobs | studio | pipeline | interview | admin
   const [toastMessage, setToastMessage] = useState(null);
 
   // Data States
@@ -66,13 +69,35 @@ export default function App() {
     setTimeout(() => setToastMessage(null), duration);
   };
 
-  // --- Initial Data Loading ---
+  // --- Initial Data Loading with Dynamic Account Discovery ---
   useEffect(() => {
-    fetchProfile();
-    fetchJobs();
-    fetchMonitorData();
-    fetchInterviewData();
-  }, [accountId]);
+    const initAccountAndData = async () => {
+      if (!impersonatedTenant) {
+        try {
+          const curRes = await fetch(`${API_BASE}/profile/current`);
+          if (curRes.ok) {
+            const curData = await curRes.json();
+            if (curData && curData.account_id) {
+              setSuperadminId(curData.account_id);
+              if (curData.account_id !== accountId) {
+                setAccountId(curData.account_id);
+                return; // Will re-trigger effect with verified accountId
+              }
+            }
+          }
+        } catch (err) {
+          // Fall back to default accountId
+        }
+      }
+      fetchProfile();
+      fetchJobs();
+      fetchMonitorData();
+      fetchInterviewData();
+    };
+
+    initAccountAndData();
+  }, [accountId, impersonatedTenant]);
+
 
   // Fetch Jobs
   const fetchJobs = async () => {
@@ -521,13 +546,52 @@ export default function App() {
       <Sidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-        profileName={profile?.full_name || 'Niloy Sannyal'}
-        tenantEmail={profile?.email || 'niloy@example.com'}
+        profileName={impersonatedTenant ? impersonatedTenant.email : (profile?.full_name || 'Niloy Sannyal')}
+        tenantEmail={impersonatedTenant ? impersonatedTenant.email : (profile?.email || 'niloy@example.com')}
+        isSuperadmin={true}
         showToast={showToast}
       />
 
       {/* MAIN CONTENT AREA */}
       <main className="career-os-main">
+        {/* QA DOGFOODING IMPERSONATION BANNER */}
+        {impersonatedTenant && (
+          <div className="impersonation-qa-banner">
+            <div className="impersonation-banner-info">
+              <span className="impersonation-tag">🧪 QA DOGFOOD MODE</span>
+              <span className="impersonation-text">
+                Testing workspace as tenant: <strong>{impersonatedTenant.email}</strong>
+                <span className="impersonation-subid"> (ID: {impersonatedTenant.id.slice(0, 8)}...)</span>
+              </span>
+            </div>
+            <button
+              className="btn-exit-impersonation"
+              onClick={() => {
+                setImpersonatedTenant(null);
+                setAccountId(superadminId);
+                setActiveSection('admin');
+                showToast('Exited QA mode. Returned to Superadmin Control.');
+              }}
+            >
+              Exit to Admin Panel
+            </button>
+          </div>
+        )}
+
+        {/* SECTION 0: SUPERADMIN CONTROL */}
+        {activeSection === 'admin' && (
+          <AdminView
+            currentSuperadminId={superadminId}
+            onImpersonateTenant={(tenant) => {
+              setImpersonatedTenant(tenant);
+              setAccountId(tenant.id);
+              setActiveSection('dashboard');
+              showToast(`Acting as tenant: ${tenant.email}`);
+            }}
+            showToast={showToast}
+          />
+        )}
+
         {/* SECTION 1: DASHBOARD */}
         {activeSection === 'dashboard' && (
           <DashboardView
