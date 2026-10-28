@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
+import { useTheme } from './utils/theme';
 
 import Sidebar from './components/Sidebar';
 import DashboardView from './components/DashboardView';
@@ -12,6 +13,7 @@ import AdminView from './components/AdminView';
 import JobDetailModal from './components/JobDetailModal';
 import FollowUpModal from './components/FollowUpModal';
 import MaterialsModal from './components/MaterialsModal';
+import CommandPalette from './components/CommandPalette';
 import Toast from './components/Toast';
 
 // Default Tenant: Niloy Sannyal (seeded in database)
@@ -24,6 +26,8 @@ export default function App() {
   const [impersonatedTenant, setImpersonatedTenant] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard'); // dashboard | profile | jobs | studio | pipeline | interview | admin
   const [toastMessage, setToastMessage] = useState(null);
+  const { theme, setTheme, toggleTheme } = useTheme();
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Data States
   const [jobs, setJobs] = useState([]);
@@ -68,6 +72,28 @@ export default function App() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), duration);
   };
+
+  // Global Keyboard Shortcuts (Linear & Raycast Ergonomics)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
+        else if (e.key === '2') { e.preventDefault(); setActiveSection('jobs'); }
+        else if (e.key === '3') { e.preventDefault(); setActiveSection('studio'); }
+        else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
+        else if (e.key === '5') { e.preventDefault(); setActiveSection('interview'); }
+        else if (e.key === '6') { e.preventDefault(); setActiveSection('profile'); }
+        else if (e.key === '7') { e.preventDefault(); setActiveSection('admin'); }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // --- Initial Data Loading with Dynamic Account Discovery ---
   useEffect(() => {
@@ -550,6 +576,10 @@ export default function App() {
         tenantEmail={impersonatedTenant ? impersonatedTenant.email : (profile?.email || 'niloy@example.com')}
         isSuperadmin={true}
         showToast={showToast}
+        theme={theme}
+        setTheme={setTheme}
+        toggleTheme={toggleTheme}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* MAIN CONTENT AREA */}
@@ -715,6 +745,19 @@ export default function App() {
           showToast={showToast}
         />
       )}
+
+      {/* GLOBAL COMMAND PALETTE (Ctrl+K / Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        activeSection={activeSection}
+        onNavigate={setActiveSection}
+        theme={theme}
+        setTheme={setTheme}
+        jobs={jobs}
+        onSelectJobForStudio={handleSelectJobForStudio}
+        showToast={showToast}
+      />
 
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>

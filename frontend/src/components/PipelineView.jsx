@@ -1,11 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import {
   Kanban,
+  FileEdit,
   Send,
   Clock,
+  MessageSquare,
+  GraduationCap,
+  Sparkles,
+  Archive,
   Building2,
   Eye,
   Plus,
+  Search,
 } from 'lucide-react';
 
 export default function PipelineView({
@@ -18,18 +24,17 @@ export default function PipelineView({
   onNavigate,
   showToast,
 }) {
-  const [selectedColumnFilter, setSelectedColumnFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Kanban Stage Definitions
+  // Kanban Stage Definitions with Pure SVG Icons (No Emojis)
   const stages = [
-    { id: 'draft', label: 'Drafted', color: 'stage-draft', icon: '📝' },
-    { id: 'sent', label: 'Sent / Applied', color: 'stage-sent', icon: '🚀' },
-    { id: 'follow_up_due', label: 'Follow-Up Due', color: 'stage-due', icon: '⏰' },
-    { id: 'responded', label: 'Responded', color: 'stage-responded', icon: '💬' },
-    { id: 'interview', label: 'Interviewing', color: 'stage-interview', icon: '🏆' },
-    { id: 'offer', label: 'Offer Received', color: 'stage-offer', icon: '🎉' },
-    { id: 'rejected', label: 'Archived / Rejected', color: 'stage-rejected', icon: '❌' },
+    { id: 'draft', label: 'Drafted', color: 'stage-draft', icon: FileEdit },
+    { id: 'sent', label: 'Sent / Applied', color: 'stage-sent', icon: Send },
+    { id: 'follow_up_due', label: 'Follow-Up Due', color: 'stage-due', icon: Clock },
+    { id: 'responded', label: 'Responded', color: 'stage-responded', icon: MessageSquare },
+    { id: 'interview', label: 'Interviewing', color: 'stage-interview', icon: GraduationCap },
+    { id: 'offer', label: 'Offer Received', color: 'stage-offer', icon: Sparkles },
+    { id: 'rejected', label: 'Archived / Rejected', color: 'stage-rejected', icon: Archive },
   ];
 
   // Helper to determine whether follow-up is due
@@ -88,7 +93,9 @@ export default function PipelineView({
       {/* Pipeline Header */}
       <div className="pipeline-header panel-card">
         <div className="pipeline-title-group">
-          <Kanban className="pipeline-icon" />
+          <div className="pipeline-icon-box">
+            <Kanban className="pipeline-icon" />
+          </div>
           <div>
             <h3>Autonomous Application Pipeline & Lifecycle Tracker</h3>
             <p className="pipeline-subtext">
@@ -98,13 +105,16 @@ export default function PipelineView({
         </div>
 
         <div className="pipeline-filter-controls">
-          <input
-            type="text"
-            placeholder="Search company or role..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pipeline-search-input"
-          />
+          <div className="pipeline-search-box">
+            <Search className="pipeline-search-icon" />
+            <input
+              type="text"
+              placeholder="Search company or role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pipeline-search-input"
+            />
+          </div>
           <button
             className="action-btn-primary"
             onClick={() => onNavigate('studio')}
@@ -119,12 +129,15 @@ export default function PipelineView({
       <div className="kanban-board-container">
         {stages.map((stage) => {
           const appsInStage = groupedApps[stage.id] || [];
+          const StageIcon = stage.icon;
 
           return (
             <div key={stage.id} className={`kanban-column ${stage.color}`}>
               <div className="column-header">
                 <div className="column-title-left">
-                  <span className="stage-emoji">{stage.icon}</span>
+                  <div className="stage-icon-box">
+                    <StageIcon className="stage-icon" />
+                  </div>
                   <span className="column-name">{stage.label}</span>
                 </div>
                 <span className="column-badge">{appsInStage.length}</span>
@@ -182,6 +195,7 @@ export default function PipelineView({
                           value={app.status}
                           onChange={(e) => onUpdateStatus(app.id, e.target.value)}
                           className="status-dropdown"
+                          aria-label="Update application stage"
                         >
                           <option value="draft">Draft</option>
                           <option value="sent">Sent</option>
@@ -195,6 +209,7 @@ export default function PipelineView({
                           className="view-materials-btn"
                           onClick={() => onViewMaterials(app)}
                           title="View Tailored CV & Outreach"
+                          aria-label="View tailored application materials"
                         >
                           <Eye className="icon-xs" />
                         </button>
@@ -215,7 +230,7 @@ export default function PipelineView({
 
                 {appsInStage.length === 0 && (
                   <div className="column-empty-placeholder">
-                    <span>No applications</span>
+                    <span>No applications in this stage</span>
                   </div>
                 )}
               </div>

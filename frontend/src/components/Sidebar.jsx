@@ -13,6 +13,10 @@ import {
   ChevronUp,
   Users,
   ShieldCheck,
+  Search,
+  Moon,
+  Sun,
+  Laptop,
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -23,6 +27,10 @@ export default function Sidebar({
   isSuperadmin = true,
   onLogout,
   showToast,
+  theme = 'dark',
+  setTheme,
+  toggleTheme,
+  onOpenCommandPalette,
 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
@@ -43,26 +51,31 @@ export default function Sidebar({
       id: 'dashboard',
       label: 'Dashboard',
       icon: LayoutDashboard,
+      shortcut: 'Alt+1',
     },
     {
       id: 'jobs',
       label: 'Jobs & Radar',
       icon: Briefcase,
+      shortcut: 'Alt+2',
     },
     {
       id: 'studio',
       label: 'Application Studio',
       icon: FileEdit,
+      shortcut: 'Alt+3',
     },
     {
       id: 'pipeline',
       label: 'Application Pipeline',
       icon: Kanban,
+      shortcut: 'Alt+4',
     },
     {
       id: 'interview',
       label: 'STAR Interview Coach',
       icon: GraduationCap,
+      shortcut: 'Alt+5',
     },
   ];
 
@@ -72,18 +85,19 @@ export default function Sidebar({
       label: 'Admin Control',
       icon: ShieldCheck,
       badge: 'Superadmin',
+      shortcut: 'Alt+7',
     });
   }
 
-
   // Derive user initials (e.g., "NS" for Niloy Sannyal)
-  const initials = profileName
-    .split(' ')
-    .map((n) => n[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'NS';
+  const initials =
+    profileName
+      .split(' ')
+      .map((n) => n[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'NS';
 
   const handleSelectOption = (sectionId, message) => {
     setShowProfileMenu(false);
@@ -106,18 +120,33 @@ export default function Sidebar({
 
   return (
     <aside className="app-sidebar" aria-label="Sidebar Navigation">
-      {/* Brand Header */}
-      <div className="sidebar-brand">
-        <div className="brand-icon-box">
-          <Sparkles className="icon-sparkles" />
+      {/* Top Header Group */}
+      <div className="sidebar-top-group">
+        {/* Brand Header */}
+        <div className="sidebar-brand">
+          <div className="brand-icon-box">
+            <Sparkles className="icon-sparkles" />
+          </div>
+          <div className="brand-meta">
+            <h1 className="brand-title">JobEazy</h1>
+            <span className="brand-account">Autonomous Job Agent</span>
+          </div>
         </div>
-        <div className="brand-meta">
-          <h1 className="brand-title">JobEazy</h1>
-          <span className="brand-account">Autonomous Job Agent</span>
-        </div>
+
+        {/* Global Command Palette Launcher Button (Linear / Raycast Style) */}
+        <button
+          className="sidebar-quick-search-btn"
+          onClick={onOpenCommandPalette}
+          title="Search views, opportunities and actions (Ctrl+K)"
+          aria-label="Open command palette"
+        >
+          <Search className="quick-search-icon" />
+          <span className="quick-search-label">Quick Search...</span>
+          <kbd className="quick-search-kbd">⌘K</kbd>
+        </button>
       </div>
 
-      {/* Nav Menu (Clean, No badge counters, Profile moved to bottom) */}
+      {/* Nav Menu */}
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -133,6 +162,7 @@ export default function Sidebar({
                 <Icon className="nav-icon" />
                 <span className="nav-label">{item.label}</span>
               </div>
+              <span className="nav-shortcut-hint">{item.shortcut}</span>
             </button>
           );
         })}
@@ -148,6 +178,45 @@ export default function Sidebar({
               <div className="popover-user-info">
                 <strong>{profileName}</strong>
                 <span>{tenantEmail}</span>
+              </div>
+            </div>
+
+            <div className="popover-divider" />
+
+            {/* Theme Selector Segmented Control */}
+            <div className="popover-theme-row">
+              <span className="popover-theme-label">Theme</span>
+              <div className="theme-toggle-group" role="radiogroup" aria-label="Theme selection">
+                <button
+                  className={`theme-toggle-btn ${theme === 'dark' ? 'active' : ''}`}
+                  onClick={() => setTheme && setTheme('dark')}
+                  title="Obsidian Dark Mode"
+                  aria-checked={theme === 'dark'}
+                  role="radio"
+                >
+                  <Moon className="theme-icon" />
+                  <span>Dark</span>
+                </button>
+                <button
+                  className={`theme-toggle-btn ${theme === 'light' ? 'active' : ''}`}
+                  onClick={() => setTheme && setTheme('light')}
+                  title="Studio Light Mode"
+                  aria-checked={theme === 'light'}
+                  role="radio"
+                >
+                  <Sun className="theme-icon" />
+                  <span>Light</span>
+                </button>
+                <button
+                  className={`theme-toggle-btn ${theme === 'system' ? 'active' : ''}`}
+                  onClick={() => setTheme && setTheme('system')}
+                  title="Match System OS"
+                  aria-checked={theme === 'system'}
+                  role="radio"
+                >
+                  <Laptop className="theme-icon" />
+                  <span>Auto</span>
+                </button>
               </div>
             </div>
 
@@ -203,7 +272,7 @@ export default function Sidebar({
             activeSection === 'profile' ? 'active-profile' : ''
           }`}
           onClick={() => setShowProfileMenu((prev) => !prev)}
-          title="Account settings & profile"
+          title="Account settings & theme"
           aria-haspopup="true"
           aria-expanded={showProfileMenu}
         >
