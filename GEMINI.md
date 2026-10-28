@@ -43,12 +43,14 @@ permissive default, so deciding it later is a data change, not a rebuild).
 
 ## Current priority (per ROADMAP.md Phase 0 → 1)
 All three core modules (**Find → Apply → Monitor**) plus **STAR Interview Coach**,
-**Profile Management**, and the **Superadmin Control Center** (with multi-tenant management,
-dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding mode)
-are built end-to-end with 142 passing tests and a live React dashboard backed by Supabase
-PostgreSQL. The current focus is running Niloy's live job search through the system
-(Phase 1 personal validation), refining match scoring, and verifying outreach quality
-while strictly maintaining the non-negotiables.
+**Profile Management**, **Superadmin Control Center** (with multi-tenant management,
+dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding mode),
+**Public SaaS Landing Page**, and **Unified JWT Authentication Engine** (with bcrypt
+password hashing and automatic role-based routing between SuperAdmin Ops Center and
+Candidate OS) are built end-to-end with 151 passing tests and a live React dashboard
+backed by Supabase PostgreSQL. The current focus is running Niloy's live job search through
+the system (Phase 1 personal validation), refining match scoring, and verifying outreach
+quality while strictly maintaining the non-negotiables.
 
 ## Tech stack (decided, don't re-propose alternatives)
 - **Backend**: FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL (Supabase / local pooler) / SQLite (dev), Redis, Qdrant.

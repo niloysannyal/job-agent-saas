@@ -1,4 +1,5 @@
 import uuid
+import bcrypt
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict
@@ -52,6 +53,11 @@ class Account(Base):
         String(50),
         nullable=False,
         default="active",
+    )
+    # Hashed password for authentication
+    hashed_password: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
     )
     # Template limit per ARCHITECTURE.md §5 (default = unlimited, None)
     account_template_limit: Mapped[Optional[int]] = mapped_column(
@@ -116,6 +122,23 @@ class Account(Base):
         cascade="all, delete-orphan",
     )
 
+    def set_password(self, password: str) -> None:
+        """Hash and set account password with bcrypt salt."""
+        salt = bcrypt.gensalt()
+        self.hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+    def verify_password(self, password: str) -> bool:
+        """Verify password against stored bcrypt hash."""
+        if not self.hashed_password:
+            return False
+        try:
+            return bcrypt.checkpw(
+                password.encode("utf-8"),
+                self.hashed_password.encode("utf-8")
+            )
+        except Exception:
+            return False
+
 
 # --- Pydantic Schemas ---
 
@@ -128,7 +151,7 @@ class AccountBase(BaseModel):
 
 
 class AccountCreate(AccountBase):
-    pass
+    password: Optional[str] = None
 
 
 class AccountUpdate(BaseModel):
@@ -139,10 +162,34 @@ class AccountUpdate(BaseModel):
     account_template_limit: Optional[int] = None
 
 
-
 class AccountRead(AccountBase):
     id: str
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    account_id: str
+    email: str
+    role: str
+    plan_tier: str
+
+
+class AuthMeResponse(BaseModel):
+    id: str
+    email: str
+    role: str
+    status: str
+    plan_tier: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import { useTheme } from './utils/theme';
+import { AuthProvider, useAuth, parseJwtPayload } from './context/AuthContext';
 
+import LandingPageView from './components/LandingPageView';
+import LoginModal from './components/LoginModal';
 import Sidebar from './components/Sidebar';
 import DashboardView from './components/DashboardView';
 import ProfileView from './components/ProfileView';
@@ -16,18 +19,73 @@ import MaterialsModal from './components/MaterialsModal';
 import CommandPalette from './components/CommandPalette';
 import Toast from './components/Toast';
 
-// Default Tenant: Niloy Sannyal (seeded in database)
 const DEFAULT_ACCOUNT_ID = '6e488188-0015-4657-94c9-92d01413dcfb';
 const API_BASE = '/api/v1';
 
-export default function App() {
-  const [superadminId, setSuperadminId] = useState(DEFAULT_ACCOUNT_ID);
-  const [accountId, setAccountId] = useState(DEFAULT_ACCOUNT_ID);
-  const [impersonatedTenant, setImpersonatedTenant] = useState(null);
-  const [activeSection, setActiveSection] = useState('dashboard'); // dashboard | profile | jobs | studio | pipeline | interview | admin
+function CareerAppInner() {
+  const {
+    user,
+    token,
+    authHeaders,
+    logout,
+    impersonateTenant,
+    exitImpersonation,
+    isImpersonating,
+    impersonatedTenant,
+    isSuperadmin,
+  } = useAuth();
+
+  const [accountId, setAccountId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('jobeazy_jwt_token');
+      const parsed = parseJwtPayload(stored);
+      if (parsed?.role === 'superadmin') return parsed.id;
+      if (parsed?.id) return parsed.id;
+    }
+    return DEFAULT_ACCOUNT_ID;
+  });
+
+  const [activeSection, setActiveSectionState] = useState(() => {
+    if (typeof window === 'undefined') return 'dashboard';
+    const stored = localStorage.getItem('jobeazy_jwt_token');
+    const parsed = parseJwtPayload(stored);
+    const saved = localStorage.getItem('jobeazy_active_section');
+    if (parsed?.role === 'superadmin') {
+      return (saved && saved !== 'dashboard') ? saved : 'admin';
+    }
+    return (saved && saved !== 'admin') ? saved : 'dashboard';
+  });
+
+  const setActiveSection = (section) => {
+    setActiveSectionState(section);
+    try {
+      localStorage.setItem('jobeazy_active_section', section);
+    } catch {}
+  };
+
+  const [viewMode, setViewMode] = useState(() => (localStorage.getItem('jobeazy_jwt_token') ? 'app' : 'landing'));
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Sync accountId with authenticated user or impersonated tenant
+  useEffect(() => {
+    if (impersonatedTenant?.id) {
+      setAccountId(impersonatedTenant.id);
+    } else if (user?.id) {
+      setAccountId(user.id);
+    }
+  }, [user, impersonatedTenant]);
+
+  // Ensure role-based section consistency
+  useEffect(() => {
+    if (user?.role === 'superadmin' && !impersonatedTenant && activeSection === 'dashboard') {
+      setActiveSection('admin');
+    } else if (user && user.role !== 'superadmin' && activeSection === 'admin') {
+      setActiveSection('dashboard');
+    }
+  }, [user, impersonatedTenant]);
 
   // Data States
   const [jobs, setJobs] = useState([]);
@@ -73,7 +131,7 @@ export default function App() {
     setTimeout(() => setToastMessage(null), duration);
   };
 
-  // Global Keyboard Shortcuts (Linear & Raycast Ergonomics)
+  // Keyboard Shortcuts (Linear Ergonomics)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -88,48 +146,30 @@ export default function App() {
         else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
         else if (e.key === '5') { e.preventDefault(); setActiveSection('interview'); }
         else if (e.key === '6') { e.preventDefault(); setActiveSection('profile'); }
-        else if (e.key === '7') { e.preventDefault(); setActiveSection('admin'); }
+        else if (e.key === '7' && isSuperadmin) { e.preventDefault(); setActiveSection('admin'); }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isSuperadmin]);
 
-  // --- Initial Data Loading with Dynamic Account Discovery ---
+  // Initial Data Loading - Only fetch candidate data for tenants or when superadmin is impersonating
   useEffect(() => {
-    const initAccountAndData = async () => {
-      if (!impersonatedTenant) {
-        try {
-          const curRes = await fetch(`${API_BASE}/profile/current`);
-          if (curRes.ok) {
-            const curData = await curRes.json();
-            if (curData && curData.account_id) {
-              setSuperadminId(curData.account_id);
-              if (curData.account_id !== accountId) {
-                setAccountId(curData.account_id);
-                return; // Will re-trigger effect with verified accountId
-              }
-            }
-          }
-        } catch (err) {
-          // Fall back to default accountId
-        }
-      }
+    if (viewMode === 'app' && (!isSuperadmin || isImpersonating)) {
       fetchProfile();
       fetchJobs();
       fetchMonitorData();
       fetchInterviewData();
-    };
-
-    initAccountAndData();
-  }, [accountId, impersonatedTenant]);
-
+    }
+  }, [accountId, viewMode, isSuperadmin, isImpersonating]);
 
   // Fetch Jobs
   const fetchJobs = async () => {
     try {
       setLoadingJobs(true);
-      const res = await fetch(`${API_BASE}/jobs?account_id=${accountId}&include_gated=true&include_flagged=true&limit=100`);
+      const res = await fetch(`${API_BASE}/jobs?account_id=${accountId}&include_gated=true&include_flagged=true&limit=100`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const data = await res.json();
         setJobs(Array.isArray(data) ? data : []);
@@ -146,8 +186,12 @@ export default function App() {
     try {
       setLoadingApps(true);
       const [sumRes, appsRes] = await Promise.all([
-        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`),
-        fetch(`${API_BASE}/applications?account_id=${accountId}&limit=100`),
+        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        }),
+        fetch(`${API_BASE}/applications?account_id=${accountId}&limit=100`, {
+          headers: { ...authHeaders },
+        }),
       ]);
       if (sumRes.ok) {
         const sumData = await sumRes.json();
@@ -167,7 +211,9 @@ export default function App() {
   // Fetch Profile
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`);
+      const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`, {
+        headers: { ...authHeaders },
+      });
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
@@ -202,8 +248,12 @@ export default function App() {
   const fetchInterviewData = async () => {
     try {
       const [storiesRes, tagsRes] = await Promise.all([
-        fetch(`${API_BASE}/interview/stories?account_id=${accountId}`),
-        fetch(`${API_BASE}/interview/tags?account_id=${accountId}`),
+        fetch(`${API_BASE}/interview/stories?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        }),
+        fetch(`${API_BASE}/interview/tags?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        }),
       ]);
       if (storiesRes.ok) {
         const sData = await storiesRes.json();
@@ -224,7 +274,10 @@ export default function App() {
       setIsIngesting(true);
       const res = await fetch(`${API_BASE}/jobs/ingest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({
           account_id: accountId,
           query: query || 'AI Engineer',
@@ -254,7 +307,10 @@ export default function App() {
       setIsSavingProfile(true);
       const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify(profileForm),
       });
       if (res.ok) {
@@ -275,7 +331,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/designations?account_id=${accountId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ title, priority, is_active: true }),
       });
       if (res.ok) {
@@ -291,6 +350,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/designations/${id}?account_id=${accountId}`, {
         method: 'DELETE',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Removed designation.');
@@ -306,7 +366,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/locations?account_id=${accountId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ location_name, location_type, relocation_willing, is_active: true }),
       });
       if (res.ok) {
@@ -322,6 +385,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/locations/${id}?account_id=${accountId}`, {
         method: 'DELETE',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Removed location.');
@@ -337,7 +401,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/compensation?account_id=${accountId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify(compData),
       });
       if (res.ok) {
@@ -354,7 +421,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/languages?account_id=${accountId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ language, proficiency }),
       });
       if (res.ok) {
@@ -370,6 +440,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile/languages/${id}?account_id=${accountId}`, {
         method: 'DELETE',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Removed language.');
@@ -385,7 +456,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/profile?account_id=${accountId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ master_cv_latex: latexSource }),
       });
       if (res.ok) {
@@ -402,7 +476,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/interview/stories?account_id=${accountId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify(storyPayload),
       });
       if (res.ok) {
@@ -418,6 +495,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/interview/stories/${id}?account_id=${accountId}`, {
         method: 'DELETE',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Story deleted.');
@@ -438,7 +516,10 @@ export default function App() {
       setIsTailoring(true);
       const res = await fetch(`${API_BASE}/applications/tailor`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({
           account_id: accountId,
           job_id,
@@ -468,6 +549,7 @@ export default function App() {
       setIsSending(true);
       const res = await fetch(`${API_BASE}/applications/${applicationId}/send?account_id=${accountId}`, {
         method: 'POST',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Application approved & confirmed! 10-day follow-up scheduled.');
@@ -489,7 +571,10 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/applications/${appId}/status?account_id=${accountId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
@@ -506,6 +591,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/applications/${app.id}/follow-up?account_id=${accountId}`, {
         method: 'POST',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         const data = await res.json();
@@ -522,11 +608,12 @@ export default function App() {
   };
 
   // Pipeline: Confirm Send Follow-Up
-  const handleSendFollowUpConfirm = async (appId, draftText) => {
+  const handleSendFollowUpConfirm = async (appId) => {
     try {
       setIsSendingFollowUp(true);
       const res = await fetch(`${API_BASE}/applications/${appId}/follow-up/send?account_id=${accountId}`, {
         method: 'POST',
+        headers: { ...authHeaders },
       });
       if (res.ok) {
         showToast('Follow-up recorded! Next review scheduled.');
@@ -548,59 +635,98 @@ export default function App() {
     setActiveSection('studio');
   };
 
-  // Global counts for Sidebar badges
-  const sidebarCounts = useMemo(() => {
-    const highMatch = jobs.filter((j) => (j.match_score ?? 0) >= 80).length;
-    return {
-      jobs: jobs.length,
-      highMatch,
-      designations: profile?.target_designations?.length || 0,
-      tailoredDrafts: monitorSummary.draft || 0,
-      pipeline: monitorSummary.total || 0,
-      followUpsDue: monitorSummary.follow_ups_due || 0,
-      stories: stories.length,
-    };
-  }, [jobs, profile, monitorSummary, stories]);
-
+  // Top recommended jobs
   const topJobs = useMemo(() => {
     return [...jobs].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
   }, [jobs]);
 
+  // If user selected Landing Page view
+  if (viewMode === 'landing') {
+    return (
+      <div className="landing-wrapper">
+        <LandingPageView
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+          onEnterApp={() => {
+            if (token) {
+              setViewMode('app');
+            } else {
+              setIsLoginModalOpen(true);
+            }
+          }}
+          isAuthenticated={!!token}
+          user={user}
+        />
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={(authData) => {
+            setViewMode('app');
+            if (authData?.role === 'superadmin') {
+              setActiveSection('admin');
+              showToast('Signed in as Superadmin. Switched to Superadmin Control Center.');
+            } else {
+              setActiveSection('dashboard');
+              showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+            }
+          }}
+        />
+        <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+      </div>
+    );
+  }
+
+  // If user role is NOT superadmin and they somehow landed on 'admin', redirect to 'dashboard'
+  const effectiveSection = activeSection === 'admin' && !isSuperadmin ? 'dashboard' : activeSection;
+
   return (
     <div className="career-os-root">
-      {/* SIDEBAR NAVIGATION */}
+      {/* SIDEBAR NAVIGATION (Candidate OS Workspace) */}
       <Sidebar
-        activeSection={activeSection}
+        activeSection={effectiveSection}
         setActiveSection={setActiveSection}
-        profileName={impersonatedTenant ? impersonatedTenant.email : (profile?.full_name || 'Niloy Sannyal')}
-        tenantEmail={impersonatedTenant ? impersonatedTenant.email : (profile?.email || 'niloy@example.com')}
-        isSuperadmin={true}
+        profileName={
+          impersonatedTenant
+            ? (impersonatedTenant.name || impersonatedTenant.email)
+            : (isSuperadmin
+                ? 'SuperAdmin'
+                : (profile?.full_name || user?.email?.split('@')[0] || 'Niloy Sannyal'))
+        }
+        tenantEmail={
+          impersonatedTenant
+            ? impersonatedTenant.email
+            : (user?.email || (isSuperadmin ? 'admin@jobeazy.com' : 'niloy@example.com'))
+        }
+        isSuperadmin={isSuperadmin}
         showToast={showToast}
         theme={theme}
         setTheme={setTheme}
         toggleTheme={toggleTheme}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onLogout={() => {
+          logout();
+          setViewMode('landing');
+          showToast('Signed out of session.');
+        }}
       />
 
       {/* MAIN CONTENT AREA */}
       <main className="career-os-main">
         {/* QA DOGFOODING IMPERSONATION BANNER */}
-        {impersonatedTenant && (
+        {isImpersonating && impersonatedTenant && (
           <div className="impersonation-qa-banner">
             <div className="impersonation-banner-info">
               <span className="impersonation-tag">🧪 QA DOGFOOD MODE</span>
               <span className="impersonation-text">
-                Testing workspace as tenant: <strong>{impersonatedTenant.email}</strong>
-                <span className="impersonation-subid"> (ID: {impersonatedTenant.id.slice(0, 8)}...)</span>
+                Testing workspace as tenant: <strong>{impersonatedTenant.name || impersonatedTenant.email}</strong>
+                <span className="impersonation-subid"> (ID: {impersonatedTenant.id?.slice(0, 8)}...)</span>
               </span>
             </div>
             <button
               className="btn-exit-impersonation"
               onClick={() => {
-                setImpersonatedTenant(null);
-                setAccountId(superadminId);
+                exitImpersonation();
                 setActiveSection('admin');
-                showToast('Exited QA mode. Returned to Superadmin Control.');
+                showToast('Exited QA mode. Returned to Superadmin Control Center.');
               }}
             >
               Exit to Admin Panel
@@ -608,13 +734,12 @@ export default function App() {
           </div>
         )}
 
-        {/* SECTION 0: SUPERADMIN CONTROL */}
-        {activeSection === 'admin' && (
+        {/* SECTION 0: SUPERADMIN CONTROL (Accessible to superadmins only) */}
+        {effectiveSection === 'admin' && isSuperadmin && (
           <AdminView
-            currentSuperadminId={superadminId}
+            currentSuperadminId={user?.id || accountId}
             onImpersonateTenant={(tenant) => {
-              setImpersonatedTenant(tenant);
-              setAccountId(tenant.id);
+              impersonateTenant(tenant);
               setActiveSection('dashboard');
               showToast(`Acting as tenant: ${tenant.email}`);
             }}
@@ -623,9 +748,9 @@ export default function App() {
         )}
 
         {/* SECTION 1: DASHBOARD */}
-        {activeSection === 'dashboard' && (
+        {effectiveSection === 'dashboard' && (
           <DashboardView
-            stats={{ total: jobs.length, high: sidebarCounts.highMatch }}
+            stats={{ total: jobs.length, high: jobs.filter((j) => (j.match_score ?? 0) >= 80).length }}
             monitorSummary={monitorSummary}
             profile={profile}
             topJobs={topJobs}
@@ -635,7 +760,7 @@ export default function App() {
         )}
 
         {/* SECTION 2: PROFILE & GROUNDING */}
-        {activeSection === 'profile' && (
+        {effectiveSection === 'profile' && (
           <ProfileView
             profile={profile}
             profileForm={profileForm}
@@ -660,7 +785,7 @@ export default function App() {
         )}
 
         {/* SECTION 3: JOBS & RADAR */}
-        {activeSection === 'jobs' && (
+        {effectiveSection === 'jobs' && (
           <JobsView
             jobs={jobs}
             loading={loadingJobs}
@@ -673,7 +798,7 @@ export default function App() {
         )}
 
         {/* SECTION 4: APPLICATION STUDIO */}
-        {activeSection === 'studio' && (
+        {effectiveSection === 'studio' && (
           <ApplicationStudio
             selectedJob={selectedJobForStudio}
             onSelectJob={setSelectedJobForStudio}
@@ -691,7 +816,7 @@ export default function App() {
         )}
 
         {/* SECTION 5: PIPELINE KANBAN & TRACKER */}
-        {activeSection === 'pipeline' && (
+        {effectiveSection === 'pipeline' && (
           <PipelineView
             applications={applications}
             loading={loadingApps}
@@ -705,7 +830,7 @@ export default function App() {
         )}
 
         {/* SECTION 6: STAR INTERVIEW COACH */}
-        {activeSection === 'interview' && (
+        {effectiveSection === 'interview' && (
           <InterviewCoachView
             stories={stories}
             tags={interviewTags}
@@ -750,7 +875,7 @@ export default function App() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
-        activeSection={activeSection}
+        activeSection={effectiveSection}
         onNavigate={setActiveSection}
         theme={theme}
         setTheme={setTheme}
@@ -759,7 +884,30 @@ export default function App() {
         showToast={showToast}
       />
 
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={(authData) => {
+          setViewMode('app');
+          if (authData?.role === 'superadmin') {
+            setActiveSection('admin');
+            showToast('Signed in as Superadmin. Switched to Superadmin Control Center.');
+          } else {
+            setActiveSection('dashboard');
+            showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+          }
+        }}
+      />
+
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <CareerAppInner />
+    </AuthProvider>
   );
 }

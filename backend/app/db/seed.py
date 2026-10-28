@@ -39,6 +39,27 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
         close_session = True
 
     try:
+        # 0. SuperAdmin Ops Account (dedicated administrative console)
+        SUPERADMIN_ID = "00000000-0000-4000-a000-000000000001"
+        superadmin = session.query(Account).filter((Account.id == SUPERADMIN_ID) | (Account.email == "admin@jobeazy.com")).first()
+        if not superadmin:
+            superadmin = Account(
+                id=SUPERADMIN_ID,
+                email="admin@jobeazy.com",
+                plan_tier="enterprise",
+                role="superadmin",
+                status="active",
+            )
+            superadmin.set_password("AdminSecure2026!")
+            session.add(superadmin)
+            session.flush()
+            logger.info(f"Seeded superadmin: {superadmin.id} ({superadmin.email})")
+        else:
+            superadmin.role = "superadmin"
+            superadmin.status = "active"
+            superadmin.set_password("AdminSecure2026!")
+            session.flush()
+
         # 1. Tenant #1: Niloy (deterministic default tenant UUID)
         DEFAULT_TENANT_ID = "6e488188-0015-4657-94c9-92d01413dcfb"
         account = session.query(Account).filter_by(email="niloy@example.com").first()
@@ -47,16 +68,18 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
                 id=DEFAULT_TENANT_ID,
                 email="niloy@example.com",
                 plan_tier="free",
-                role="superadmin",
+                role="tenant",
                 status="active",
                 account_template_limit=None,
             )
+            account.set_password("JobEazy2026!")
             session.add(account)
             session.flush()
             logger.info(f"Seeded default tenant #1: {account.id} ({account.email})")
         else:
-            account.role = "superadmin"
+            account.role = "tenant"
             account.status = "active"
+            account.set_password("JobEazy2026!")
             session.flush()
 
 

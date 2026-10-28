@@ -48,11 +48,15 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [x] Profile Management API & UI (`/api/v1/profile` + `ProfileView.jsx`) — CRUD for `UserProfile`, `TargetDesignation`, `TargetLocation`, `CompensationExpectation`, `SpokenLanguage`, and dealbreaker preferences.
 - [x] STAR Interview Coach (`/api/v1/interview` + `InterviewCoachView.jsx`) — STAR story bank manager, question generator matching role requirements, and AI answer critique adhering to the verified fact ledger.
 
-**Superadmin Control & Multi-Tenant RBAC (Phase 0 additions):**
+**Superadmin Control, Multi-Tenant RBAC & Auth Engine (Phase 0 additions):**
 - [x] Multi-tenant role & status migration (`role`, `status` on `accounts` via Alembic `7b8e2b6659a9` on Supabase PostgreSQL).
+- [x] Password authentication migration (`hashed_password` on `accounts` via Alembic `e57e51d71b2e` on Supabase PostgreSQL).
+- [x] JWT Bearer Token Security Engine (`/api/v1/auth/login`, `register`, `me`) with bcrypt hashing and RBAC route protection.
 - [x] Superadmin Control Center API (`/api/v1/admin/metrics`, `tenants`, `impersonate`, `llm-providers`, `sources`, `templates`, `flagged`).
 - [x] Superadmin UI (`AdminView.jsx`) with Bento metrics, tenant management, dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding mode with persistent banner.
-- [x] 142 total passing backend tests.
+- [x] Public SaaS Landing Page (`LandingPageView.jsx`) with live app preview mock, bento grid, lifecycle workflow, and pricing tiers.
+- [x] Clean Portal Separation: General tenants (`niloy@example.com`) strictly access Candidate OS; Superadmins (`admin@jobeazy.com`) route directly to Ops Center with dedicated sidebar controls.
+- [x] 151 total passing backend tests (100% green).
 
 **Architecture & Tooling:**
 - [x] Graphify Knowledge Graph (`graphify-out/`) — deterministic AST code parsing, interactive node graph (`graph.html`), Mermaid call-flow diagram (`job-agent-saas-callflow.html`), D3 collapsible tree (`GRAPH_TREE.html`), and 59 community wiki articles for fast agent reasoning.

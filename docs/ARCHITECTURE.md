@@ -269,18 +269,12 @@ into Stripe's own product. Setup deferred per Niloy's decision — the
 without a schema change later.
 
 ## 13. SaaS-only concerns still ahead (Phase 3+)
-- **BLOCKER, not optional (found 2026-10-19): `account_id` is currently a
-  trusted, unverified query parameter on every API endpoint** (confirmed on
-  `GET /jobs` — assume the same is true anywhere else `account_id` appears
-  until proven otherwise). Any caller who knows or guesses an `account_id` can
-  read that account's jobs, CVs, and application data — there is currently zero
-  authentication binding a request to the account it claims. This is harmless
-  at single-user Phase 0/1 scale (only Niloy's own account exists), but it is
-  an absolute, non-negotiable blocker before Phase 3 opens signups to anyone
-  else. Fix path: replace every `account_id: str = Query(...)` parameter with a
-  dependency-injected, auth-verified value (e.g. `current_account: Account =
-  Depends(get_current_account)`, extracted from a validated session/JWT), and
-  audit every existing endpoint for this pattern before adding auth, not after.
+- **RESOLVED (2026-10-28): `account_id` authentication binding blocker resolved.**
+  Implemented multi-tenant JWT bearer token authentication engine via `app.core.auth`:
+  - Alembic migration `e57e51d71b2e` added `hashed_password` (VARCHAR 255) with bcrypt hashing to `accounts`.
+  - Added signed PyJWT authentication endpoints (`POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `GET /api/v1/auth/me`).
+  - Upgraded `get_current_account` dependency to decode `Authorization: Bearer <token>` header first and enforce account isolation.
+  - Added `require_superadmin` dependency blocking non-superadmin accounts (`403 Forbidden`) from accessing administrative endpoints.
 - Legal review of ToS exposure from the JSearch aggregator layer, once added.
 - Legal review specifically of whether Layer 1b (LinkedIn public endpoint, §4) can
   ever be offered to other users at all — current default is no, Niloy-only.
@@ -298,6 +292,7 @@ without a schema change later.
 | 2026-10-04 | Stack: FastAPI + Postgres + Redis + Qdrant | Matches skillset, proven in Betopia Sales Agent |
 | 2026-10-04 | Hosting: single VPS + Docker Compose for MVP | Matches existing ops experience; revisit at scale |
 | 2026-10-04 | Payments: Paddle recommended (Stripe unavailable from Bangladesh) | MoR handles global tax; setup deferred |
+| 2026-10-28 | Unified JWT Auth, Role-Based Routing & Portal Separation | Separate candidate workspace from superadmin ops center; protect admin endpoints with bcrypt & PyJWT; resolve §13 blocker |
 | 2026-10-04 | LLM: OpenAI first, admin-configurable provider table from day one | Flexibility without a future migration |
 | 2026-10-18 | Adopted posting integrity gate, drafter-reviewer, PDF verification loop, ATS text-layer check, relevance-weighted CV cutting, language gate, capped follow-up drafting | Validated patterns from ai-job-search-dev/ai-job-search (MIT, author-verified outcome) |
 | 2026-10-18 | Added freehire.me (Layer 1) and LinkedIn public jobs-guest endpoint (Layer 1b, Niloy-only) as sources | Zero-cost, legal (freehire.me) or low-risk personal-use (LinkedIn endpoint) coverage found via competitor research |

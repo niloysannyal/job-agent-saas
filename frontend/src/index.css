@@ -402,6 +402,37 @@ code, .font-mono {
   font-size: 12px;
 }
 
+/* Universal Form Elements (Dual-Theme Compliant) */
+input, select, textarea {
+  font-family: var(--font-sans);
+  background-color: var(--surface-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+select option {
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--emerald-500);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+  outline: none;
+}
+
+input:disabled, select:disabled, textarea:disabled, button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Form Inputs */
 .input-text {
   background: var(--surface-input);

@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # Vector Database
     QDRANT_URL: str = "http://localhost:6333"
 
+    # Authentication & JWT Configuration
+    JWT_SECRET_KEY: str = "jobeazy-saas-super-secret-jwt-key-phase0-2026"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
     # Profile & CV Template Paths (configurable via environment variables)
     MASTER_CV_PATH: Path = Path("cv_templates/01_MASTER_CV.tex")
     USER_PROFILE_PATH: Path = Path("docs/USER_PROFILE.md")

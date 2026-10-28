@@ -11,6 +11,16 @@ export function getInitialTheme() {
   return 'dark'; // Default to Obsidian Dark mode
 }
 
+export const getTheme = getInitialTheme;
+
+export function setTheme(theme) {
+  if (typeof window === 'undefined') return;
+  applyTheme(theme);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {}
+}
+
 export function applyTheme(theme) {
   if (typeof window === 'undefined') return;
   const root = document.documentElement;

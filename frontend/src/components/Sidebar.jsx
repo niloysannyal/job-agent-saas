@@ -46,7 +46,19 @@ export default function Sidebar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navItems = [
+  const navItems = [];
+
+  if (isSuperadmin) {
+    navItems.push({
+      id: 'admin',
+      label: 'Admin Control Center',
+      icon: ShieldCheck,
+      badge: 'Ops',
+      shortcut: 'Alt+0',
+    });
+  }
+
+  navItems.push(
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -77,17 +89,7 @@ export default function Sidebar({
       icon: GraduationCap,
       shortcut: 'Alt+5',
     },
-  ];
-
-  if (isSuperadmin) {
-    navItems.push({
-      id: 'admin',
-      label: 'Admin Control',
-      icon: ShieldCheck,
-      badge: 'Superadmin',
-      shortcut: 'Alt+7',
-    });
-  }
+  );
 
   // Derive user initials (e.g., "NS" for Niloy Sannyal)
   const initials =
@@ -248,13 +250,19 @@ export default function Sidebar({
 
             <div className="popover-divider" />
 
-            <button
-              className="popover-item"
-              onClick={() => handleSelectOption(null, 'Switching accounts (Multi-tenant mode ready)')}
-            >
-              <Users className="popover-icon" />
-              <span>Switch Account</span>
-            </button>
+            {isSuperadmin && (
+              <>
+                <button
+                  className={`popover-item popover-admin-btn ${activeSection === 'admin' ? 'active' : ''}`}
+                  onClick={() => handleSelectOption('admin', 'Switched to Superadmin Control Center')}
+                >
+                  <ShieldCheck className="popover-icon text-emerald-500" />
+                  <span>Admin Control Center</span>
+                  <span className="popover-badge-superadmin">OPS</span>
+                </button>
+                <div className="popover-divider" />
+              </>
+            )}
 
             <button
               className="popover-item popover-logout"
