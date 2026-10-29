@@ -103,3 +103,4 @@ async def test_reflect_experience_task(monkeypatch):
     res = await reflect_experience_task(ctx={}, account_id="acc-worker-2")
     assert res["status"] == "success"
     assert "conversion_rate" in res
+

@@ -181,3 +181,4 @@ class GoogleIntegrationService:
                 "web_link": web_link,
                 "status": "draft_created",
             }
+

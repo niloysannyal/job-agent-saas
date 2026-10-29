@@ -36,3 +36,4 @@ done
 echo "ERROR: Health check timed out!"
 docker compose logs --tail=50 backend
 exit 1
+

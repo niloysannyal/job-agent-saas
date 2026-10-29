@@ -40,3 +40,4 @@ def decrypt_secret(ciphertext: Optional[str]) -> Optional[str]:
     except Exception:
         # Backward compatibility for plain strings in testing or before encryption
         return ciphertext
+

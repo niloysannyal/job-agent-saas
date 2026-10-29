@@ -49,3 +49,4 @@ class WorkerSettings:
     on_shutdown = shutdown
     max_jobs = 10
     job_timeout = 300
+
