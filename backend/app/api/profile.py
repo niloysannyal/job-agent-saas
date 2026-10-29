@@ -11,8 +11,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.auth import get_current_account
 from app.db.session import get_db
 from app.models.account import Account
+from app.services.matching.experience_reflector import ExperienceReflector
 from app.models.profile import (
     CompensationExpectation,
     CompensationBase,
@@ -420,3 +422,41 @@ def delete_language(
         raise HTTPException(status_code=404, detail="Language not found.")
     db.delete(lang)
     db.commit()
+
+
+@router.get(
+    "/experience-insights",
+    summary="Get autonomous Experience Reflector insights, channel conversion, and dynamic skill multipliers",
+)
+def get_experience_insights(
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    target_id = account_id or current_account.id
+    reflector = ExperienceReflector(db)
+    insights = reflector.reflect_for_account(target_id)
+    return {
+        "account_id": insights.account_id,
+        "total_applications": insights.total_applications,
+        "interviews_count": insights.interviews_count,
+        "offers_count": insights.offers_count,
+        "rejections_count": insights.rejections_count,
+        "overall_conversion_rate": insights.overall_conversion_rate,
+        "channel_performance": {
+            k: {
+                "channel": v.channel,
+                "total_applied": v.total_applied,
+                "interviews": v.interviews,
+                "offers": v.offers,
+                "rejections": v.rejections,
+                "conversion_rate": v.conversion_rate,
+            }
+            for k, v in insights.channel_performance.items()
+        },
+        "top_performing_skills": insights.top_performing_skills,
+        "underperforming_keywords": insights.underperforming_keywords,
+        "skill_weight_multipliers": insights.skill_weight_multipliers,
+        "strategic_recommendations": insights.strategic_recommendations,
+        "generated_at": insights.generated_at,
+    }

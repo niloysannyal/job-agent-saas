@@ -11,6 +11,16 @@ from app.models.application import (
     ApplicationCreate,
     ApplicationRead,
     ApplicationUpdate,
+    ApplicationFormAnswer,
+    ApplicationFormAnswerBase,
+    ApplicationFormAnswerCreate,
+    ApplicationFormAnswerRead,
+)
+from app.models.oauth import (
+    OAuthConnection,
+    OAuthConnectionBase,
+    OAuthConnectionCreate,
+    OAuthConnectionRead,
 )
 from app.models.cv_template import (
     AccountCvVersion,

@@ -52,3 +52,4 @@ def test_create_draft_rfc822():
     assert "mailto:careers@scale.com" in result.mailto_url
     assert "X-Unsent: 1" in result.eml_raw
     assert "Awaiting human review" in result.action_summary or "Click 'Launch Email'" in result.action_summary
+

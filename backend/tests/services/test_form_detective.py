@@ -74,3 +74,4 @@ def test_detect_direct_message_linkedin():
     assert result.channel_type == ApplyChannelType.DIRECT_MESSAGE
     assert result.target_handle == "alex-recruiter-lead"
     assert any(q.id == "dm_connection_note" for q in result.questions)
+

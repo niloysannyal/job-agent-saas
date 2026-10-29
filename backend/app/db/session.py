@@ -50,3 +50,8 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+
+
+def SessionLocal() -> Session:
+    """Create a new database session instance outside of FastAPI request lifecycle (e.g. background worker)."""
+    return get_session_factory()()

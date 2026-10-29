@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.interview import StarStory
     from app.models.job import Job
     from app.models.llm_provider import LLMProviderConfig
+    from app.models.oauth import OAuthConnection
     from app.models.profile import UserProfile
     from app.models.subscription import Entitlement
 
@@ -118,6 +119,11 @@ class Account(Base):
     )
     star_stories: Mapped[List["StarStory"]] = relationship(
         "StarStory",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    oauth_connections: Mapped[List["OAuthConnection"]] = relationship(
+        "OAuthConnection",
         back_populates="account",
         cascade="all, delete-orphan",
     )

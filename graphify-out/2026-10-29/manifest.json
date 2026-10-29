@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/applications.py": {
-    "mtime": 1793271787.1973138,
-    "seen": 1793272096.6309307,
-    "ast_hash": "50ddc330d7c1410e7de15fc4f21b99ed",
+    "mtime": 1793273717.3921754,
+    "seen": 1793273987.780421,
+    "ast_hash": "32785d092acdae2bc78c883229cb6f16",
     "semantic_hash": ""
   },
   "backend/app/api/interview.py": {
@@ -24,8 +24,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/jobs.py": {
-    "mtime": 1793271465.8509183,
-    "seen": 1793272096.6309352,
+    "mtime": 1793272204.9942791,
+    "seen": 1793273987.7804272,
     "ast_hash": "631e36c15ed38dab26ae8153d5e514bf",
     "semantic_hash": ""
   },
@@ -192,8 +192,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/tailor_service.py": {
-    "mtime": 1793271917.6264095,
-    "seen": 1793272096.6309671,
+    "mtime": 1793272205.0989711,
+    "seen": 1793273987.7804706,
     "ast_hash": "87979150054e2dd96fcb1d7a7c62f225",
     "semantic_hash": ""
   },
@@ -318,8 +318,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/matching/service.py": {
-    "mtime": 1793271735.0927782,
-    "seen": 1793272096.630987,
+    "mtime": 1793272205.2519095,
+    "seen": 1793273987.780504,
     "ast_hash": "82128ac02cc0b1928a8e49f2f89e0eb0",
     "semantic_hash": ""
   },
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1793098015.25966,
-    "seen": 1793162601.7274907,
-    "ast_hash": "aeb3a276cad8f71f74a26fa2f604430a",
+    "mtime": 1793273821.6448662,
+    "seen": 1793273987.7805538,
+    "ast_hash": "aa6f54273a89736f88d78111f9f6c290",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -702,8 +702,8 @@
     "semantic_hash": ""
   },
   "backend/app/core/auth.py": {
-    "mtime": 1793271562.3843443,
-    "seen": 1793272096.6309385,
+    "mtime": 1793272205.0414464,
+    "seen": 1793273987.780432,
     "ast_hash": "cd9fd8829d7cb208c5bc402597bc64f5",
     "semantic_hash": ""
   },
@@ -957,6 +957,66 @@
     "mtime": 1793268664.5481129,
     "seen": 1793268935.1187978,
     "ast_hash": "a1bddb8f97658bd4fddc91f726a6c6c6",
+    "semantic_hash": ""
+  },
+  "backend/app/services/email_dispatch/__init__.py": {
+    "mtime": 1793273629.3761253,
+    "seen": 1793273987.7804723,
+    "ast_hash": "e780c0a323a988d767e6d9ee56fe0fa4",
+    "semantic_hash": ""
+  },
+  "backend/app/services/email_dispatch/dispatch_service.py": {
+    "mtime": 1793273643.187544,
+    "seen": 1793273987.7804742,
+    "ast_hash": "037b0cbe3f50fe23b0631f39428aabab",
+    "semantic_hash": ""
+  },
+  "backend/app/services/form_detective/__init__.py": {
+    "mtime": 1793272224.1446178,
+    "seen": 1793273987.780475,
+    "ast_hash": "39184ed2ee65521d0db12a22fbc9271b",
+    "semantic_hash": ""
+  },
+  "backend/app/services/form_detective/detective.py": {
+    "mtime": 1793272743.1226623,
+    "seen": 1793273987.780476,
+    "ast_hash": "89de9de32dc4cfa3fac8a9db10a5850d",
+    "semantic_hash": ""
+  },
+  "backend/app/services/qa_generator/__init__.py": {
+    "mtime": 1793272271.8193796,
+    "seen": 1793273987.7805066,
+    "ast_hash": "441c79a8d6e2f35ada3860bf651cd276",
+    "semantic_hash": ""
+  },
+  "backend/app/services/qa_generator/generator.py": {
+    "mtime": 1793272586.125486,
+    "seen": 1793273987.780508,
+    "ast_hash": "64a1c88e2ba6e962acd038a26f4a3568",
+    "semantic_hash": ""
+  },
+  "backend/tests/api/test_form_qa_api.py": {
+    "mtime": 1793273733.1776867,
+    "seen": 1793273987.7805161,
+    "ast_hash": "9c3aa28c25e0da54f0411b6f3cf7009b",
+    "semantic_hash": ""
+  },
+  "backend/tests/services/test_email_dispatch.py": {
+    "mtime": 1793273651.2920396,
+    "seen": 1793273987.7805388,
+    "ast_hash": "6264129060d89d04ed2767b20cda89a2",
+    "semantic_hash": ""
+  },
+  "backend/tests/services/test_form_detective.py": {
+    "mtime": 1793272428.244866,
+    "seen": 1793273987.7805405,
+    "ast_hash": "f9e46f59fb7c5f685bd656136ff4f7ae",
+    "semantic_hash": ""
+  },
+  "backend/tests/services/test_qa_generator.py": {
+    "mtime": 1793272565.8154461,
+    "seen": 1793273987.7805462,
+    "ast_hash": "ac7d2b9081029c3109a245cfb9665b6d",
     "semantic_hash": ""
   }
 }

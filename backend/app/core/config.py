@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    # Google OAuth 2.0 Credentials (for Gmail Draft composition)
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5173/auth/google/callback"
+
+    # Redis URL (for background async worker Arq)
+    REDIS_URL: str = "redis://localhost:6379/0"
+
     # Profile & CV Template Paths (configurable via environment variables)
     MASTER_CV_PATH: Path = Path("cv_templates/01_MASTER_CV.tex")
     USER_PROFILE_PATH: Path = Path("docs/USER_PROFILE.md")

@@ -29,6 +29,7 @@ import {
   HelpCircle,
   Check,
   Compass,
+  Bookmark,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { formatSalary } from './JobsView';
@@ -80,6 +81,12 @@ export default function ApplicationStudio({
   const [formAnswers, setFormAnswers] = useState({});
   const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false);
   const [copiedQuestionId, setCopiedQuestionId] = useState(null);
+
+  // Google OAuth & Gmail State
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [isDraftingGmail, setIsDraftingGmail] = useState(false);
+  const [gmailDraftLink, setGmailDraftLink] = useState('');
 
   // Overleaf-style Compiler State
   const [isCompiling, setIsCompiling] = useState(false);
@@ -219,6 +226,25 @@ ${candidateEmail} | ${candidateLinkedin}`;
       setEditedOutreachDraft(initialOutreach);
     }
   }, [tailorResult]);
+
+  // Check Google OAuth integration status
+  useEffect(() => {
+    const checkGoogleStatus = async () => {
+      try {
+        const res = await fetch('/api/v1/integrations/google/status', {
+          headers: { 'X-Account-ID': profile?.account_id || '' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setGoogleConnected(data.connected);
+          setGoogleEmail(data.email || '');
+        }
+      } catch (e) {
+        // quiet fallback
+      }
+    };
+    checkGoogleStatus();
+  }, [profile?.account_id]);
 
   // Overleaf-style Recompile Action
   const handleCompile = () => {
@@ -470,6 +496,82 @@ ${candidateEmail} | ${candidateLinkedin}`;
     } catch (err) {
       console.error('EML export error:', err);
       showToast('Failed to download .eml draft', 3000);
+    }
+  };
+
+  const handleConnectGmail = async () => {
+    try {
+      const res = await fetch('/api/v1/integrations/google/auth-url', {
+        headers: { 'X-Account-ID': profile?.account_id || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        window.open(data.auth_url, '_blank', 'width=550,height=650');
+        showToast('Google OAuth opened. Complete sign-in to enable 1-click drafting.');
+      }
+    } catch (e) {
+      showToast('Error opening Google authentication');
+    }
+  };
+
+  const handleDraftInGmail = async () => {
+    setIsDraftingGmail(true);
+    setGmailDraftLink('');
+    try {
+      showToast('Creating Draft in your Gmail...');
+      const comp = customCompany || 'Company';
+      const role = customRole || 'AI Engineer';
+      const candidateName = profile?.full_name || 'Niloy Sannyal';
+      const toEmail = channelInspection?.recruiter_email || 'recruiter@company.com';
+      const subject = `Application: ${role} - ${candidateName}`;
+      const body = editedOutreachDraft || editedCoverDraft;
+
+      const res = await fetch('/api/v1/integrations/google/create-draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Account-ID': profile?.account_id || '',
+        },
+        body: JSON.stringify({
+          application_id: selectedApplication?.id,
+          recipient_email: toEmail,
+          subject,
+          body_text: body,
+          attach_cv: true,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGmailDraftLink(data.web_link);
+        showToast('✨ Draft created in Gmail! 1-Click ready for your review.');
+      } else {
+        const err = await res.json();
+        if (err.detail && err.detail.includes('not connected')) {
+          handleConnectGmail();
+        } else {
+          showToast(err.detail || 'Failed to create Gmail draft');
+        }
+      }
+    } catch (e) {
+      showToast('Failed to connect to Gmail service');
+    } finally {
+      setIsDraftingGmail(false);
+    }
+  };
+
+  const handleCopyBookmarklet = async () => {
+    try {
+      const res = await fetch('/api/v1/integrations/autofill/bookmarklet', {
+        headers: { 'X-Account-ID': profile?.account_id || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        await navigator.clipboard.writeText(data.bookmarklet_js);
+        showToast('📋 Autofill Bookmarklet copied! Create a browser bookmark with this URL and click it on any job form.');
+      }
+    } catch (e) {
+      showToast('Failed to copy bookmarklet');
     }
   };
 
@@ -1015,14 +1117,24 @@ ${candidateEmail} | ${candidateLinkedin}`;
 
               <div className="toolbar-actions">
                 {activeDraftTab === 'form_qa' ? (
-                  <button
-                    className="action-btn-xs"
-                    onClick={handleCopyAllAnswers}
-                    title="Copy all questions and generated answers into formatted text"
-                  >
-                    <Copy className="btn-icon-xxs" />
-                    <span>Copy All Q&A</span>
-                  </button>
+                  <div className="btn-group-row">
+                    <button
+                      className="action-btn-xs"
+                      onClick={handleCopyBookmarklet}
+                      title="Copy browser bookmarklet to autofill Google Forms & ATS applications with 1 click"
+                    >
+                      <Bookmark className="btn-icon-xxs" />
+                      <span>Autofill Bookmarklet</span>
+                    </button>
+                    <button
+                      className="action-btn-xs"
+                      onClick={handleCopyAllAnswers}
+                      title="Copy all questions and generated answers into formatted text"
+                    >
+                      <Copy className="btn-icon-xxs" />
+                      <span>Copy All Q&A</span>
+                    </button>
+                  </div>
                 ) : (
                   <button
                     className="action-btn-xs"
@@ -1132,6 +1244,35 @@ ${candidateEmail} | ${candidateLinkedin}`;
                         <Download className="btn-icon-xxs" />
                         <span>Download .eml Draft with CV</span>
                       </button>
+
+                      <button
+                        className={`action-btn-xs action-btn-gmail ${googleConnected ? 'connected' : ''}`}
+                        onClick={googleConnected ? handleDraftInGmail : handleConnectGmail}
+                        disabled={isDraftingGmail}
+                        title={googleConnected ? "Create a 1-click draft in your Gmail account" : "Connect your Google account to enable 1-click Gmail drafting"}
+                      >
+                        <Sparkles className="btn-icon-xxs" />
+                        <span>
+                          {isDraftingGmail
+                            ? 'Creating Draft...'
+                            : googleConnected
+                            ? 'Draft in Gmail (1-Click)'
+                            : 'Connect Gmail'}
+                        </span>
+                      </button>
+
+                      {gmailDraftLink && (
+                        <a
+                          href={gmailDraftLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="action-btn-xs action-btn-view-draft"
+                          title="Open newly created draft directly in Gmail"
+                        >
+                          <ExternalLink className="btn-icon-xxs" />
+                          <span>Open Draft in Gmail</span>
+                        </a>
+                      )}
                     </div>
                   )}
 
@@ -1184,6 +1325,15 @@ ${candidateEmail} | ${candidateLinkedin}`;
                             <span>Generate Tailored Answers</span>
                           </>
                         )}
+                      </button>
+
+                      <button
+                        className="action-btn-xs"
+                        onClick={handleCopyBookmarklet}
+                        title="Copy browser bookmarklet to autofill Google Forms & ATS applications with 1 click"
+                      >
+                        <Bookmark className="btn-icon-xxs" />
+                        <span>Autofill Bookmarklet</span>
                       </button>
 
                       <button

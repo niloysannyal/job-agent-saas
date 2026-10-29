@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -105,6 +105,11 @@ class Application(Base):
         "AccountCvVersion",
         back_populates="applications",
     )
+    form_answers: Mapped[List["ApplicationFormAnswer"]] = relationship(
+        "ApplicationFormAnswer",
+        back_populates="application",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def job_company(self) -> Optional[str]:
@@ -113,6 +118,81 @@ class Application(Base):
     @property
     def job_role(self) -> Optional[str]:
         return self.job.role if self.job else None
+
+
+class ApplicationFormAnswer(Base):
+    """
+    Stores structured questions and answers for a specific job application form.
+    Maintains multi-tenant isolation with account_id.
+    """
+    __tablename__ = "application_form_answers"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    application_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("applications.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    question_id: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    question_prompt: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+    field_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="paragraph",
+    )
+    tailored_answer: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+    candidate_angles: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        doc="JSON-encoded candidate angles from Harness² recursion",
+    )
+    verified_facts_used: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        doc="JSON-encoded verified facts cited",
+    )
+    char_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relationships
+    application: Mapped["Application"] = relationship(
+        "Application",
+        back_populates="form_answers",
+    )
 
 
 # --- Pydantic Schemas ---
@@ -144,11 +224,36 @@ class ApplicationUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class ApplicationFormAnswerBase(BaseModel):
+    account_id: str
+    application_id: str
+    question_id: str
+    question_prompt: str
+    field_type: str = "paragraph"
+    tailored_answer: str
+    candidate_angles: Optional[str] = None
+    verified_facts_used: Optional[str] = None
+    char_count: int = 0
+
+
+class ApplicationFormAnswerCreate(ApplicationFormAnswerBase):
+    pass
+
+
+class ApplicationFormAnswerRead(ApplicationFormAnswerBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ApplicationRead(ApplicationBase):
     id: str
     job_company: Optional[str] = None
     job_role: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    form_answers: List[ApplicationFormAnswerRead] = []
 
     model_config = ConfigDict(from_attributes=True)

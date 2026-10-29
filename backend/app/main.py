@@ -6,6 +6,7 @@ from app.api.admin import router as admin_router
 from app.api.applications import router as applications_router
 from app.api.auth import router as auth_router
 from app.api.interview import router as interview_router
+from app.api.integrations import router as integrations_router
 from app.api.jobs import router as jobs_router
 from app.api.profile import router as profile_router
 from app.db.base import Base
@@ -48,6 +49,7 @@ def create_app() -> FastAPI:
     app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
     app.include_router(profile_router, prefix=settings.API_V1_PREFIX)
     app.include_router(interview_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(integrations_router, prefix=settings.API_V1_PREFIX)
     app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
 
     return app
