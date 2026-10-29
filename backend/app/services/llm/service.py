@@ -72,14 +72,26 @@ class LLMService:
             if close_session:
                 session.close()
 
-        # If no DB rows found, default to OpenAI with settings.OPENAI_API_KEY
-        if not providers:
-            providers.append(
-                OpenAIProvider(
-                    api_key=settings.OPENAI_API_KEY,
-                    model_name="gpt-4o-mini",
+        # Fallback Chain Backup ("Last Hope"):
+        # If settings.OPENAI_API_KEY is available, ensure a bedrock OpenAI fallback
+        # exists at the end of the chain so that if configured models fail,
+        # the request automatically falls back to this reliable safety net.
+        if settings.OPENAI_API_KEY:
+            fallback_model = "gpt-4o-mini"
+            if not providers:
+                providers.append(
+                    OpenAIProvider(
+                        api_key=settings.OPENAI_API_KEY,
+                        model_name=fallback_model,
+                    )
                 )
-            )
+            elif any(getattr(p, "model_name", None) != fallback_model for p in providers):
+                providers.append(
+                    OpenAIProvider(
+                        api_key=settings.OPENAI_API_KEY,
+                        model_name=fallback_model,
+                    )
+                )
 
         return providers
 

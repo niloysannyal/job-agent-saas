@@ -13,6 +13,10 @@ import {
   ChevronUp,
   Users,
   ShieldCheck,
+  ShieldAlert,
+  Server,
+  Layers,
+  FileCode,
   Search,
   Moon,
   Sun,
@@ -22,9 +26,12 @@ import {
 export default function Sidebar({
   activeSection,
   setActiveSection,
+  adminTab = 'tenants',
+  setAdminTab,
   profileName = 'Niloy Sannyal',
   tenantEmail = 'niloy@example.com',
-  isSuperadmin = true,
+  isSuperadmin = false,
+  isImpersonating = false,
   onLogout,
   showToast,
   theme = 'dark',
@@ -48,48 +55,85 @@ export default function Sidebar({
 
   const navItems = [];
 
-  if (isSuperadmin) {
-    navItems.push({
-      id: 'admin',
-      label: 'Admin Control Center',
-      icon: ShieldCheck,
-      badge: 'Ops',
-      shortcut: 'Alt+0',
-    });
+  if (isSuperadmin && !isImpersonating) {
+    navItems.push(
+      {
+        id: 'overview',
+        label: 'Platform Overview',
+        icon: LayoutDashboard,
+        shortcut: 'Alt+1',
+        isAdminTab: true,
+      },
+      {
+        id: 'tenants',
+        label: 'Tenants & Workspaces',
+        icon: Users,
+        shortcut: 'Alt+2',
+        isAdminTab: true,
+      },
+      {
+        id: 'providers',
+        label: 'Dynamic LLM Providers',
+        icon: Server,
+        shortcut: 'Alt+3',
+        isAdminTab: true,
+      },
+      {
+        id: 'sources',
+        label: 'Job Sources & Feeds',
+        icon: Layers,
+        shortcut: 'Alt+4',
+        isAdminTab: true,
+      },
+      {
+        id: 'templates',
+        label: 'Curated LaTeX Templates',
+        icon: FileCode,
+        shortcut: 'Alt+5',
+        isAdminTab: true,
+      },
+      {
+        id: 'flagged',
+        label: 'Posting Guard Flags',
+        icon: ShieldAlert,
+        shortcut: 'Alt+6',
+        isAdminTab: true,
+      },
+    );
+  } else {
+    navItems.push(
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        shortcut: 'Alt+1',
+      },
+      {
+        id: 'jobs',
+        label: 'Jobs & Radar',
+        icon: Briefcase,
+        shortcut: 'Alt+2',
+      },
+      {
+        id: 'studio',
+        label: 'Application Studio',
+        icon: FileEdit,
+        shortcut: 'Alt+3',
+      },
+      {
+        id: 'pipeline',
+        label: 'Application Pipeline',
+        icon: Kanban,
+        shortcut: 'Alt+4',
+      },
+      {
+        id: 'interview',
+        label: 'STAR Interview Coach',
+        icon: GraduationCap,
+        shortcut: 'Alt+5',
+      },
+    );
   }
-
-  navItems.push(
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: LayoutDashboard,
-      shortcut: 'Alt+1',
-    },
-    {
-      id: 'jobs',
-      label: 'Jobs & Radar',
-      icon: Briefcase,
-      shortcut: 'Alt+2',
-    },
-    {
-      id: 'studio',
-      label: 'Application Studio',
-      icon: FileEdit,
-      shortcut: 'Alt+3',
-    },
-    {
-      id: 'pipeline',
-      label: 'Application Pipeline',
-      icon: Kanban,
-      shortcut: 'Alt+4',
-    },
-    {
-      id: 'interview',
-      label: 'STAR Interview Coach',
-      icon: GraduationCap,
-      shortcut: 'Alt+5',
-    },
-  );
 
   // Derive user initials (e.g., "NS" for Niloy Sannyal)
   const initials =
@@ -131,7 +175,9 @@ export default function Sidebar({
           </div>
           <div className="brand-meta">
             <h1 className="brand-title">JobEazy</h1>
-            <span className="brand-account">Autonomous Job Agent</span>
+            <span className={`brand-account ${isSuperadmin && !isImpersonating ? 'text-emerald' : ''}`}>
+              {isSuperadmin && !isImpersonating ? 'SuperAdmin Ops Plane' : 'Autonomous Job Agent'}
+            </span>
           </div>
         </div>
 
@@ -152,11 +198,20 @@ export default function Sidebar({
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeSection === item.id;
+          const isActive = item.isAdminTab
+            ? (activeSection === 'admin' && adminTab === item.id)
+            : (activeSection === item.id);
           return (
             <button
               key={item.id}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => {
+                if (item.isAdminTab) {
+                  setActiveSection('admin');
+                  if (setAdminTab) setAdminTab(item.id);
+                } else {
+                  setActiveSection(item.id);
+                }
+              }}
               className={`nav-item-btn ${isActive ? 'active' : ''}`}
               id={`nav-btn-${item.id}`}
             >

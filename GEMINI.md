@@ -48,7 +48,7 @@ dynamic LLM failover ping testing, and one-click "Test As Tenant" QA dogfooding 
 **Public SaaS Landing Page**, and **Unified JWT Authentication Engine** (with bcrypt
 password hashing and automatic role-based routing between SuperAdmin Ops Center and
 Candidate OS) are built end-to-end with 151 passing tests and a live React dashboard
-backed by Supabase PostgreSQL. The current focus is running Niloy's live job search through
+backed by Supabase PostgreSQL, protected by a bedrock `.env` LLM fallback chain, frosted glassmorphism overlays with intact sidebar, and an ECC-adapted 5-phase verification loop (`scripts/verify.py`). The current focus is running Niloy's live job search through
 the system (Phase 1 personal validation), refining match scoring, and verifying outreach
 quality while strictly maintaining the non-negotiables.
 

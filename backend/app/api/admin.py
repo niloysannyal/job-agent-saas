@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_account, require_superadmin
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.account import Account, AccountRead
 from app.models.application import Application
@@ -319,29 +320,32 @@ def impersonate_tenant(
 
 # --- LLM Providers Management ---
 
+def _build_provider_read(p: LLMProviderConfig) -> LLMProviderRead:
+    has_db_key = bool(p.encrypted_api_key)
+    has_env_key = bool(settings.OPENAI_API_KEY) and p.provider.lower() == "openai"
+    key_source = "db_encrypted" if has_db_key else ("env_fallback" if has_env_key else "missing")
+    return LLMProviderRead(
+        id=p.id,
+        provider=p.provider,
+        model_name=p.model_name,
+        account_id=p.account_id,
+        is_active=p.is_active,
+        priority=p.priority,
+        config=p.config or {},
+        has_api_key=has_db_key or has_env_key,
+        key_source=key_source,
+        created_at=p.created_at,
+        updated_at=p.updated_at,
+    )
+
+
 @router.get("/llm-providers", response_model=List[LLMProviderRead], summary="List all configured LLM providers")
 def list_llm_providers(
     db: Session = Depends(get_db),
     admin: Account = Depends(require_superadmin),
 ) -> List[LLMProviderRead]:
     providers = db.query(LLMProviderConfig).order_by(LLMProviderConfig.priority.asc()).all()
-    results = []
-    for p in providers:
-        results.append(
-            LLMProviderRead(
-                id=p.id,
-                provider=p.provider,
-                model_name=p.model_name,
-                account_id=p.account_id,
-                is_active=p.is_active,
-                priority=p.priority,
-                config=p.config or {},
-                has_api_key=bool(p.encrypted_api_key),
-                created_at=p.created_at,
-                updated_at=p.updated_at,
-            )
-        )
-    return results
+    return [_build_provider_read(p) for p in providers]
 
 
 @router.post("/llm-providers", response_model=LLMProviderRead, summary="Register a new LLM provider")
@@ -363,18 +367,7 @@ def create_llm_provider(
     db.commit()
     db.refresh(new_provider)
 
-    return LLMProviderRead(
-        id=new_provider.id,
-        provider=new_provider.provider,
-        model_name=new_provider.model_name,
-        account_id=new_provider.account_id,
-        is_active=new_provider.is_active,
-        priority=new_provider.priority,
-        config=new_provider.config or {},
-        has_api_key=bool(new_provider.encrypted_api_key),
-        created_at=new_provider.created_at,
-        updated_at=new_provider.updated_at,
-    )
+    return _build_provider_read(new_provider)
 
 
 @router.patch("/llm-providers/{provider_id}", response_model=LLMProviderRead, summary="Update provider priority or active status")
@@ -403,18 +396,7 @@ def update_llm_provider(
     db.commit()
     db.refresh(p)
 
-    return LLMProviderRead(
-        id=p.id,
-        provider=p.provider,
-        model_name=p.model_name,
-        account_id=p.account_id,
-        is_active=p.is_active,
-        priority=p.priority,
-        config=p.config or {},
-        has_api_key=bool(p.encrypted_api_key),
-        created_at=p.created_at,
-        updated_at=p.updated_at,
-    )
+    return _build_provider_read(p)
 
 
 @router.delete("/llm-providers/{provider_id}", summary="Delete an LLM provider configuration")
@@ -433,7 +415,7 @@ def delete_llm_provider(
 
 
 @router.post("/llm-providers/{provider_id}/test", summary="Test live connectivity of an LLM provider")
-def test_llm_provider(
+async def test_llm_provider(
     provider_id: str,
     db: Session = Depends(get_db),
     admin: Account = Depends(require_superadmin),
@@ -444,7 +426,7 @@ def test_llm_provider(
 
     try:
         service = LLMService(db_session=db)
-        test_reply = service.generate(
+        test_reply = await service.generate(
             prompt="Respond with 'OK' if you can read this.",
             context="System health check",
         )
@@ -452,9 +434,8 @@ def test_llm_provider(
             "status": "connected",
             "provider": p.provider,
             "model": p.model_name,
-            "response": test_reply.strip(),
+            "response": str(test_reply).strip(),
         }
-
     except Exception as e:
         return {
             "status": "error",
@@ -466,6 +447,16 @@ def test_llm_provider(
 
 # --- Job Sourcing & Ingestion Controls ---
 
+_source_status_registry: Dict[str, bool] = {
+    "adzuna": True,
+    "remotive": True,
+    "remoteok": True,
+    "greenhouse": True,
+    "lever": True,
+    "freehire": True,
+}
+
+
 @router.get("/jobs/sources", response_model=List[JobSourceInfo], summary="List all integrated job sources and status")
 def get_job_sources(
     db: Session = Depends(get_db),
@@ -476,7 +467,7 @@ def get_job_sources(
             "name": "adzuna",
             "display_name": "Adzuna API",
             "legal_layer": "Layer 1 (Official / Legal)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("adzuna", True),
             "is_restricted": False,
             "description": "Broad international coverage across 19 countries.",
         },
@@ -484,7 +475,7 @@ def get_job_sources(
             "name": "remotive",
             "display_name": "Remotive API",
             "legal_layer": "Layer 1 (Official / Legal)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("remotive", True),
             "is_restricted": False,
             "description": "Curated remote tech & software engineering jobs.",
         },
@@ -492,7 +483,7 @@ def get_job_sources(
             "name": "remoteok",
             "display_name": "RemoteOK API",
             "legal_layer": "Layer 1 (Attribution Required)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("remoteok", True),
             "is_restricted": False,
             "description": "Remote tech positions with mandatory source attribution.",
         },
@@ -500,7 +491,7 @@ def get_job_sources(
             "name": "greenhouse",
             "display_name": "Greenhouse Board API",
             "legal_layer": "Layer 1 (Official / Legal)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("greenhouse", True),
             "is_restricted": False,
             "description": "Target company board feeder via public Greenhouse API.",
         },
@@ -508,7 +499,7 @@ def get_job_sources(
             "name": "lever",
             "display_name": "Lever Postings API",
             "legal_layer": "Layer 1 (Official / Legal)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("lever", True),
             "is_restricted": False,
             "description": "Target company board feeder via public Lever API.",
         },
@@ -516,7 +507,7 @@ def get_job_sources(
             "name": "freehire",
             "display_name": "Freehire Aggregator",
             "legal_layer": "Layer 1b (Restricted / QA Only)",
-            "is_active": True,
+            "is_active": _source_status_registry.get("freehire", True),
             "is_restricted": True,
             "description": "Tech aggregator for Niloy personal validation.",
         },
@@ -537,6 +528,19 @@ def get_job_sources(
             )
         )
     return results
+
+
+@router.post("/jobs/sources/{source_name}/toggle", summary="Toggle job source active status")
+def toggle_job_source(
+    source_name: str,
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+):
+    source_key = source_name.lower()
+    if source_key not in _source_status_registry:
+        _source_status_registry[source_key] = True
+    _source_status_registry[source_key] = not _source_status_registry[source_key]
+    return {"name": source_key, "is_active": _source_status_registry[source_key]}
 
 
 @router.post("/jobs/trigger", response_model=TriggerIngestionResponse, summary="Trigger manual job ingestion")
@@ -587,6 +591,36 @@ def list_flagged_jobs(
         .all()
     )
     return list(flagged)
+
+
+@router.post("/jobs/{job_id}/dismiss-flag", summary="Dismiss safety flag and mark job clean")
+def dismiss_job_flag(
+    job_id: str,
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+):
+    job = db.query(Job).filter_by(id=job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    job.integrity_status = "clean"
+    job.vetoed = False
+    db.commit()
+    db.refresh(job)
+    return {"status": "dismissed", "job_id": job.id, "integrity_status": "clean"}
+
+
+@router.delete("/jobs/{job_id}", summary="Purge malicious or flagged job")
+def delete_job(
+    job_id: str,
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+):
+    job = db.query(Job).filter_by(id=job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    db.delete(job)
+    db.commit()
+    return {"status": "deleted", "job_id": job_id}
 
 
 # --- Global CV Template Management ---

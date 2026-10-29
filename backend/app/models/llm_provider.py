@@ -110,6 +110,7 @@ class LLMProviderRead(LLMProviderBase):
     id: str
     # Note: encrypted_api_key is never exposed in full in read schemas
     has_api_key: bool = False
+    key_source: str = "missing"
     created_at: datetime
     updated_at: datetime
 

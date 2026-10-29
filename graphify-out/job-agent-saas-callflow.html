@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>job-agent-saas — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 1349 nodes, 3358 edges, 83 communities. Commit: c2d8d28</p>
+<p class="subtitle">Generated from graphify knowledge graph: 1458 nodes, 3494 edges, 91 communities. Commit: c3cb329</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -77,7 +77,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     <a href="#applicationstudio-jsx">ApplicationStudio.jsx</a>
     <a href="#features-views">Features &amp; Views</a>
     <a href="#local-setup">Local setup</a>
-    <a href="#core-auth-py">core/auth.py</a>
+    <a href="#saas-review-checklist">SaaS Review Checklist</a>
     <a href="#other">Other</a>
 </div>
 
@@ -88,7 +88,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>33 nodes</small>")
+    EXTRACT_PIPELINE_5F350230("Extraction Pipeline<br/><small>35 nodes</small>")
     class EXTRACT_PIPELINE_5F350230 module;
     BUILD_GRAPH_321CBB04("Graph Build<br/><small>92 nodes</small>")
     class BUILD_GRAPH_321CBB04 module;
@@ -96,15 +96,15 @@ flowchart LR
     class ANALYSIS_CLUSTERING_C79796DA module;
     OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>9 nodes</small>")
     class OUTPUTS_DOCS_ED82387C module;
-    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>91 nodes</small>")
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>165 nodes</small>")
     class CLI_SKILLS_9964CBB8 module;
-    INGEST_CACHE_UPDATE_FF457338("Ingestion &amp; Updates<br/><small>37 nodes</small>")
+    INGEST_CACHE_UPDATE_FF457338("Ingestion &amp; Updates<br/><small>41 nodes</small>")
     class INGEST_CACHE_UPDATE_FF457338 module;
-    SERVE_API_35EC8E86("Serving API<br/><small>212 nodes</small>")
+    SERVE_API_35EC8E86("Serving API<br/><small>210 nodes</small>")
     class SERVE_API_35EC8E86 module;
-    SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>3 nodes</small>")
+    SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>6 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>773 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>780 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     USER_PROFILE_NILOY_SANNYAL_57E57F30("User Profile — Niloy Sannyal<br/><small>17 nodes</small>")
     class USER_PROFILE_NILOY_SANNYAL_57E57F30 module;
@@ -114,22 +114,22 @@ flowchart LR
     class FEATURES_VIEWS_F17AD638 module;
     LOCAL_SETUP_19EFAD77("Local setup<br/><small>9 nodes</small>")
     class LOCAL_SETUP_19EFAD77 module;
-    CORE_AUTH_PY_C19FCEE5("core/auth.py<br/><small>9 nodes</small>")
-    class CORE_AUTH_PY_C19FCEE5 module;
-    OTHER_D0941E68("Other<br/><small>26 nodes</small>")
+    SAAS_REVIEW_CHECKLIST_B8F128D1("SaaS Review Checklist<br/><small>9 nodes</small>")
+    class SAAS_REVIEW_CHECKLIST_B8F128D1 module;
+    OTHER_D0941E68("Other<br/><small>47 nodes</small>")
     class OTHER_D0941E68 module;
-    SERVE_API_35EC8E86 -->|uses x129| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|imports x127| SERVE_API_35EC8E86
-    TESTS_FIXTURES_B84B1DCC -->|uses x69| INGEST_CACHE_UPDATE_FF457338
-    TESTS_FIXTURES_B84B1DCC -->|imports x60| EXTRACT_PIPELINE_5F350230
-    EXTRACT_PIPELINE_5F350230 -->|imports x29| TESTS_FIXTURES_B84B1DCC
-    SERVE_API_35EC8E86 -->|imports x19| EXTRACT_PIPELINE_5F350230
-    INGEST_CACHE_UPDATE_FF457338 -->|uses x10| TESTS_FIXTURES_B84B1DCC
-    CORE_AUTH_PY_C19FCEE5 -->|imports x10| TESTS_FIXTURES_B84B1DCC
-    APPLICATIONSTUDIO_JSX_CE0A41F7 -->|imports x7| BUILD_GRAPH_321CBB04
-    EXTRACT_PIPELINE_5F350230 -->|imports x6| SERVE_API_35EC8E86
-    BUILD_GRAPH_321CBB04 -->|imports x5| OTHER_D0941E68
-    TESTS_FIXTURES_B84B1DCC -->|imports x5| CORE_AUTH_PY_C19FCEE5
+    SERVE_API_35EC8E86 -->|uses x139| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x112| SERVE_API_35EC8E86
+    TESTS_FIXTURES_B84B1DCC -->|imports x55| EXTRACT_PIPELINE_5F350230
+    INGEST_CACHE_UPDATE_FF457338 -->|imports x52| TESTS_FIXTURES_B84B1DCC
+    EXTRACT_PIPELINE_5F350230 -->|imports x37| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x33| INGEST_CACHE_UPDATE_FF457338
+    CLI_SKILLS_9964CBB8 -->|imports x32| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x29| CLI_SKILLS_9964CBB8
+    SERVE_API_35EC8E86 -->|imports x18| CLI_SKILLS_9964CBB8
+    CLI_SKILLS_9964CBB8 -->|contains x12| SERVE_API_35EC8E86
+    SERVE_API_35EC8E86 -->|imports x8| EXTRACT_PIPELINE_5F350230
+    CLI_SKILLS_9964CBB8 -->|imports x8| EXTRACT_PIPELINE_5F350230
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -146,50 +146,43 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>33</td><td><code>29, 21</code></td></tr><tr><td>Graph Build</td><td>92</td><td><code>1, 16, 25, 34, 83, 68</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>13</td><td><code>30, 63</code></td></tr><tr><td>Outputs &amp; Docs</td><td>9</td><td><code>61</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>91</td><td><code>24, 27, 47, 49, 50, 52, 53, 65, 84, 54</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>37</td><td><code>6, 64, 66, 69</code></td></tr><tr><td>Serving API</td><td>212</td><td><code>4, 13, 19, 44, 20, 48, 42, 36</code></td></tr><tr><td>Security &amp; Global Graph</td><td>3</td><td><code>85</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>773</td><td><code>0, 3, 41, 14, 12, 8, 11, 23, 9, 18, 22, 5, 10, 2, 17, 26, 55, 31, 35, 7, 15, 40, 58, 28, 60, 74, 32, 45, 51, 67, 59, 75, 38, 39</code></td></tr><tr><td>User Profile — Niloy Sannyal</td><td>17</td><td><code>33</code></td></tr><tr><td>ApplicationStudio.jsx</td><td>15</td><td><code>62</code></td></tr><tr><td>Features &amp; Views</td><td>10</td><td><code>43</code></td></tr><tr><td>Local setup</td><td>9</td><td><code>46</code></td></tr><tr><td>core/auth.py</td><td>9</td><td><code>70</code></td></tr><tr><td>Other</td><td>26</td><td><code>82, 71, 56, 57, 76, 77, 78, 79, 86, 37</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>35</td><td><code>21, 29</code></td></tr><tr><td>Graph Build</td><td>92</td><td><code>1, 16, 25, 34, 83, 68</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>13</td><td><code>30, 63</code></td></tr><tr><td>Outputs &amp; Docs</td><td>9</td><td><code>61</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>165</td><td><code>24, 59, 8, 27, 47, 49, 50, 52, 73, 51, 85, 86, 65, 72, 84, 54</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>41</td><td><code>10, 64, 66, 69</code></td></tr><tr><td>Serving API</td><td>210</td><td><code>13, 44, 4, 19, 31, 53, 60, 42, 88, 36</code></td></tr><tr><td>Security &amp; Global Graph</td><td>6</td><td><code>81</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>780</td><td><code>0, 2, 9, 55, 6, 12, 3, 11, 41, 18, 26, 17, 20, 48, 23, 15, 35, 14, 22, 5, 32, 40, 28, 67, 70, 74, 45, 7, 90, 38, 39</code></td></tr><tr><td>User Profile — Niloy Sannyal</td><td>17</td><td><code>33</code></td></tr><tr><td>ApplicationStudio.jsx</td><td>15</td><td><code>62</code></td></tr><tr><td>Features &amp; Views</td><td>10</td><td><code>43</code></td></tr><tr><td>Local setup</td><td>9</td><td><code>46</code></td></tr><tr><td>SaaS Review Checklist</td><td>9</td><td><code>71</code></td></tr><tr><td>Other</td><td>47</td><td><code>82, 75, 79, 80, 58, 87, 56, 57, 76, 77, 78, 37, 89</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Serving API -&gt; core/auth.py -&gt; Graph Build -&gt; Other</div>
+    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Serving API -&gt; CLI &amp; Skill Installers -&gt; Ingestion &amp; Updates -&gt; Graph Build</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>1349 nodes · 3358 edges · 83 communities (67 shown, 16 thin omitted)</li>
-      <li>Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 400 edges (avg confidence: 0.94)</li>
+      <li>1458 nodes · 3494 edges · 91 communities (78 shown, 13 thin omitted)</li>
+      <li>Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 412 edges (avg confidence: 0.94)</li>
       <li>Token cost: 0 input · 0 output</li>
-      <li>1. `Account` - 115 edges</li>
+      <li>1. `Account` - 119 edges</li>
       <li>2. `JobPosting` - 74 edges</li>
-      <li>3. `JobSearchQuery` - 62 edges</li>
+      <li>3. `Job` - 64 edges</li>
     </ul>
   </div>
 </div>
 <hr>
 <!-- ====== 2. Extraction Pipeline ====== -->
 <h2 id="extract-pipeline">2. Extraction Pipeline</h2>
-<p>Extraction Pipeline groups implementation around backend, app, matching, services, mostly in services/matching/service.py, services/matching/profile_parser.py, app/core/config.py. This section covers 33 nodes and 54 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Extraction Pipeline groups implementation around backend, matching, app, services, mostly in services/matching/service.py, services/matching/profile_parser.py, services/matching/embedding.py. This section covers 35 nodes and 62 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Extraction Pipeline (33 nodes, 54 edges)
+    %% Section: Extraction Pipeline (35 nodes, 62 edges)
     subgraph extract_pipeline_services_matching_service_py_dff849d8["services/matching/service.py"]
         backend_app_services_matching_service_9b68d96a("service.py")
-        backend_app_services_matching_service_matchingse_fe37471c("MatchingService<br/><small>services/matching/service.py</small>")
         backend_app_services_matching_service_matchingse_eb9fa25b("score_and_gate_jobs()<br/><small>services/matching/service.py</small>")
+        backend_app_services_matching_service_matchingse_fe37471c("MatchingService<br/><small>services/matching/service.py</small>")
         backend_app_services_matching_service_matchingse_e32ba5e1("_get_qdrant_point_id()<br/><small>services/matching/service.py</small>")
         backend_app_services_matching_service_matchingse_909c1cf9("embed_and_upsert_profile()<br/><small>services/matching/service.py</small>")
         backend_app_services_matching_service_matchingre_8a0e46f8("MatchingResult<br/><small>services/matching/service.py</small>")
-    end
-    subgraph extract_pipeline_External_generated_e23197dc["External / generated"]
-        pathlib_4471f74a("pathlib")
-        typing_02d7d347("typing")
-        pydantic_settings_3e506e75("pydantic_settings")
-        logging_42f7b07d("logging")
-        dataclasses_cebf6197("dataclasses")
     end
     subgraph extract_pipeline_services_matching_profile_parse_ac7e5f82["services/matching/profile_parser.py"]
         backend_app_services_matching_profile_parser_e24a89a5("profile_parser.py")
@@ -198,8 +191,15 @@ flowchart LR
         backend_app_services_matching_profile_parser_pro_ae45f5eb("parse()<br/><small>services/matching/profile_parser.py</small>")
         backend_app_services_matching_profile_parser_par_ce347cae("ParsedProfile<br/><small>services/matching/profile_parser.py</small>")
     end
+    subgraph extract_pipeline_External_generated_e23197dc["External / generated"]
+        typing_02d7d347("typing")
+        pydantic_settings_3e506e75("pydantic_settings")
+    end
     backend_app_core_config_befdc705("config.py")
     backend_app_services_job_ingestion_9eeab12e("job_ingestion.py")
+    backend_app_services_matching_init_2859800c("__init__.py")
+    backend_app_services_matching_embedding_compute_46efac4c("compute_cosine_similarity()<br/><small>services/matching/embedding.py</small>")
+    backend_tests_services_matching_test_matching_te_12cc03bc("compute cosine similarity()<br/><small>services/matching/test_matching.py</small>")
     backend_app_services_matching_profile_parser_pro_504561f1 -->|method| backend_app_services_matching_profile_parser_pro_7949e6f3
     backend_app_services_matching_profile_parser_pro_504561f1 -->|method| backend_app_services_matching_profile_parser_pro_ae45f5eb
     backend_app_services_matching_service_matchingse_fe37471c -->|method| backend_app_services_matching_service_matchingse_eb9fa25b
@@ -212,37 +212,37 @@ flowchart LR
     backend_app_services_matching_service_matchingse_eb9fa25b -->|calls| backend_app_services_matching_service_matchingre_8a0e46f8
     backend_app_services_matching_service_matchingse_eb9fa25b -->|calls| backend_app_services_matching_service_matchingse_909c1cf9
     backend_app_services_matching_service_matchingse_eb9fa25b -->|calls| backend_app_services_matching_profile_parser_pro_ae45f5eb
-    backend_app_core_config_befdc705 -->|imports| pathlib_4471f74a
+    backend_app_services_matching_service_matchingse_eb9fa25b -->|calls| backend_app_services_matching_embedding_compute_46efac4c
+    backend_tests_services_matching_test_matching_te_12cc03bc -->|calls| backend_app_services_matching_embedding_compute_46efac4c
     backend_app_core_config_befdc705 -->|imports| typing_02d7d347
     backend_app_core_config_befdc705 -->|imports| pydantic_settings_3e506e75
-    backend_app_services_job_ingestion_9eeab12e -->|imports| logging_42f7b07d
     backend_app_services_job_ingestion_9eeab12e -->|imports| backend_app_services_matching_service_matchingre_8a0e46f8
     backend_app_services_job_ingestion_9eeab12e -->|imports| backend_app_services_matching_service_matchingse_fe37471c
     backend_app_services_job_ingestion_9eeab12e -->|imports| backend_app_services_matching_service_9b68d96a
-    backend_app_services_job_ingestion_9eeab12e -->|imports| dataclasses_cebf6197
     backend_app_services_job_ingestion_9eeab12e -->|imports| typing_02d7d347
-    backend_app_services_matching_profile_parser_e24a89a5 -->|imports| logging_42f7b07d
-    backend_app_services_matching_profile_parser_e24a89a5 -->|imports| dataclasses_cebf6197
-    backend_app_services_matching_profile_parser_e24a89a5 -->|imports| pathlib_4471f74a
-    %% Omitted for readability: 15 nodes, 9 edges
+    backend_app_services_matching_init_2859800c -->|imports| backend_app_services_matching_service_matchingre_8a0e46f8
+    backend_app_services_matching_init_2859800c -->|imports| backend_app_services_matching_service_matchingse_fe37471c
+    backend_app_services_matching_init_2859800c -->|imports| backend_app_services_matching_profile_parser_par_ce347cae
+    backend_app_services_matching_init_2859800c -->|imports| backend_app_services_matching_profile_parser_pro_504561f1
+    %% Omitted for readability: 17 nodes, 8 edges
     class backend_app_services_matching_service_9b68d96a module;
-    class backend_app_services_matching_service_matchingse_fe37471c klass;
     class backend_app_services_matching_service_matchingse_eb9fa25b function;
+    class backend_app_services_matching_service_matchingse_fe37471c klass;
     class backend_app_services_matching_service_matchingse_e32ba5e1 function;
     class backend_app_services_matching_service_matchingse_909c1cf9 function;
     class backend_app_services_matching_service_matchingre_8a0e46f8 klass;
-    class pathlib_4471f74a function;
-    class typing_02d7d347 function;
-    class pydantic_settings_3e506e75 function;
-    class logging_42f7b07d function;
-    class dataclasses_cebf6197 async;
     class backend_app_services_matching_profile_parser_e24a89a5 module;
     class backend_app_services_matching_profile_parser_pro_504561f1 klass;
     class backend_app_services_matching_profile_parser_pro_7949e6f3 function;
     class backend_app_services_matching_profile_parser_pro_ae45f5eb function;
     class backend_app_services_matching_profile_parser_par_ce347cae klass;
+    class typing_02d7d347 function;
+    class pydantic_settings_3e506e75 function;
     class backend_app_core_config_befdc705 module;
     class backend_app_services_job_ingestion_9eeab12e module;
+    class backend_app_services_matching_init_2859800c module;
+    class backend_app_services_matching_embedding_compute_46efac4c function;
+    class backend_tests_services_matching_test_matching_te_12cc03bc test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -282,6 +282,14 @@ flowchart LR
 </tr>
 <tr>
   <td>3</td>
+  <td><code>MatchingResult</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/matching/__init__.py</small><br><code>IngestionResult</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>MatchingResult node in services/matching/service.py.</td>
+</tr>
+<tr>
+  <td>4</td>
   <td><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td><code>__init__.py</code><br><small style="color:var(--muted)">services/matching/__init__.py</small><br><code>and upsert qdrant()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>gate clean jobs()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br>+3 more</td>
@@ -289,63 +297,63 @@ flowchart LR
   <td>MatchingService node in services/matching/service.py.</td>
 </tr>
 <tr>
-  <td>4</td>
-  <td><code>.extract_clean_cv_text()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br><code>ProfileParser</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>.extract_clean_cv_text() node in services/matching/profile_parser.py.</td>
-</tr>
-<tr>
   <td>5</td>
-  <td><code>.parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>and profile extraction()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>default language fallback()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br>+2 more</td>
-  <td><code>extract_clean_cv_text()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br><code>ParsedProfile</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td>.parse() node in services/matching/profile_parser.py.</td>
+  <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>auth.py</code><br><small style="color:var(--muted)">app/core/auth.py</small><br>+9 more</td>
+  <td><code>pathlib</code><br><code>pydantic_settings</code><br><code>typing</code></td>
+  <td>Module file in app/core/config.py.</td>
 </tr>
 <tr>
   <td>6</td>
-  <td><code>.embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>score_and_gate_jobs()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><code>_get_qdrant_point_id()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td>.embed_and_upsert_profile() node in services/matching/service.py.</td>
+  <td><code>core/__init__.py</code><br><small style="color:var(--muted)">app/core/__init__.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Module file in app/core/__init__.py.</td>
 </tr>
 <tr>
   <td>7</td>
-  <td><code>._get_qdrant_point_id()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>._get_qdrant_point_id() node in services/matching/service.py.</td>
+  <td><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>jobs.py</code><br><small style="color:var(--muted)">app/api/jobs.py</small><br><code>test_job_ingestion.py</code><br><small style="color:var(--muted)">tests/services/test_job_ingestion.py</small></td>
+  <td><code>base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small><br><code>dataclasses</code><br><code>datetime</code><br>+15 more</td>
+  <td>Module file in app/services/job_ingestion.py.</td>
 </tr>
 <tr>
   <td>8</td>
-  <td><code>.score_and_gate_jobs()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>LanguageGate</code><br><small style="color:var(--muted)">services/matching/language_gate.py</small><br>+2 more</td>
-  <td>.score_and_gate_jobs() node in services/matching/service.py.</td>
+  <td><code>matching/__init__.py</code><br><small style="color:var(--muted)">services/matching/__init__.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>test_matching.py</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small></td>
+  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>EmbeddingClient</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>get_embedding_client()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br>+7 more</td>
+  <td>Module file in services/matching/__init__.py.</td>
 </tr>
 <tr>
   <td>9</td>
-  <td><code>Path</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Path node in project.</td>
+  <td><code>language_gate.py</code><br><small style="color:var(--muted)">services/matching/language_gate.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><code>re</code><br><code>typing</code></td>
+  <td>Module file in services/matching/language_gate.py.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>Path</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Path node in project.</td>
+  <td><code>profile_parser.py</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small><br><code>dataclasses</code><br><code>logging</code><br>+4 more</td>
+  <td>Module file in services/matching/profile_parser.py.</td>
 </tr>
 <tr>
   <td>11</td>
+  <td><code>matching/service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small></td>
+  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>dataclasses</code><br><code>embedding.py</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br>+16 more</td>
+  <td>Module file in services/matching/service.py.</td>
+</tr>
+<tr>
+  <td>12</td>
   <td><code>Structured representation of parsed user profile and CV.</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -353,7 +361,7 @@ flowchart LR
   <td>Design note for Structured representation of parsed user profile and CV..</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>13</td>
   <td><code>Parses cv_templates/01_MASTER_CV.tex and docs/USER_PROFILE.md. KNOWN FORMAT…</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -361,20 +369,12 @@ flowchart LR
   <td>Design note for Parses cv_templates/01_MASTER_CV.tex and docs/USER_PROFILE.md. KNOWN FORMAT….</td>
 </tr>
 <tr>
-  <td>13</td>
-  <td><code>Extract readable text from LaTeX CV, stripping comments and common markup.</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Extract readable text from LaTeX CV, stripping comments and common markup..</td>
-</tr>
-<tr>
   <td>14</td>
-  <td><code>Score clean jobs with cosine similarity and apply language/dealbreaker gate.…</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><code>Summary of a match scoring run.</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Score clean jobs with cosine similarity and apply language/dealbreaker gate.….</td>
+  <td>Design note for Summary of a match scoring run..</td>
 </tr>
 <tr>
   <td>15</td>
@@ -386,94 +386,6 @@ flowchart LR
 </tr>
 <tr>
   <td>16</td>
-  <td><code>Derive a deterministic UUID point ID for the account.</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Derive a deterministic UUID point ID for the account..</td>
-</tr>
-<tr>
-  <td>17</td>
-  <td><code>Embed the Master CV and target-roles section of USER_PROFILE.md, upserting the…</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Embed the Master CV and target-roles section of USER_PROFILE.md, upserting the….</td>
-</tr>
-<tr>
-  <td>18</td>
-  <td><code>MatchingResult</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/matching/__init__.py</small><br><code>IngestionResult</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br>+2 more</td>
-  <td>No direct outbound edge</td>
-  <td>MatchingResult node in services/matching/service.py.</td>
-</tr>
-<tr>
-  <td>19</td>
-  <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>auth.py</code><br><small style="color:var(--muted)">app/core/auth.py</small><br><code>embedding.py</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br>+8 more</td>
-  <td><code>pathlib</code><br><code>pydantic_settings</code><br><code>typing</code></td>
-  <td>Module file in app/core/config.py.</td>
-</tr>
-<tr>
-  <td>20</td>
-  <td><code>core/__init__.py</code><br><small style="color:var(--muted)">app/core/__init__.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Module file in app/core/__init__.py.</td>
-</tr>
-<tr>
-  <td>21</td>
-  <td><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>jobs.py</code><br><small style="color:var(--muted)">app/api/jobs.py</small><br><code>test_job_ingestion.py</code><br><small style="color:var(--muted)">tests/services/test_job_ingestion.py</small></td>
-  <td><code>base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small><br><code>dataclasses</code><br><code>datetime</code><br>+15 more</td>
-  <td>Module file in app/services/job_ingestion.py.</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>language_gate.py</code><br><small style="color:var(--muted)">services/matching/language_gate.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><code>re</code><br><code>typing</code></td>
-  <td>Module file in services/matching/language_gate.py.</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>profile_parser.py</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small><br><code>dataclasses</code><br><code>logging</code><br>+4 more</td>
-  <td>Module file in services/matching/profile_parser.py.</td>
-</tr>
-<tr>
-  <td>24</td>
-  <td><code>matching/service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small></td>
-  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>dataclasses</code><br><code>embedding.py</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br>+16 more</td>
-  <td>Module file in services/matching/service.py.</td>
-</tr>
-<tr>
-  <td>25</td>
-  <td><code>conftest.py</code><br><small style="color:var(--muted)">backend/tests/conftest.py</small></td>
-  <td><span class="tag tag-func">Test</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>pathlib</code><br><code>sys</code></td>
-  <td>Module file in backend/tests/conftest.py.</td>
-</tr>
-<tr>
-  <td>26</td>
-  <td><code>Summary of a match scoring run.</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Summary of a match scoring run..</td>
-</tr>
-<tr>
-  <td>27</td>
   <td><code>dataclasses</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-async">Async</span></td>
   <td><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br><code>posting_guard.py</code><br><small style="color:var(--muted)">app/services/posting_guard.py</small><br><code>profile_parser.py</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br>+1 more</td>
@@ -481,7 +393,7 @@ flowchart LR
   <td>dataclasses node in project.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>17</td>
   <td><code>logging</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>embedding.py</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>job_ingestion.py</code><br><small style="color:var(--muted)">app/services/job_ingestion.py</small><br>+7 more</td>
@@ -489,20 +401,108 @@ flowchart LR
   <td>logging node in project.</td>
 </tr>
 <tr>
-  <td>29</td>
-  <td><code>pathlib</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small><br><code>conftest.py</code><br><small style="color:var(--muted)">backend/tests/conftest.py</small><br><code>profile_parser.py</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br>+2 more</td>
-  <td>No direct outbound edge</td>
-  <td>pathlib node in project.</td>
-</tr>
-<tr>
-  <td>30</td>
+  <td>18</td>
   <td><code>pydantic_settings</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small></td>
   <td>No direct outbound edge</td>
   <td>pydantic_settings node in project.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>qdrant_client_models</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>service.py</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>qdrant_client_models node in project.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>typing</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>7b8e2b6659a9_add_role_and_status_to_accounts.py</code><br><small style="color:var(--muted)">migrations/versions/7b8e2b6659a9_add_role_and_status_to_accounts.py</small><br><code>9fa848922c02_add_applied_at_follow_up_due_notes_to_.py</code><br><small style="color:var(--muted)">migrations/versions/9fa848922c02_add_applied_at_follow_up_due_notes_to_.py</small><br><code>__init__.py</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small><br>+45 more</td>
+  <td>No direct outbound edge</td>
+  <td>typing node in project.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/matching/__init__.py</small><br><code>compute cosine similarity()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>score_and_gate_jobs()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>compute_cosine_similarity() node in services/matching/embedding.py.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>.extract_clean_cv_text()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br><code>ProfileParser</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.extract_clean_cv_text() node in services/matching/profile_parser.py.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>.parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>and profile extraction()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>default language fallback()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small><br><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br>+2 more</td>
+  <td><code>extract_clean_cv_text()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small><br><code>ParsedProfile</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td>.parse() node in services/matching/profile_parser.py.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>.embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>score_and_gate_jobs()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><code>_get_qdrant_point_id()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>parse()</code><br><small style="color:var(--muted)">services/matching/profile_parser.py</small></td>
+  <td>.embed_and_upsert_profile() node in services/matching/service.py.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>._get_qdrant_point_id()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>._get_qdrant_point_id() node in services/matching/service.py.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>.score_and_gate_jobs()</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>MatchingService</code><br><small style="color:var(--muted)">services/matching/service.py</small></td>
+  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small><br><code>embed_and_upsert_profile()</code><br><small style="color:var(--muted)">services/matching/service.py</small><br><code>LanguageGate</code><br><small style="color:var(--muted)">services/matching/language_gate.py</small><br>+2 more</td>
+  <td>.score_and_gate_jobs() node in services/matching/service.py.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>test_compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/test_matching.py</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>compute_cosine_similarity()</code><br><small style="color:var(--muted)">services/matching/embedding.py</small></td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>Path</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Path node in project.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>Path</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Path node in project.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>Compute cosine similarity between two numeric vectors: dot(a, b) / (norm(a) *…</code><br><small style="color:var(--muted)">services/matching/embedding.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Compute cosine similarity between two numeric vectors: dot(a, b) / (norm(a) *….</td>
 </tr>
 </table>
 
@@ -513,16 +513,17 @@ flowchart LR
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>services/matching/service.py</code></td><td>11 nodes</td></tr>
 <tr><td><code>services/matching/profile_parser.py</code></td><td>8 nodes</td></tr>
+<tr><td><code>services/matching/embedding.py</code></td><td>2 nodes</td></tr>
+<tr><td><code>services/matching/test_matching.py</code></td><td>2 nodes</td></tr>
 <tr><td><code>app/core/__init__.py</code></td><td>1 nodes</td></tr>
 <tr><td><code>app/core/config.py</code></td><td>1 nodes</td></tr>
 <tr><td><code>app/services/job_ingestion.py</code></td><td>1 nodes</td></tr>
-<tr><td><code>services/matching/language_gate.py</code></td><td>1 nodes</td></tr>
-<tr><td><code>backend/tests/conftest.py</code></td><td>1 nodes</td></tr>
+<tr><td><code>services/matching/__init__.py</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x18, explains x8, calls x7, imports x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x14, imports x12, explains x10, calls x9. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -1219,55 +1220,70 @@ flowchart LR
 
 <!-- ====== 6. CLI & Skill Installers ====== -->
 <h2 id="cli-skills">6. CLI &amp; Skill Installers</h2>
-<p>CLI &amp; Skill Installers groups implementation around agents, skills, skillmd, graphify, mostly in skills/graphify/SKILL.md, docs/ARCHITECTURE.md, AGENTS.md. This section covers 91 nodes and 81 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>CLI &amp; Skill Installers groups implementation around skillmd, agents, skills, graphify, mostly in skills/graphify/SKILL.md, docs/ARCHITECTURE.md, AGENTS.md. This section covers 165 nodes and 183 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: CLI &amp; Skill Installers (91 nodes, 81 edges)
-    subgraph cli_skills_AGENTS_md_c2f84881["AGENTS.md"]
-        agents_e7052aeb("AGENTS.md")
-        agents_agent_behavior_rules_job_application_agen_0dd42200("Agent Behavior Rules — Job Application...<br/><small>AGENTS.md</small>")
-        agents_code_conventions_7e8d5778("Code conventions<br/><small>AGENTS.md</small>")
-        agents_database_migrations_09227ebb("Database &amp; migrations<br/><small>AGENTS.md</small>")
-        agents_folder_structure_put_new_code_in_the_righ_3fb8a909("Folder structure — put new code in the...<br/><small>AGENTS.md</small>")
-        agents_interfaces_to_honor_not_bypass_26a95f3f("Interfaces to honor, not bypass<br/><small>AGENTS.md</small>")
-        agents_what_not_to_build_without_being_asked_a50829cf("What NOT to build without being asked<br/><small>AGENTS.md</small>")
-        agents_when_to_stop_and_ask_instead_of_proceedin_40d0adeb("When to stop and ask instead of proceeding<br/><small>AGENTS.md</small>")
+    %% Section: CLI &amp; Skill Installers (165 nodes, 183 edges)
+    subgraph cli_skills_db_migrations_env_py_8cdd75a5["db/migrations/env.py"]
+        backend_app_db_migrations_env_f2e1640e("env.py")
+        backend_app_db_migrations_env_get_database_url_444d779e("get_database_url()<br/><small>db/migrations/env.py</small>")
+        backend_app_db_migrations_env_run_migrations_off_6e1b5985("run_migrations_offline()<br/><small>db/migrations/env.py</small>")
+        backend_app_db_migrations_env_run_migrations_onl_07c4efe3("run_migrations_online()<br/><small>db/migrations/env.py</small>")
     end
-    subgraph cli_skills_GEMINI_md_9dd2fdae["GEMINI.md"]
-        gemini_current_priority_per_roadmap_md_phase_0_1_c588afe0("Current priority (per ROADMAP.md Phase...<br/><small>GEMINI.md</small>")
-        gemini_468da084("GEMINI.md")
-        gemini_non_negotiables_do_not_redesign_these_wit_78e22f5e("Non-negotiables (do not redesign these...<br/><small>GEMINI.md</small>")
-        gemini_project_job_application_agent_saas_ff116abd("Project: Job Application Agent SaaS<br/><small>GEMINI.md</small>")
-        gemini_read_these_before_writing_code_e5cde162("Read these before writing code<br/><small>GEMINI.md</small>")
-        gemini_tech_stack_decided_don_t_re_propose_alter_d3fe9d67("Tech stack (decided, don't re-propose a...<br/><small>GEMINI.md</small>")
+    subgraph cli_skills_scripts_check_migrations_py_80950fa1["scripts/check_migrations.py"]
+        scripts_check_migrations_run_migration_audit_d6409b19("run_migration_audit()<br/><small>scripts/check_migrations.py</small>")
+        scripts_check_migrations_check_models_tenancy_1baa89bd("check_models_tenancy()<br/><small>scripts/check_migrations.py</small>")
+        scripts_check_migrations_check_alembic_heads_eb5ddaa9("check_alembic_heads()<br/><small>scripts/check_migrations.py</small>")
     end
-    frontend_src_index_54e24783("frontend_src_index")
-    ref_react_dom_61ea372d("react-dom<br/><small>frontend/package.json</small>")
-    frontend_src_app_app_9781f459("App()<br/><small>frontend/src/App.jsx</small>")
+    subgraph cli_skills_scripts_verify_py_e8809fff["scripts/verify.py"]
+        scripts_verify_db490f73("verify.py")
+        scripts_verify_main_afa20d54("main()<br/><small>scripts/verify.py</small>")
+        scripts_verify_run_step_61651b6b("run_step()<br/><small>scripts/verify.py</small>")
+    end
+    subgraph cli_skills_app_db_session_py_ae7bc177["app/db/session.py"]
+        backend_app_db_session_normalize_db_url_2031043e("normalize_db_url()<br/><small>app/db/session.py</small>")
+        backend_app_db_session_get_engine_dc21237c("get_engine()<br/><small>app/db/session.py</small>")
+    end
+    subgraph cli_skills_scripts_doctor_py_41d4e729["scripts/doctor.py"]
+        scripts_doctor_run_doctor_259b7de9("run_doctor()<br/><small>scripts/doctor.py</small>")
+        scripts_doctor_check_b09e4899("check()<br/><small>scripts/doctor.py</small>")
+    end
+    backend_app_core_auth_46c90cfe("auth.py")
+    backend_app_db_init_f3449ea0("__init__.py")
+    backend_app_main_4d9a7320("main.py")
     frontend_src_main_c1980e55("main.jsx")
-    frontend_src_main_c1980e55 -->|imports| frontend_src_app_app_9781f459
-    frontend_src_main_c1980e55 -->|imports| ref_react_dom_61ea372d
-    frontend_src_main_c1980e55 -->|imports| frontend_src_index_54e24783
-    %% Omitted for readability: 73 nodes, 0 edges
-    class agents_e7052aeb concept;
-    class agents_agent_behavior_rules_job_application_agen_0dd42200 concept;
-    class agents_code_conventions_7e8d5778 concept;
-    class agents_database_migrations_09227ebb concept;
-    class agents_folder_structure_put_new_code_in_the_righ_3fb8a909 concept;
-    class agents_interfaces_to_honor_not_bypass_26a95f3f concept;
-    class agents_what_not_to_build_without_being_asked_a50829cf concept;
-    class agents_when_to_stop_and_ask_instead_of_proceedin_40d0adeb concept;
-    class gemini_current_priority_per_roadmap_md_phase_0_1_c588afe0 concept;
-    class gemini_468da084 concept;
-    class gemini_non_negotiables_do_not_redesign_these_wit_78e22f5e concept;
-    class gemini_project_job_application_agent_saas_ff116abd concept;
-    class gemini_read_these_before_writing_code_e5cde162 concept;
-    class gemini_tech_stack_decided_don_t_re_propose_alter_d3fe9d67 concept;
-    class frontend_src_index_54e24783 function;
-    class ref_react_dom_61ea372d function;
-    class frontend_src_app_app_9781f459 ui;
+    scripts_check_migrations_run_migration_audit_d6409b19 -->|calls| scripts_check_migrations_check_models_tenancy_1baa89bd
+    scripts_check_migrations_run_migration_audit_d6409b19 -->|calls| scripts_check_migrations_check_alembic_heads_eb5ddaa9
+    scripts_doctor_run_doctor_259b7de9 -->|calls| scripts_doctor_check_b09e4899
+    scripts_verify_main_afa20d54 -->|calls| scripts_verify_run_step_61651b6b
+    backend_app_db_migrations_env_get_database_url_444d779e -->|calls| backend_app_db_session_normalize_db_url_2031043e
+    backend_app_db_migrations_env_run_migrations_off_6e1b5985 -->|calls| backend_app_db_migrations_env_get_database_url_444d779e
+    backend_app_db_migrations_env_run_migrations_onl_07c4efe3 -->|calls| backend_app_db_session_get_engine_dc21237c
+    backend_app_db_session_get_engine_dc21237c -->|calls| backend_app_db_session_normalize_db_url_2031043e
+    backend_app_db_init_f3449ea0 -->|imports| backend_app_db_session_get_engine_dc21237c
+    backend_app_db_migrations_env_f2e1640e -->|imports| backend_app_db_session_get_engine_dc21237c
+    backend_app_db_migrations_env_f2e1640e -->|imports| backend_app_db_session_normalize_db_url_2031043e
+    backend_app_main_4d9a7320 -->|imports| backend_app_db_session_get_engine_dc21237c
+    %% Omitted for readability: 147 nodes, 0 edges
+    class backend_app_db_migrations_env_f2e1640e module;
+    class backend_app_db_migrations_env_get_database_url_444d779e function;
+    class backend_app_db_migrations_env_run_migrations_off_6e1b5985 function;
+    class backend_app_db_migrations_env_run_migrations_onl_07c4efe3 function;
+    class scripts_check_migrations_run_migration_audit_d6409b19 function;
+    class scripts_check_migrations_check_models_tenancy_1baa89bd function;
+    class scripts_check_migrations_check_alembic_heads_eb5ddaa9 function;
+    class scripts_verify_db490f73 module;
+    class scripts_verify_main_afa20d54 function;
+    class scripts_verify_run_step_61651b6b function;
+    class backend_app_db_session_normalize_db_url_2031043e function;
+    class backend_app_db_session_get_engine_dc21237c function;
+    class scripts_doctor_run_doctor_259b7de9 function;
+    class scripts_doctor_check_b09e4899 function;
+    class backend_app_core_auth_46c90cfe module;
+    class backend_app_db_init_f3449ea0 module;
+    class backend_app_main_4d9a7320 module;
     class frontend_src_main_c1980e55 ui;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -1492,43 +1508,43 @@ flowchart LR
 </tr>
 <tr>
   <td>26</td>
-  <td><code>ARCHITECTURE.md</code><br><small style="color:var(--muted)">docs/ARCHITECTURE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>check_alembic_heads()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_migration_audit()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing ARCHITECTURE.md.</td>
+  <td>check_alembic_heads() node in scripts/check_migrations.py.</td>
 </tr>
 <tr>
   <td>27</td>
-  <td><code>0. Design principle: &quot;missing puzzle piece&quot;</code><br><small style="color:var(--muted)">docs/ARCHITECTURE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>check_models_tenancy()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_migration_audit()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing 0. Design principle: &quot;missing puzzle piece&quot;.</td>
+  <td>check_models_tenancy() node in scripts/check_migrations.py.</td>
 </tr>
 <tr>
   <td>28</td>
-  <td><code>10. Hosting (OPEN — still genuinely undecided)</code><br><small style="color:var(--muted)">docs/ARCHITECTURE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
+  <td><code>run_migration_audit()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Documentation node describing 10. Hosting (OPEN — still genuinely undecided).</td>
+  <td><code>check_alembic_heads()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small><br><code>check_models_tenancy()</code><br><small style="color:var(--muted)">scripts/check_migrations.py</small></td>
+  <td>run_migration_audit() node in scripts/check_migrations.py.</td>
 </tr>
 <tr>
   <td>29</td>
-  <td><code>11. LLM provider strategy (confirmed)</code><br><small style="color:var(--muted)">docs/ARCHITECTURE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>check()</code><br><small style="color:var(--muted)">scripts/doctor.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>run_doctor()</code><br><small style="color:var(--muted)">scripts/doctor.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing 11. LLM provider strategy (confirmed).</td>
+  <td>check() node in scripts/doctor.py.</td>
 </tr>
 <tr>
   <td>30</td>
-  <td><code>12. Payments (research complete — decision still yours to make)</code><br><small style="color:var(--muted)">docs/ARCHITECTURE.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
+  <td><code>run_doctor()</code><br><small style="color:var(--muted)">scripts/doctor.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Documentation node describing 12. Payments (research complete — decision still yours to make).</td>
+  <td><code>check()</code><br><small style="color:var(--muted)">scripts/doctor.py</small></td>
+  <td>run_doctor() node in scripts/doctor.py.</td>
 </tr>
 </table>
 
@@ -1542,84 +1558,93 @@ flowchart LR
 <tr><td><code>AGENTS.md</code></td><td>8 nodes</td></tr>
 <tr><td><code>docs/IDEA.md</code></td><td>8 nodes</td></tr>
 <tr><td><code>skills/cv-tailoring-guard/SKILL.md</code></td><td>7 nodes</td></tr>
+<tr><td><code>skills/silent-failure-hunter/SKILL.md</code></td><td>7 nodes</td></tr>
 <tr><td><code>GEMINI.md</code></td><td>7 nodes</td></tr>
-<tr><td><code>docs/ROADMAP.md</code></td><td>6 nodes</td></tr>
-<tr><td><code>graphify/references/hooks.md</code></td><td>4 nodes</td></tr>
+<tr><td><code>app/db/session.py</code></td><td>7 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x78, imports x2, imports x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x114, imports x22, imports x19, calls x11. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 7. Ingestion & Updates ====== -->
 <h2 id="ingest-cache-update">7. Ingestion &amp; Updates</h2>
-<p>Ingestion &amp; Updates groups implementation around job, backend, app, sources, mostly in services/job_sources/adzuna.py, services/job_sources/base.py, graphify/references/add-watch.md. This section covers 37 nodes and 42 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Ingestion &amp; Updates groups implementation around job, sources, backend, app, mostly in services/job_sources/greenhouse.py, graphify/references/add-watch.md, graphify/references/update.md. This section covers 41 nodes and 56 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Ingestion &amp; Updates (37 nodes, 42 edges)
-    subgraph ingest_cache_update_services_job_sources_adzuna_246f52de["services/job_sources/adzuna.py"]
-        backend_app_services_job_sources_adzuna_adzunajo_b6a37183("AdzunaJobSource<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4("_parse_results()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_adzunajo_1bfb8354("fetch()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_adzunajo_b7c0fb19("_validate_credentials()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_adzunajo_a98a0f6f("_build_url_and_params()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_adzunajo_8ab5cd19("__init__()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_clean_te_1653143f("_clean_text()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_format_s_f2f51d50("_format_salary()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_detect_l_6af20850("_detect_location_type()<br/><small>services/job_sources/adzuna.py</small>")
-        backend_app_services_job_sources_adzuna_parse_cr_7b8e189f("_parse_created_date()<br/><small>services/job_sources/adzuna.py</small>")
+    %% Section: Ingestion &amp; Updates (41 nodes, 56 edges)
+    subgraph ingest_cache_update_services_job_sources_greenho_82f53ba8["services/job_sources/greenhouse.py"]
+        backend_app_services_job_sources_greenhouse_e781e203("greenhouse.py")
+        backend_app_services_job_sources_greenhouse_gree_0aeacdb8("GreenhouseJobSource<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_gree_7dc25fed("_parse_results()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_gree_432b26ee("fetch()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_gree_1b383bbe("__init__()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_gree_153002cc("_build_url()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_clea_1e77a49f("_clean_html()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_unes_e8277b0b("unescape greenhouse content()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_dete_73f109b6("_detect_location_type()<br/><small>services/job_sources/greenhouse.py</small>")
+        backend_app_services_job_sources_greenhouse_pars_ae8ce7f1("_parse_iso_date()<br/><small>services/job_sources/greenhouse.py</small>")
     end
     subgraph ingest_cache_update_External_generated_9d67cab5["External / generated"]
-        backend_app_services_job_sources_adzuna_py_any_bb9e9c27("Any")
-        backend_app_services_job_sources_base_py_any_6dcbac98("Any")
-        backend_app_services_job_sources_adzuna_py_async_fffd9121("AsyncClient")
-        backend_app_services_job_sources_adzuna_py_datet_a927e0d0("datetime")
+        backend_app_services_job_sources_base_py_abc_f3eebabc("ABC")
+        backend_app_services_job_sources_greenhouse_py_d_00ce9273("datetime")
+        html_950a39b6("html")
     end
-    subgraph ingest_cache_update_app_models_job_py_30e89d6a["app/models/job.py"]
-        backend_app_models_job_jobsearchquery_1dabc207("JobSearchQuery<br/><small>app/models/job.py</small>")
-        backend_app_models_job_rationale_191_ec687429("Normalized query parameters for searchi...<br/><small>app/models/job.py</small>")
+    subgraph ingest_cache_update_services_job_sources_init_py_a0224b63["services/job_sources/__init__.py"]
+        backend_app_services_job_sources_init_da0f7e18("__init__.py")
+        backend_app_services_job_sources_init_get_availa_3dbc63a7("get_available_sources()<br/><small>services/job_sources/__init__.py</small>")
     end
     subgraph ingest_cache_update_services_job_sources_base_py_9754333a["services/job_sources/base.py"]
-        backend_app_services_job_sources_base_jobsource_a895c03e("fetch()<br/><small>services/job_sources/base.py</small>")
-        backend_app_services_job_sources_base_jobsource_0f64bf41("normalize_query()<br/><small>services/job_sources/base.py</small>")
+        backend_app_services_job_sources_base_880409fa("base.py")
+        backend_app_services_job_sources_base_jobsource_8de99b61("JobSource<br/><small>services/job_sources/base.py</small>")
     end
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|method| backend_app_services_job_sources_adzuna_adzunajo_b7c0fb19
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|method| backend_app_services_job_sources_adzuna_adzunajo_a98a0f6f
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|method| backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|method| backend_app_services_job_sources_adzuna_adzunajo_1bfb8354
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|method| backend_app_services_job_sources_adzuna_adzunajo_8ab5cd19
-    backend_app_services_job_sources_adzuna_adzunajo_1bfb8354 -->|calls| backend_app_services_job_sources_adzuna_adzunajo_b7c0fb19
-    backend_app_services_job_sources_adzuna_adzunajo_1bfb8354 -->|calls| backend_app_services_job_sources_adzuna_adzunajo_a98a0f6f
-    backend_app_services_job_sources_adzuna_adzunajo_1bfb8354 -->|calls| backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4
-    backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4 -->|calls| backend_app_services_job_sources_adzuna_clean_te_1653143f
-    backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4 -->|calls| backend_app_services_job_sources_adzuna_format_s_f2f51d50
-    backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4 -->|calls| backend_app_services_job_sources_adzuna_detect_l_6af20850
-    backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4 -->|calls| backend_app_services_job_sources_adzuna_parse_cr_7b8e189f
-    backend_app_services_job_sources_adzuna_adzunajo_b6a37183 -->|uses| backend_app_models_job_jobsearchquery_1dabc207
-    %% Omitted for readability: 19 nodes, 0 edges
-    class backend_app_services_job_sources_adzuna_adzunajo_b6a37183 klass;
-    class backend_app_services_job_sources_adzuna_adzunajo_e09f3bc4 function;
-    class backend_app_services_job_sources_adzuna_adzunajo_1bfb8354 function;
-    class backend_app_services_job_sources_adzuna_adzunajo_b7c0fb19 function;
-    class backend_app_services_job_sources_adzuna_adzunajo_a98a0f6f function;
-    class backend_app_services_job_sources_adzuna_adzunajo_8ab5cd19 function;
-    class backend_app_services_job_sources_adzuna_clean_te_1653143f function;
-    class backend_app_services_job_sources_adzuna_format_s_f2f51d50 function;
-    class backend_app_services_job_sources_adzuna_detect_l_6af20850 function;
-    class backend_app_services_job_sources_adzuna_parse_cr_7b8e189f function;
-    class backend_app_services_job_sources_adzuna_py_any_bb9e9c27 klass;
-    class backend_app_services_job_sources_base_py_any_6dcbac98 klass;
-    class backend_app_services_job_sources_adzuna_py_async_fffd9121 entry;
-    class backend_app_services_job_sources_adzuna_py_datet_a927e0d0 function;
-    class backend_app_models_job_jobsearchquery_1dabc207 klass;
-    class backend_app_models_job_rationale_191_ec687429 concept;
-    class backend_app_services_job_sources_base_jobsource_a895c03e function;
-    class backend_app_services_job_sources_base_jobsource_0f64bf41 function;
+    backend_app_services_job_sources_linkedin_2d29a27b("linkedin.py")
+    backend_app_services_job_sources_greenhouse_gree_0aeacdb8 -->|method| backend_app_services_job_sources_greenhouse_gree_7dc25fed
+    backend_app_services_job_sources_greenhouse_gree_0aeacdb8 -->|method| backend_app_services_job_sources_greenhouse_gree_432b26ee
+    backend_app_services_job_sources_greenhouse_gree_0aeacdb8 -->|method| backend_app_services_job_sources_greenhouse_gree_1b383bbe
+    backend_app_services_job_sources_greenhouse_gree_0aeacdb8 -->|method| backend_app_services_job_sources_greenhouse_gree_153002cc
+    backend_app_services_job_sources_greenhouse_gree_432b26ee -->|calls| backend_app_services_job_sources_greenhouse_gree_153002cc
+    backend_app_services_job_sources_greenhouse_gree_432b26ee -->|calls| backend_app_services_job_sources_greenhouse_gree_7dc25fed
+    backend_app_services_job_sources_greenhouse_gree_7dc25fed -->|calls| backend_app_services_job_sources_greenhouse_clea_1e77a49f
+    backend_app_services_job_sources_greenhouse_gree_7dc25fed -->|calls| backend_app_services_job_sources_greenhouse_unes_e8277b0b
+    backend_app_services_job_sources_greenhouse_gree_7dc25fed -->|calls| backend_app_services_job_sources_greenhouse_dete_73f109b6
+    backend_app_services_job_sources_greenhouse_gree_7dc25fed -->|calls| backend_app_services_job_sources_greenhouse_pars_ae8ce7f1
+    backend_app_services_job_sources_init_get_availa_3dbc63a7 -->|calls| backend_app_services_job_sources_greenhouse_gree_0aeacdb8
+    backend_app_services_job_sources_base_880409fa -->|imports| backend_app_services_job_sources_base_py_abc_f3eebabc
+    backend_app_services_job_sources_greenhouse_e781e203 -->|imports| backend_app_services_job_sources_base_jobsource_8de99b61
+    backend_app_services_job_sources_greenhouse_e781e203 -->|imports| backend_app_services_job_sources_greenhouse_py_d_00ce9273
+    backend_app_services_job_sources_greenhouse_e781e203 -->|imports| html_950a39b6
+    backend_app_services_job_sources_greenhouse_e781e203 -->|imports| backend_app_services_job_sources_base_880409fa
+    backend_app_services_job_sources_init_da0f7e18 -->|imports| backend_app_services_job_sources_base_jobsource_8de99b61
+    backend_app_services_job_sources_init_da0f7e18 -->|imports| backend_app_services_job_sources_greenhouse_gree_0aeacdb8
+    backend_app_services_job_sources_linkedin_2d29a27b -->|imports| backend_app_services_job_sources_base_jobsource_8de99b61
+    backend_app_services_job_sources_linkedin_2d29a27b -->|imports| html_950a39b6
+    backend_app_services_job_sources_linkedin_2d29a27b -->|imports| backend_app_services_job_sources_base_880409fa
+    backend_app_services_job_sources_init_get_availa_3dbc63a7 -->|uses| backend_app_services_job_sources_base_jobsource_8de99b61
+    %% Omitted for readability: 23 nodes, 0 edges
+    class backend_app_services_job_sources_greenhouse_e781e203 module;
+    class backend_app_services_job_sources_greenhouse_gree_0aeacdb8 klass;
+    class backend_app_services_job_sources_greenhouse_gree_7dc25fed function;
+    class backend_app_services_job_sources_greenhouse_gree_432b26ee function;
+    class backend_app_services_job_sources_greenhouse_gree_1b383bbe function;
+    class backend_app_services_job_sources_greenhouse_gree_153002cc function;
+    class backend_app_services_job_sources_greenhouse_clea_1e77a49f function;
+    class backend_app_services_job_sources_greenhouse_unes_e8277b0b function;
+    class backend_app_services_job_sources_greenhouse_dete_73f109b6 function;
+    class backend_app_services_job_sources_greenhouse_pars_ae8ce7f1 function;
+    class backend_app_services_job_sources_base_py_abc_f3eebabc klass;
+    class backend_app_services_job_sources_greenhouse_py_d_00ce9273 function;
+    class html_950a39b6 function;
+    class backend_app_services_job_sources_init_da0f7e18 module;
+    class backend_app_services_job_sources_init_get_availa_3dbc63a7 function;
+    class backend_app_services_job_sources_base_880409fa module;
+    class backend_app_services_job_sources_base_jobsource_8de99b61 klass;
+    class backend_app_services_job_sources_linkedin_2d29a27b module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -1643,110 +1668,118 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>JobSearchQuery</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td><code>JobSource</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br>+38 more</td>
-  <td>No direct outbound edge</td>
-  <td>JobSearchQuery node in app/models/job.py.</td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small><br><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>freehire.py</code><br><small style="color:var(--muted)">services/job_sources/freehire.py</small><br>+11 more</td>
+  <td><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/base.py</small><br><code>JobPosting</code><br><small style="color:var(--muted)">app/models/job.py</small><br><code>JobSearchQuery</code><br><small style="color:var(--muted)">app/models/job.py</small><br>+1 more</td>
+  <td>JobSource node in services/job_sources/base.py.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small><br><code>adzuna missing credentials()</code><br><small style="color:var(--muted)">services/job_sources/test_adzuna.py</small><br><code>fetch query variations()</code><br><small style="color:var(--muted)">services/job_sources/test_adzuna.py</small><br>+5 more</td>
-  <td><code>__init__()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_build_url_and_params()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br>+6 more</td>
-  <td>AdzunaJobSource node in services/job_sources/adzuna.py.</td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small><br><code>fetch string slug()</code><br><small style="color:var(--muted)">services/job_sources/test_greenhouse.py</small><br><code>get_available_sources()</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small><br>+3 more</td>
+  <td><code>__init__()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>_build_url()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br>+4 more</td>
+  <td>GreenhouseJobSource node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>3</td>
-  <td><code>._build_url_and_params()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_clean_html()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td>No direct outbound edge</td>
-  <td>._build_url_and_params() node in services/job_sources/adzuna.py.</td>
+  <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
   <td>4</td>
-  <td><code>.fetch()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_detect_location_type()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><code>_build_url_and_params()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_validate_credentials()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br>+1 more</td>
-  <td>.fetch() node in services/job_sources/adzuna.py.</td>
+  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>_detect_location_type() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>5</td>
-  <td><code>.__init__()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>._build_url()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td>No direct outbound edge</td>
-  <td>.__init__() node in services/job_sources/adzuna.py.</td>
+  <td>._build_url() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>6</td>
-  <td><code>._parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>.fetch()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><code>_clean_text()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_detect_location_type()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>_format_salary()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br>+1 more</td>
-  <td>._parse_results() node in services/job_sources/adzuna.py.</td>
+  <td><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td><code>_build_url()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>JobSourceHTTPError</code><br><small style="color:var(--muted)">services/job_sources/exceptions.py</small></td>
+  <td>.fetch() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>7</td>
-  <td><code>._validate_credentials()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>.__init__()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><code>JobSourceConfigError</code><br><small style="color:var(--muted)">services/job_sources/exceptions.py</small></td>
-  <td>._validate_credentials() node in services/job_sources/adzuna.py.</td>
+  <td><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.__init__() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>8</td>
-  <td><code>_clean_text()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>._parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>_clean_text() node in services/job_sources/adzuna.py.</td>
+  <td><code>fetch()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td><code>_clean_html()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>_detect_location_type()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>_parse_iso_date()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br>+1 more</td>
+  <td>._parse_results() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>9</td>
-  <td><code>_detect_location_type()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_parse_iso_date()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td>No direct outbound edge</td>
-  <td>_detect_location_type() node in services/job_sources/adzuna.py.</td>
+  <td>_parse_iso_date() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>_format_salary()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_unescape_greenhouse_content()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td>No direct outbound edge</td>
-  <td>_format_salary() node in services/job_sources/adzuna.py.</td>
+  <td>_unescape_greenhouse_content() node in services/job_sources/greenhouse.py.</td>
 </tr>
 <tr>
   <td>11</td>
-  <td><code>_parse_created_date()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>get_available_sources()</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>_parse_results()</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>_parse_created_date() node in services/job_sources/adzuna.py.</td>
+  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>jobs.py</code><br><small style="color:var(--muted)">app/api/jobs.py</small><br><code>trigger_ingestion()</code><br><small style="color:var(--muted)">app/api/jobs.py</small><br>+1 more</td>
+  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>FreehireJobSource</code><br><small style="color:var(--muted)">services/job_sources/freehire.py</small><br><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br>+5 more</td>
+  <td>get_available_sources() node in services/job_sources/__init__.py.</td>
 </tr>
 <tr>
   <td>12</td>
-  <td><code>.fetch()</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>JobSource</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>.fetch() node in services/job_sources/base.py.</td>
+  <td><code>job_sources/base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>freehire.py</code><br><small style="color:var(--muted)">services/job_sources/freehire.py</small><br><code>greenhouse.py</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br>+6 more</td>
+  <td><code>ABC</code><br><code>job.py</code><br><small style="color:var(--muted)">app/models/job.py</small><br><code>JobPosting</code><br><small style="color:var(--muted)">app/models/job.py</small><br>+2 more</td>
+  <td>Module file in services/job_sources/base.py.</td>
 </tr>
 <tr>
   <td>13</td>
-  <td><code>.normalize_query()</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>JobSource</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
+  <td><code>ABC</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
   <td>No direct outbound edge</td>
-  <td>.normalize_query() node in services/job_sources/base.py.</td>
+  <td>ABC node in project.</td>
 </tr>
 <tr>
   <td>14</td>
+  <td><code>greenhouse.py</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>test_greenhouse.py</code><br><small style="color:var(--muted)">services/job_sources/test_greenhouse.py</small></td>
+  <td><code>base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small><br><code>datetime</code><br><code>exceptions.py</code><br><small style="color:var(--muted)">services/job_sources/exceptions.py</small><br>+9 more</td>
+  <td>Module file in services/job_sources/greenhouse.py.</td>
+</tr>
+<tr>
+  <td>15</td>
   <td><code>Any</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
@@ -1754,7 +1787,7 @@ flowchart LR
   <td>Any node in project.</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>16</td>
   <td><code>AsyncClient</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-cmd">Entry</span></td>
   <td>External entry / no inbound edge</td>
@@ -1762,124 +1795,116 @@ flowchart LR
   <td>AsyncClient node in project.</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>17</td>
   <td><code>datetime</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>adzuna.py</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>greenhouse.py</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td>No direct outbound edge</td>
   <td>datetime node in project.</td>
 </tr>
 <tr>
-  <td>17</td>
-  <td><code>Any</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Any node in project.</td>
-</tr>
-<tr>
   <td>18</td>
-  <td><code>Normalized query parameters for searching across job sources.</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Normalized query parameters for searching across job sources..</td>
+  <td><code>job_sources/__init__.py</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>jobs.py</code><br><small style="color:var(--muted)">app/api/jobs.py</small></td>
+  <td><code>AdzunaJobSource</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small><br><code>FreehireJobSource</code><br><small style="color:var(--muted)">services/job_sources/freehire.py</small><br><code>GreenhouseJobSource</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br>+9 more</td>
+  <td>Module file in services/job_sources/__init__.py.</td>
 </tr>
 <tr>
   <td>19</td>
-  <td><code>Asynchronously fetch job postings matching the query from Adzuna.</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Asynchronously fetch job postings matching the query from Adzuna..</td>
+  <td><code>linkedin.py</code><br><small style="color:var(--muted)">services/job_sources/linkedin.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>test_linkedin_source.py</code><br><small style="color:var(--muted)">tests/services/test_linkedin_source.py</small></td>
+  <td><code>asyncio</code><br><code>base.py</code><br><small style="color:var(--muted)">services/job_sources/base.py</small><br><code>datetime</code><br>+12 more</td>
+  <td>Module file in services/job_sources/linkedin.py.</td>
 </tr>
 <tr>
   <td>20</td>
-  <td><code>Strip HTML tags and normalize whitespace.</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>Plugin interface for all job sourcing integrations per ARCHITECTURE.md §4:…</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Plugin interface for all job sourcing integrations per ARCHITECTURE.md §4:….</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>Asynchronously fetch all open job postings for a company from Greenhouse. Pass…</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Asynchronously fetch all open job postings for a company from Greenhouse. Pass….</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>Unescape Greenhouse&#x27;s double-encoded HTML content field. The field is HTML-…</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Unescape Greenhouse&#x27;s double-encoded HTML content field. The field is HTML-….</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>Strip HTML tags and normalize whitespace.</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Design note for Strip HTML tags and normalize whitespace..</td>
 </tr>
 <tr>
-  <td>21</td>
-  <td><code>Parse ISO formatted creation date from Adzuna response.</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Parse ISO formatted creation date from Adzuna response..</td>
-</tr>
-<tr>
-  <td>22</td>
-  <td><code>Format salary range into a human-readable display string.</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Format salary range into a human-readable display string..</td>
-</tr>
-<tr>
-  <td>23</td>
-  <td><code>Infer location type (remote, hybrid, on-site) from job fields.</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>Design note for Infer location type (remote, hybrid, on-site) from job fields..</td>
-</tr>
-<tr>
   <td>24</td>
-  <td><code>Adzuna API implementation of the JobSource interface (ARCHITECTURE.md §4).…</code><br><small style="color:var(--muted)">services/job_sources/adzuna.py</small></td>
+  <td><code>Parse ISO 8601 date string (with optional timezone offset).</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Adzuna API implementation of the JobSource interface (ARCHITECTURE.md §4).….</td>
+  <td>Design note for Parse ISO 8601 date string (with optional timezone offset)..</td>
 </tr>
 <tr>
   <td>25</td>
-  <td><code>Asynchronously fetch job postings matching the query. IMPORTANT CALLER BEHAVIOR…</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
+  <td><code>Infer location type from the location string and title.</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Asynchronously fetch job postings matching the query. IMPORTANT CALLER BEHAVIOR….</td>
+  <td>Design note for Infer location type from the location string and title..</td>
 </tr>
 <tr>
   <td>26</td>
-  <td><code>Helper method to normalize search input into a JobSearchQuery instance.</code><br><small style="color:var(--muted)">services/job_sources/base.py</small></td>
+  <td><code>Greenhouse public Job Board API implementation of the JobSource interface…</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Helper method to normalize search input into a JobSearchQuery instance..</td>
+  <td>Design note for Greenhouse public Job Board API implementation of the JobSource interface….</td>
 </tr>
 <tr>
   <td>27</td>
-  <td><code>add-watch.md</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
+  <td><code>Return instantiated JobSource instances based on requested names or all…</code><br><small style="color:var(--muted)">services/job_sources/__init__.py</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing add-watch.md.</td>
+  <td>Design note for Return instantiated JobSource instances based on requested names or all….</td>
 </tr>
 <tr>
   <td>28</td>
-  <td><code>For /graphify add</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>asyncio</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-async">Async</span></td>
+  <td><code>linkedin.py</code><br><small style="color:var(--muted)">services/job_sources/linkedin.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing For /graphify add.</td>
+  <td>asyncio node in project.</td>
 </tr>
 <tr>
   <td>29</td>
-  <td><code>For --watch</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>html</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>greenhouse.py</code><br><small style="color:var(--muted)">services/job_sources/greenhouse.py</small><br><code>linkedin.py</code><br><small style="color:var(--muted)">services/job_sources/linkedin.py</small><br><code>tailor_service.py</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing For --watch.</td>
+  <td>Exports documentation data to a target format.</td>
 </tr>
 <tr>
   <td>30</td>
-  <td><code>graphify reference: add a URL and watch a folder</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
-  <td><span class="tag tag-func">Concept</span></td>
-  <td>External entry / no inbound edge</td>
+  <td><code>random</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>linkedin.py</code><br><small style="color:var(--muted)">services/job_sources/linkedin.py</small></td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing graphify reference: add a URL and watch a folder.</td>
+  <td>random node in project.</td>
 </tr>
 </table>
 
@@ -1888,82 +1913,87 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>services/job_sources/adzuna.py</code></td><td>16 nodes</td></tr>
+      <tr><td><code>services/job_sources/greenhouse.py</code></td><td>16 nodes</td></tr>
 <tr><td><code>graphify/references/add-watch.md</code></td><td>4 nodes</td></tr>
 <tr><td><code>graphify/references/update.md</code></td><td>4 nodes</td></tr>
-<tr><td><code>services/job_sources/base.py</code></td><td>4 nodes</td></tr>
 <tr><td><code>graphify/references/transcribe.md</code></td><td>3 nodes</td></tr>
-<tr><td><code>app/models/job.py</code></td><td>2 nodes</td></tr>
+<tr><td><code>services/job_sources/__init__.py</code></td><td>3 nodes</td></tr>
+<tr><td><code>services/job_sources/base.py</code></td><td>3 nodes</td></tr>
+<tr><td><code>services/job_sources/linkedin.py</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x12, explains x9, contains x8, calls x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x15, explains x8, calls x7, imports x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 8. Serving API ====== -->
 <h2 id="serve-api">8. Serving API</h2>
-<p>Serving API groups implementation around backend, app, api, profilepy, mostly in app/api/admin.py, app/models/profile.py, app/api/profile.py. This section covers 212 nodes and 455 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Serving API groups implementation around backend, app, api, models, mostly in app/api/applications.py, app/api/admin.py, app/api/profile.py. This section covers 210 nodes and 443 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Serving API (212 nodes, 455 edges)
-    subgraph serve_api_services_matching_embedding_py_9faa7176["services/matching/embedding.py"]
-        backend_app_services_matching_embedding_embeddin_5f7b77f1("EmbeddingClient<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_embeddin_d7af422d("embed()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_embeddin_1a739fd5("embed_batch()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_mockembe_2da6089e("MockEmbeddingClient<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_mockembe_f65d7b90("__init__()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_mockembe_1208d5c1("_text_to_vector()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_mockembe_0bdd3c9e("embed()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_mockembe_43091d92("embed_batch()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_openaiem_d4fa70d2("OpenAIEmbeddingClient<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_openaiem_57cd7199("__init__()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_openaiem_91fbda6a("embed()<br/><small>services/matching/embedding.py</small>")
-        backend_app_services_matching_embedding_openaiem_43813920("embed_batch()<br/><small>services/matching/embedding.py</small>")
+    %% Section: Serving API (210 nodes, 443 edges)
+    subgraph serve_api_app_api_applications_py_cd3a0658["app/api/applications.py"]
+        backend_app_api_applications_10be8324("applications.py")
+        backend_app_api_applications_draft_follow_up_2d563b1a("draft_follow_up()<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_followupdraftrespon_b477c455("FollowUpDraftResponse<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_evaluate_job_fit_43588ba9("evaluate_job_fit()<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_fitdimension_f4e00379("FitDimension<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_fitevaluationrespon_234846aa("FitEvaluationResponse<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_get_monitor_summary_ddfb5dc2("get_monitor_summary()<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_statussummary_4670bd7b("StatusSummary<br/><small>app/api/applications.py</small>")
     end
-    subgraph serve_api_app_db_seed_py_73638d51["app/db/seed.py"]
-        backend_app_db_seed_10a7a08c("seed.py")
-        backend_app_db_seed_seed_initial_data_86edee7c("seed_initial_data()<br/><small>app/db/seed.py</small>")
+    subgraph serve_api_app_models_application_py_29488642["app/models/application.py"]
+        backend_app_models_application_application_27bcf1c3("Application<br/><small>app/models/application.py</small>")
+        backend_app_models_application_application_job_c_540ffa41("job_company()<br/><small>app/models/application.py</small>")
+        backend_app_models_application_application_job_r_e894f06b("job_role()<br/><small>app/models/application.py</small>")
+    end
+    subgraph serve_api_app_api_interview_py_ee53f0ee["app/api/interview.py"]
+        backend_app_api_interview_3262e764("interview.py")
+        backend_app_api_interview_generate_interview_pre_ea42dd80("generate_interview_prep()<br/><small>app/api/interview.py</small>")
+    end
+    subgraph serve_api_app_models_job_py_5d712d12["app/models/job.py"]
+        backend_app_models_job_jobread_a4663a17("JobRead<br/><small>app/models/job.py</small>")
+        backend_app_models_job_jobread_parse_raw_data_b78ebf32("parse_raw_data()<br/><small>app/models/job.py</small>")
     end
     backend_app_api_admin_54fbb6da("admin.py")
-    backend_app_api_interview_3262e764("interview.py")
+    backend_app_api_auth_f0b24c22("auth.py")
     backend_app_api_profile_4d5a6aad("profile.py")
-    backend_tests_models_test_models_test_user_profi_aa712a55("profile and relations()<br/><small>tests/models/test_models.py</small>")
-    backend_app_services_matching_embedding_embeddin_5f7b77f1 -->|method| backend_app_services_matching_embedding_embeddin_d7af422d
-    backend_app_services_matching_embedding_embeddin_5f7b77f1 -->|method| backend_app_services_matching_embedding_embeddin_1a739fd5
-    backend_app_services_matching_embedding_mockembe_2da6089e -->|method| backend_app_services_matching_embedding_mockembe_f65d7b90
-    backend_app_services_matching_embedding_mockembe_2da6089e -->|method| backend_app_services_matching_embedding_mockembe_1208d5c1
-    backend_app_services_matching_embedding_mockembe_2da6089e -->|method| backend_app_services_matching_embedding_mockembe_0bdd3c9e
-    backend_app_services_matching_embedding_mockembe_2da6089e -->|method| backend_app_services_matching_embedding_mockembe_43091d92
-    backend_app_services_matching_embedding_openaiem_d4fa70d2 -->|method| backend_app_services_matching_embedding_openaiem_57cd7199
-    backend_app_services_matching_embedding_openaiem_d4fa70d2 -->|method| backend_app_services_matching_embedding_openaiem_91fbda6a
-    backend_app_services_matching_embedding_openaiem_d4fa70d2 -->|method| backend_app_services_matching_embedding_openaiem_43813920
-    backend_app_services_matching_embedding_mockembe_0bdd3c9e -->|calls| backend_app_services_matching_embedding_mockembe_1208d5c1
-    backend_app_services_matching_embedding_mockembe_43091d92 -->|calls| backend_app_services_matching_embedding_mockembe_1208d5c1
-    backend_app_services_matching_embedding_openaiem_91fbda6a -->|calls| backend_app_services_matching_embedding_mockembe_43091d92
-    %% Omitted for readability: 194 nodes, 0 edges
-    class backend_app_services_matching_embedding_embeddin_5f7b77f1 entry;
-    class backend_app_services_matching_embedding_embeddin_d7af422d function;
-    class backend_app_services_matching_embedding_embeddin_1a739fd5 function;
-    class backend_app_services_matching_embedding_mockembe_2da6089e entry;
-    class backend_app_services_matching_embedding_mockembe_f65d7b90 function;
-    class backend_app_services_matching_embedding_mockembe_1208d5c1 function;
-    class backend_app_services_matching_embedding_mockembe_0bdd3c9e function;
-    class backend_app_services_matching_embedding_mockembe_43091d92 function;
-    class backend_app_services_matching_embedding_openaiem_d4fa70d2 entry;
-    class backend_app_services_matching_embedding_openaiem_57cd7199 function;
-    class backend_app_services_matching_embedding_openaiem_91fbda6a function;
-    class backend_app_services_matching_embedding_openaiem_43813920 function;
-    class backend_app_db_seed_10a7a08c module;
-    class backend_app_db_seed_seed_initial_data_86edee7c function;
-    class backend_app_api_admin_54fbb6da module;
+    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_job_c_540ffa41
+    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_job_r_e894f06b
+    backend_app_models_job_jobread_a4663a17 -->|method| backend_app_models_job_jobread_parse_raw_data_b78ebf32
+    backend_app_api_applications_draft_follow_up_2d563b1a -->|calls| backend_app_api_applications_followupdraftrespon_b477c455
+    backend_app_api_applications_evaluate_job_fit_43588ba9 -->|calls| backend_app_api_applications_fitdimension_f4e00379
+    backend_app_api_applications_evaluate_job_fit_43588ba9 -->|calls| backend_app_api_applications_fitevaluationrespon_234846aa
+    backend_app_api_applications_get_monitor_summary_ddfb5dc2 -->|calls| backend_app_api_applications_statussummary_4670bd7b
+    backend_app_api_applications_10be8324 -->|imports| backend_app_models_application_application_27bcf1c3
+    backend_app_api_admin_54fbb6da -->|imports| backend_app_models_application_application_27bcf1c3
+    backend_app_api_admin_54fbb6da -->|imports| backend_app_models_job_jobread_a4663a17
+    backend_app_api_applications_draft_follow_up_2d563b1a -->|uses| backend_app_models_application_application_27bcf1c3
+    backend_app_api_applications_get_monitor_summary_ddfb5dc2 -->|uses| backend_app_models_application_application_27bcf1c3
+    %% Omitted for readability: 192 nodes, 0 edges
+    class backend_app_api_applications_10be8324 module;
+    class backend_app_api_applications_draft_follow_up_2d563b1a function;
+    class backend_app_api_applications_followupdraftrespon_b477c455 klass;
+    class backend_app_api_applications_evaluate_job_fit_43588ba9 function;
+    class backend_app_api_applications_fitdimension_f4e00379 klass;
+    class backend_app_api_applications_fitevaluationrespon_234846aa klass;
+    class backend_app_api_applications_get_monitor_summary_ddfb5dc2 function;
+    class backend_app_api_applications_statussummary_4670bd7b klass;
+    class backend_app_models_application_application_27bcf1c3 klass;
+    class backend_app_models_application_application_job_c_540ffa41 function;
+    class backend_app_models_application_application_job_r_e894f06b function;
     class backend_app_api_interview_3262e764 api;
+    class backend_app_api_interview_generate_interview_pre_ea42dd80 function;
+    class backend_app_models_job_jobread_a4663a17 klass;
+    class backend_app_models_job_jobread_parse_raw_data_b78ebf32 function;
+    class backend_app_api_admin_54fbb6da module;
+    class backend_app_api_auth_f0b24c22 api;
     class backend_app_api_profile_4d5a6aad api;
-    class backend_tests_models_test_models_test_user_profi_aa712a55 test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -1987,243 +2017,243 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>CompensationBase</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>FitDimension</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>evaluate_job_fit()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td>No direct outbound edge</td>
-  <td>CompensationBase node in app/models/profile.py.</td>
+  <td>FitDimension node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>CompensationCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>FitEvaluationRequest</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>test_models.py</code><br><small style="color:var(--muted)">tests/models/test_models.py</small><br>+1 more</td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>CompensationCreate node in app/models/profile.py.</td>
+  <td>FitEvaluationRequest node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>3</td>
-  <td><code>CompensationExpectation</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>FitEvaluationResponse</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>get_compensation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile and relations()</code><br><small style="color:var(--muted)">tests/models/test_models.py</small><br>+6 more</td>
+  <td><code>evaluate_job_fit()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td>No direct outbound edge</td>
-  <td>CompensationExpectation node in app/models/profile.py.</td>
+  <td>FitEvaluationResponse node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>4</td>
-  <td><code>CompensationRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>FollowUpDraftResponse</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>get_compensation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
+  <td><code>draft_follow_up()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td>No direct outbound edge</td>
-  <td>CompensationRead node in app/models/profile.py.</td>
+  <td>FollowUpDraftResponse node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>5</td>
-  <td><code>SpokenLanguage</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>StatusSummary</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>delete_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+7 more</td>
+  <td><code>get_monitor_summary()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td>No direct outbound edge</td>
-  <td>SpokenLanguage node in app/models/profile.py.</td>
+  <td>StatusSummary node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>6</td>
-  <td><code>SpokenLanguageBase</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>StatusUpdateRequest</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>SpokenLanguageBase node in app/models/profile.py.</td>
+  <td>StatusUpdateRequest node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>7</td>
-  <td><code>SpokenLanguageCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>TailorRequest</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>SpokenLanguageCreate node in app/models/profile.py.</td>
+  <td>TailorRequest node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>8</td>
-  <td><code>SpokenLanguageRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>TailorResponse</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>list_languages()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>SpokenLanguageRead node in app/models/profile.py.</td>
+  <td><code>tailor_application()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><code>AccountCvVersionRead</code><br><small style="color:var(--muted)">app/models/cv_template.py</small><br><code>ApplicationRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>TailorResponse node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>9</td>
-  <td><code>TargetDesignation</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>delete_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+7 more</td>
-  <td>No direct outbound edge</td>
-  <td>TargetDesignation node in app/models/profile.py.</td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>account.py</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br>+22 more</td>
+  <td><code>job_company()</code><br><small style="color:var(--muted)">app/models/application.py</small><br><code>job_role()</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>Application node in app/models/application.py.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>TargetDesignationBase</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>ApplicationRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>applications.py</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>tailor_application()</code><br><small style="color:var(--muted)">app/api/applications.py</small><br>+2 more</td>
   <td>No direct outbound edge</td>
-  <td>TargetDesignationBase node in app/models/profile.py.</td>
+  <td>ApplicationRead node in app/models/application.py.</td>
 </tr>
 <tr>
   <td>11</td>
-  <td><code>TargetDesignationCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
+  <td><code>AccountCvVersionRead</code><br><small style="color:var(--muted)">app/models/cv_template.py</small></td>
   <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>applications.py</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>tailor_application()</code><br><small style="color:var(--muted)">app/api/applications.py</small><br>+1 more</td>
   <td>No direct outbound edge</td>
-  <td>TargetDesignationCreate node in app/models/profile.py.</td>
+  <td>AccountCvVersionRead node in app/models/cv_template.py.</td>
 </tr>
 <tr>
   <td>12</td>
-  <td><code>TargetDesignationRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>list_designations()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>TargetDesignationRead node in app/models/profile.py.</td>
+  <td><code>draft_follow_up()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small><br><code>FollowUpDraftResponse</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>Job</code><br><small style="color:var(--muted)">app/models/job.py</small><br>+1 more</td>
+  <td>draft_follow_up() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>13</td>
-  <td><code>TargetLocation</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>delete_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+7 more</td>
-  <td>No direct outbound edge</td>
-  <td>TargetLocation node in app/models/profile.py.</td>
+  <td><code>evaluate_job_fit()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>FitDimension</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>FitEvaluationResponse</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>Job</code><br><small style="color:var(--muted)">app/models/job.py</small><br>+2 more</td>
+  <td>evaluate_job_fit() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>14</td>
-  <td><code>TargetLocationBase</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>TargetLocationBase node in app/models/profile.py.</td>
+  <td><code>get_llm_service()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>test_applications.py</code><br><small style="color:var(--muted)">tests/api/test_applications.py</small></td>
+  <td><code>LLMService</code><br><small style="color:var(--muted)">services/llm/service.py</small></td>
+  <td>get_llm_service() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>15</td>
-  <td><code>TargetLocationCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>TargetLocationCreate node in app/models/profile.py.</td>
+  <td><code>get_monitor_summary()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small><br><code>StatusSummary</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td>get_monitor_summary() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>16</td>
-  <td><code>TargetLocationRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>add_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>list_locations()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
+  <td><code>is_due()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>TargetLocationRead node in app/models/profile.py.</td>
+  <td>is_due() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>17</td>
-  <td><code>UserProfile</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>_get_or_create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>account.py</code><br><small style="color:var(--muted)">app/models/account.py</small><br>+19 more</td>
-  <td>No direct outbound edge</td>
-  <td>UserProfile node in app/models/profile.py.</td>
+  <td><code>list_applications()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>list_applications() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>18</td>
-  <td><code>UserProfileBase</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>UserProfileBase node in app/models/profile.py.</td>
+  <td><code>mark_application_sent()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small><br><code>Job</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td>mark_application_sent() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>19</td>
-  <td><code>UserProfileCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+1 more</td>
-  <td>No direct outbound edge</td>
-  <td>UserProfileCreate node in app/models/profile.py.</td>
+  <td><code>mark_follow_up_sent()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>mark_follow_up_sent() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>20</td>
-  <td><code>UserProfileRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>get_current_account()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br>+3 more</td>
-  <td>No direct outbound edge</td>
-  <td>UserProfileRead node in app/models/profile.py.</td>
+  <td><code>tailor_application()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>AccountCvVersionRead</code><br><small style="color:var(--muted)">app/models/cv_template.py</small><br><code>ApplicationRead</code><br><small style="color:var(--muted)">app/models/application.py</small><br>+4 more</td>
+  <td>tailor_application() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>21</td>
-  <td><code>UserProfileUpdate</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>profile.py</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>update_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>UserProfileUpdate node in app/models/profile.py.</td>
+  <td><code>update_application_status()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small><br><code>Job</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td>update_application_status() node in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>22</td>
-  <td><code>add_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>.job_company()</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>_get_or_create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>TargetDesignation</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>TargetDesignationCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small><br>+1 more</td>
-  <td>add_designation() node in app/api/profile.py.</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.job_company() node in app/models/application.py.</td>
 </tr>
 <tr>
   <td>23</td>
-  <td><code>add_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>.job_role()</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>_get_or_create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>SpokenLanguage</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>SpokenLanguageCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small><br>+1 more</td>
-  <td>add_language() node in app/api/profile.py.</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.job_role() node in app/models/application.py.</td>
 </tr>
 <tr>
   <td>24</td>
-  <td><code>add_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>.title()</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>_get_or_create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small><br><code>TargetLocation</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>TargetLocationCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small><br>+1 more</td>
-  <td>add_location() node in app/api/profile.py.</td>
+  <td><code>evaluate_job_fit()</code><br><small style="color:var(--muted)">app/api/applications.py</small><br><code>generate_interview_prep()</code><br><small style="color:var(--muted)">app/api/interview.py</small><br><code>Job</code><br><small style="color:var(--muted)">app/models/job.py</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>.title() node in app/models/job.py.</td>
 </tr>
 <tr>
   <td>25</td>
-  <td><code>create_profile()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>.sync_role_and_title()</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>UserProfile</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>UserProfileCreate</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>UserProfileRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>create_profile() node in app/api/profile.py.</td>
+  <td><code>JobBase</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td><code>title()</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td>.sync_role_and_title() node in app/models/job.py.</td>
 </tr>
 <tr>
   <td>26</td>
-  <td><code>delete_designation()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>.parse_raw_data()</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>TargetDesignation</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>delete_designation() node in app/api/profile.py.</td>
+  <td><code>JobRead</code><br><small style="color:var(--muted)">app/models/job.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>.parse_raw_data() node in app/models/job.py.</td>
 </tr>
 <tr>
   <td>27</td>
-  <td><code>delete_language()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td><code>SpokenLanguage</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>delete_language() node in app/api/profile.py.</td>
+  <td><code>applications.py</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>main.py</code><br><small style="color:var(--muted)">backend/app/main.py</small><br><code>test_applications.py</code><br><small style="color:var(--muted)">tests/api/test_applications.py</small></td>
+  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>account.py</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>AccountCvVersion</code><br><small style="color:var(--muted)">app/models/cv_template.py</small><br>+21 more</td>
+  <td>Module file in app/api/applications.py.</td>
 </tr>
 <tr>
   <td>28</td>
-  <td><code>delete_location()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BaseModel</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>TargetLocation</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>delete_location() node in app/api/profile.py.</td>
+  <td>No direct outbound edge</td>
+  <td>BaseModel node in project.</td>
 </tr>
 <tr>
   <td>29</td>
-  <td><code>get_compensation()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>get</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>CompensationExpectation</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>CompensationRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>get_compensation() node in app/api/profile.py.</td>
+  <td>No direct outbound edge</td>
+  <td>get node in project.</td>
 </tr>
 <tr>
   <td>30</td>
-  <td><code>get_current_account()</code><br><small style="color:var(--muted)">app/api/profile.py</small></td>
+  <td><code>patch</code><br><small style="color:var(--muted)"></small></td>
   <td><span class="tag tag-func">Function</span></td>
   <td>External entry / no inbound edge</td>
-  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>UserProfile</code><br><small style="color:var(--muted)">app/models/profile.py</small><br><code>UserProfileRead</code><br><small style="color:var(--muted)">app/models/profile.py</small></td>
-  <td>get_current_account() node in app/api/profile.py.</td>
+  <td>No direct outbound edge</td>
+  <td>patch node in project.</td>
 </tr>
 </table>
 
@@ -2233,38 +2263,47 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>app/api/admin.py</code></td><td>29 nodes</td></tr>
-<tr><td><code>app/models/profile.py</code></td><td>28 nodes</td></tr>
+<tr><td><code>app/api/applications.py</code></td><td>29 nodes</td></tr>
 <tr><td><code>app/api/profile.py</code></td><td>23 nodes</td></tr>
-<tr><td><code>app/api/applications.py</code></td><td>22 nodes</td></tr>
-<tr><td><code>services/matching/embedding.py</code></td><td>22 nodes</td></tr>
+<tr><td><code>app/models/profile.py</code></td><td>20 nodes</td></tr>
 <tr><td><code>app/api/interview.py</code></td><td>15 nodes</td></tr>
 <tr><td><code>docs/RESEARCH.md</code></td><td>11 nodes</td></tr>
-<tr><td><code>app/models/interview.py</code></td><td>6 nodes</td></tr>
+<tr><td><code>app/api/jobs.py</code></td><td>8 nodes</td></tr>
+<tr><td><code>app/api/auth.py</code></td><td>7 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x120, contains x91, uses x67, inherits x42. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: references x123, contains x102, uses x69, inherits x47. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 9. Security & Global Graph ====== -->
 <h2 id="security-global">9. Security &amp; Global Graph</h2>
-<p>Security &amp; Global Graph groups implementation around tailor, backend, app, services, mostly in services/cv_tailor/tailor_service.py. This section covers 3 nodes and 2 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Security &amp; Global Graph groups implementation around security, tenancymd, agents, rules, mostly in .agents/rules/security-and-tenancy.md. This section covers 6 nodes and 5 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Security &amp; Global Graph (3 nodes, 2 edges)
-    backend_app_services_cv_tailor_tailor_service_ra_88d6f3a7("Budgets and prunes the Master CV body t...<br/><small>services/cv_tailor/tailor_service.py</small>")
-    backend_app_services_cv_tailor_tailor_service_pr_08696870("prune_and_budget_latex()<br/><small>services/cv_tailor/tailor_service.py</small>")
-    backend_app_services_cv_tailor_tailor_service_pr_b173fae6("remove_section()<br/><small>services/cv_tailor/tailor_service.py</small>")
-    backend_app_services_cv_tailor_tailor_service_pr_08696870 -->|contains| backend_app_services_cv_tailor_tailor_service_pr_b173fae6
-    backend_app_services_cv_tailor_tailor_service_ra_88d6f3a7 -->|explains| backend_app_services_cv_tailor_tailor_service_pr_08696870
-    class backend_app_services_cv_tailor_tailor_service_ra_88d6f3a7 concept;
-    class backend_app_services_cv_tailor_tailor_service_pr_08696870 function;
-    class backend_app_services_cv_tailor_tailor_service_pr_b173fae6 function;
+    %% Section: Security &amp; Global Graph (6 nodes, 5 edges)
+    agents_rules_security_and_tenancy_security_tenan_77d01934("Security &amp; Tenancy Policy (adapted from...<br/><small>.agents/rules/security-and-tenancy.md</small>")
+    agents_rules_security_and_tenancy_8550f657("security-and-tenancy.md")
+    agents_rules_security_and_tenancy_2_secrets_encr_7b8882e6("2. Secrets &amp; Encryption<br/><small>.agents/rules/security-and-tenancy.md</small>")
+    agents_rules_security_and_tenancy_3_ingestion_pr_da0b4b83("3. Ingestion &amp; Prompt Injection Defense<br/><small>.agents/rules/security-and-tenancy.md</small>")
+    agents_rules_security_and_tenancy_4_human_in_the_37ca6c39("4. Human-in-the-Loop on Send<br/><small>.agents/rules/security-and-tenancy.md</small>")
+    agents_rules_security_and_tenancy_1_multi_tenant_cd8cf656("1. Multi-Tenant Partitioning<br/><small>.agents/rules/security-and-tenancy.md</small>")
+    agents_rules_security_and_tenancy_8550f657 -->|contains| agents_rules_security_and_tenancy_security_tenan_77d01934
+    agents_rules_security_and_tenancy_security_tenan_77d01934 -->|contains| agents_rules_security_and_tenancy_2_secrets_encr_7b8882e6
+    agents_rules_security_and_tenancy_security_tenan_77d01934 -->|contains| agents_rules_security_and_tenancy_3_ingestion_pr_da0b4b83
+    agents_rules_security_and_tenancy_security_tenan_77d01934 -->|contains| agents_rules_security_and_tenancy_4_human_in_the_37ca6c39
+    agents_rules_security_and_tenancy_security_tenan_77d01934 -->|contains| agents_rules_security_and_tenancy_1_multi_tenant_cd8cf656
+    class agents_rules_security_and_tenancy_security_tenan_77d01934 concept;
+    class agents_rules_security_and_tenancy_8550f657 concept;
+    class agents_rules_security_and_tenancy_2_secrets_encr_7b8882e6 concept;
+    class agents_rules_security_and_tenancy_3_ingestion_pr_da0b4b83 concept;
+    class agents_rules_security_and_tenancy_4_human_in_the_37ca6c39 concept;
+    class agents_rules_security_and_tenancy_1_multi_tenant_cd8cf656 concept;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -2288,27 +2327,51 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>prune_and_budget_latex()</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>tailor_for_job()</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>prune_and_budget_latex() node in services/cv_tailor/tailor_service.py.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>remove_section()</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>remove_section() node in services/cv_tailor/tailor_service.py.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>Budgets and prunes the Master CV body to strictly 1-2 pages matching…</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
+  <td><code>security-and-tenancy.md</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Budgets and prunes the Master CV body to strictly 1-2 pages matching….</td>
+  <td>Documentation node describing security-and-tenancy.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>1. Multi-Tenant Partitioning</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Multi-Tenant Partitioning.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>2. Secrets &amp; Encryption</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 2. Secrets &amp; Encryption.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>3. Ingestion &amp; Prompt Injection Defense</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 3. Ingestion &amp; Prompt Injection Defense.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>4. Human-in-the-Loop on Send</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 4. Human-in-the-Loop on Send.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Security &amp; Tenancy Policy (adapted from ECC AgentShield)</code><br><small style="color:var(--muted)">.agents/rules/security-and-tenancy.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Security &amp; Tenancy Policy (adapted from ECC AgentShield).</td>
 </tr>
 </table>
 
@@ -2317,24 +2380,24 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>services/cv_tailor/tailor_service.py</code></td><td>3 nodes</td></tr>
+      <tr><td><code>.agents/rules/security-and-tenancy.md</code></td><td>6 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x1, explains x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 10. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">10. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around backend, test, services, tests, mostly in tests/services/test_posting_guard.py, services/matching/test_matching.py, tests/api/test_jobs.py. This section covers 773 nodes and 1945 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around backend, test, services, tests, mostly in tests/services/test_posting_guard.py, services/matching/test_matching.py, tests/api/test_jobs.py. This section covers 780 nodes and 1875 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (773 nodes, 1945 edges)
+    %% Section: Tests &amp; Fixtures (780 nodes, 1875 edges)
     subgraph tests_fixtures_tests_services_test_posting_guard_1589fa04["tests/services/test_posting_guard.py"]
         backend_tests_services_test_posting_guard_testin_67c06538("TestInstructionDetection<br/><small>tests/services/test_posting_guard.py</small>")
         backend_tests_services_test_posting_guard_testcl_38351383("TestCleanPosting<br/><small>tests/services/test_posting_guard.py</small>")
@@ -2369,7 +2432,7 @@ flowchart LR
     backend_tests_services_cv_tailor_test_cv_tailor_0afc2d70 -->|imports| backend_app_services_cv_tailor_tailor_service_5b2ce8c3
     backend_tests_services_test_posting_guard_testcl_38351383 -->|uses| backend_app_services_posting_guard_gateresult_0c402df2
     backend_tests_services_test_posting_guard_testin_67c06538 -->|uses| backend_app_services_posting_guard_gateresult_0c402df2
-    %% Omitted for readability: 755 nodes, 0 edges
+    %% Omitted for readability: 762 nodes, 0 edges
     class backend_tests_services_test_posting_guard_testin_67c06538 test;
     class backend_tests_services_test_posting_guard_testcl_38351383 test;
     class backend_tests_services_test_posting_guard_testcl_83ced90d test;
@@ -2657,18 +2720,18 @@ flowchart LR
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>tests/services/test_posting_guard.py</code></td><td>54 nodes</td></tr>
-<tr><td><code>services/matching/test_matching.py</code></td><td>33 nodes</td></tr>
 <tr><td><code>tests/api/test_jobs.py</code></td><td>31 nodes</td></tr>
+<tr><td><code>services/matching/test_matching.py</code></td><td>31 nodes</td></tr>
 <tr><td><code>tests/services/test_job_ingestion.py</code></td><td>27 nodes</td></tr>
+<tr><td><code>tests/models/test_models.py</code></td><td>25 nodes</td></tr>
+<tr><td><code>services/matching/embedding.py</code></td><td>22 nodes</td></tr>
 <tr><td><code>tests/api/test_profile.py</code></td><td>22 nodes</td></tr>
-<tr><td><code>tests/models/test_models.py</code></td><td>21 nodes</td></tr>
 <tr><td><code>services/job_sources/test_remoteok.py</code></td><td>19 nodes</td></tr>
-<tr><td><code>tests/api/test_interview.py</code></td><td>18 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x329, contains x287, imports x259, references x248. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x292, contains x282, references x280, calls x222. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -3429,38 +3492,40 @@ flowchart LR
 </div>
 <hr>
 
-<!-- ====== 15. core/auth.py ====== -->
-<h2 id="core-auth-py">15. core/auth.py</h2>
-<p>core/auth.py groups implementation around authpy, backend, app, decode, mostly in app/core/auth.py. This section covers 9 nodes and 9 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<!-- ====== 15. SaaS Review Checklist ====== -->
+<h2 id="saas-review-checklist">15. SaaS Review Checklist</h2>
+<p>SaaS Review Checklist groups implementation around reviewmd, contexts, critical, review, mostly in contexts/review.md. This section covers 9 nodes and 8 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: core/auth.py (9 nodes, 9 edges)
-    subgraph core_auth_py_app_core_auth_py_1eea7748["app/core/auth.py"]
-        backend_app_core_auth_46c90cfe("auth.py")
-        backend_app_core_auth_get_current_account_12021a97("get_current_account()<br/><small>app/core/auth.py</small>")
-        backend_app_core_auth_decode_access_token_8d8a9d93("decode_access_token()<br/><small>app/core/auth.py</small>")
-        backend_app_core_auth_require_superadmin_02348afb("require_superadmin()<br/><small>app/core/auth.py</small>")
-        backend_app_core_auth_rationale_31_b4c6ac77("Decode and validate a JWT access token....<br/><small>app/core/auth.py</small>")
-        backend_app_core_auth_rationale_98_54c6627a("Ensure the caller has superadmin role p...<br/><small>app/core/auth.py</small>")
-        backend_app_core_auth_rationale_56_072c8927("Resolve the current authenticated accou...<br/><small>app/core/auth.py</small>")
-    end
-    subgraph core_auth_py_External_generated_b9024a2d["External / generated"]
-        jwt_5038e187("jwt")
-        backend_app_core_auth_py_session_4ae20207("Session")
-    end
-    backend_app_core_auth_get_current_account_12021a97 -->|calls| backend_app_core_auth_decode_access_token_8d8a9d93
-    backend_app_core_auth_46c90cfe -->|imports| jwt_5038e187
-    class backend_app_core_auth_46c90cfe module;
-    class backend_app_core_auth_get_current_account_12021a97 function;
-    class backend_app_core_auth_decode_access_token_8d8a9d93 function;
-    class backend_app_core_auth_require_superadmin_02348afb function;
-    class backend_app_core_auth_rationale_31_b4c6ac77 concept;
-    class backend_app_core_auth_rationale_98_54c6627a concept;
-    class backend_app_core_auth_rationale_56_072c8927 concept;
-    class jwt_5038e187 function;
-    class backend_app_core_auth_py_session_4ae20207 klass;
+    %% Section: SaaS Review Checklist (9 nodes, 8 edges)
+    contexts_review_saas_review_checklist_4611544d("SaaS Review Checklist<br/><small>contexts/review.md</small>")
+    contexts_review_code_review_context_job_applicat_ffd44ae0("Code Review Context — Job Application A...<br/><small>contexts/review.md</small>")
+    contexts_review_2fc5c854("review.md")
+    contexts_review_review_workflow_d19987a6("Review Workflow<br/><small>contexts/review.md</small>")
+    contexts_review_1_multi_tenant_data_isolation_cr_b6dd05e5("1. Multi-Tenant Data Isolation (Critical)<br/><small>contexts/review.md</small>")
+    contexts_review_2_security_credentials_critical_922dbe21("2. Security &amp; Credentials (Critical)<br/><small>contexts/review.md</small>")
+    contexts_review_3_async_performance_high_f6d2347c("3. Async &amp; Performance (High)<br/><small>contexts/review.md</small>")
+    contexts_review_4_human_in_the_loop_business_rul_b3c590e6("4. Human-in-the-Loop &amp; Business Rules (...<br/><small>contexts/review.md</small>")
+    contexts_review_5_frontend_ui_ux_standards_high_c2a7b399("5. Frontend &amp; UI/UX Standards (High)<br/><small>contexts/review.md</small>")
+    contexts_review_2fc5c854 -->|contains| contexts_review_code_review_context_job_applicat_ffd44ae0
+    contexts_review_code_review_context_job_applicat_ffd44ae0 -->|contains| contexts_review_saas_review_checklist_4611544d
+    contexts_review_code_review_context_job_applicat_ffd44ae0 -->|contains| contexts_review_review_workflow_d19987a6
+    contexts_review_saas_review_checklist_4611544d -->|contains| contexts_review_1_multi_tenant_data_isolation_cr_b6dd05e5
+    contexts_review_saas_review_checklist_4611544d -->|contains| contexts_review_2_security_credentials_critical_922dbe21
+    contexts_review_saas_review_checklist_4611544d -->|contains| contexts_review_3_async_performance_high_f6d2347c
+    contexts_review_saas_review_checklist_4611544d -->|contains| contexts_review_4_human_in_the_loop_business_rul_b3c590e6
+    contexts_review_saas_review_checklist_4611544d -->|contains| contexts_review_5_frontend_ui_ux_standards_high_c2a7b399
+    class contexts_review_saas_review_checklist_4611544d concept;
+    class contexts_review_code_review_context_job_applicat_ffd44ae0 concept;
+    class contexts_review_2fc5c854 concept;
+    class contexts_review_review_workflow_d19987a6 concept;
+    class contexts_review_1_multi_tenant_data_isolation_cr_b6dd05e5 concept;
+    class contexts_review_2_security_credentials_critical_922dbe21 concept;
+    class contexts_review_3_async_performance_high_f6d2347c concept;
+    class contexts_review_4_human_in_the_loop_business_rul_b3c590e6 concept;
+    class contexts_review_5_frontend_ui_ux_standards_high_c2a7b399 concept;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -3484,75 +3549,75 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>decode_access_token()</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>get_current_account()</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
+  <td><code>review.md</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>decode_access_token() node in app/core/auth.py.</td>
+  <td>Documentation node describing review.md.</td>
 </tr>
 <tr>
   <td>2</td>
-  <td><code>get_current_account()</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>auth.py</code><br><small style="color:var(--muted)">app/api/auth.py</small><br><code>test_admin.py</code><br><small style="color:var(--muted)">tests/api/test_admin.py</small></td>
-  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>decode_access_token()</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
-  <td>get_current_account() node in app/core/auth.py.</td>
+  <td><code>1. Multi-Tenant Data Isolation (Critical)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Multi-Tenant Data Isolation (Critical).</td>
 </tr>
 <tr>
   <td>3</td>
-  <td><code>require_superadmin()</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small></td>
-  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small></td>
-  <td>require_superadmin() node in app/core/auth.py.</td>
+  <td><code>2. Security &amp; Credentials (Critical)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 2. Security &amp; Credentials (Critical).</td>
 </tr>
 <tr>
   <td>4</td>
-  <td><code>core/auth.py</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>auth.py</code><br><small style="color:var(--muted)">app/api/auth.py</small><br><code>test_admin.py</code><br><small style="color:var(--muted)">tests/api/test_admin.py</small><br>+1 more</td>
-  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>account.py</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>config.py</code><br><small style="color:var(--muted)">app/core/config.py</small><br>+7 more</td>
-  <td>Module file in app/core/auth.py.</td>
+  <td><code>3. Async &amp; Performance (High)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 3. Async &amp; Performance (High).</td>
 </tr>
 <tr>
   <td>5</td>
-  <td><code>Session</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
+  <td><code>4. Human-in-the-Loop &amp; Business Rules (Critical)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Session node in project.</td>
+  <td>Documentation node describing 4. Human-in-the-Loop &amp; Business Rules (Critical).</td>
 </tr>
 <tr>
   <td>6</td>
-  <td><code>Decode and validate a JWT access token. Raises HTTPException(401) on expiration…</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
+  <td><code>5. Frontend &amp; UI/UX Standards (High)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Decode and validate a JWT access token. Raises HTTPException(401) on expiration….</td>
+  <td>Documentation node describing 5. Frontend &amp; UI/UX Standards (High).</td>
 </tr>
 <tr>
   <td>7</td>
-  <td><code>Resolve the current authenticated account context. 1. Primary: Validates…</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
+  <td><code>Code Review Context — Job Application Agent SaaS</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Resolve the current authenticated account context. 1. Primary: Validates….</td>
+  <td>Documentation node describing Code Review Context — Job Application Agent SaaS.</td>
 </tr>
 <tr>
   <td>8</td>
-  <td><code>Ensure the caller has superadmin role privileges.</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
+  <td><code>Review Workflow</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Ensure the caller has superadmin role privileges..</td>
+  <td>Documentation node describing Review Workflow.</td>
 </tr>
 <tr>
   <td>9</td>
-  <td><code>jwt</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>auth.py</code><br><small style="color:var(--muted)">app/core/auth.py</small></td>
+  <td><code>SaaS Review Checklist</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>jwt node in project.</td>
+  <td>Documentation node describing SaaS Review Checklist.</td>
 </tr>
 </table>
 
@@ -3561,24 +3626,24 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>app/core/auth.py</code></td><td>7 nodes</td></tr>
+      <tr><td><code>contexts/review.md</code></td><td>9 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x3, explains x3, calls x1, references x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x8. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 16. Other ====== -->
 <h2 id="other">16. Other</h2>
-<p>Other groups implementation around agents, frontend, themejs, rules, mostly in src/utils/theme.js, src/components/LandingPageView.jsx, services/llm/base.py. This section covers 26 nodes and 23 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Other groups implementation around agents, rules, frontend, qamd, mostly in contexts/qa.md, src/utils/theme.js, .agents/rules/fastapi-backend.md. This section covers 47 nodes and 41 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (26 nodes, 23 edges)
+    %% Section: Other (47 nodes, 41 edges)
     subgraph other_src_utils_theme_js_1dc28f3a["src/utils/theme.js"]
         frontend_src_utils_theme_usetheme_cf80f4fe("useTheme()<br/><small>src/utils/theme.js</small>")
         frontend_src_utils_theme_gettheme_de6eb26b("getTheme<br/><small>src/utils/theme.js</small>")
@@ -3587,24 +3652,26 @@ flowchart LR
         frontend_src_utils_theme_getinitialtheme_f504c62e("getInitialTheme()<br/><small>src/utils/theme.js</small>")
         frontend_src_utils_theme_dc30391e("theme.js")
     end
-    subgraph other_External_generated_9e8859fa["External / generated"]
-        backend_app_services_llm_base_py_any_a4639565("Any")
-        backend_app_services_cv_tailor_tailor_service_py_58a8ce01("Session")
-        backend_app_services_cv_tailor_ats_checker_py_an_dfa9a2cf("any")
+    subgraph other_agents_rules_config_protection_md_1b6400ac[".agents/rules/config-protection.md"]
+        agents_rules_config_protection_config_assertion_5b22b257("Config &amp; Assertion Protection Standard...<br/><small>.agents/rules/config-protection.md</small>")
+        agents_rules_config_protection_principle_fix_the_ae789acf("Principle: Fix the Code, Never Weaken t...<br/><small>.agents/rules/config-protection.md</small>")
+        agents_rules_config_protection_protected_targets_1bd85872("Protected Targets &amp; Non-Weakening Rules:<br/><small>.agents/rules/config-protection.md</small>")
+        agents_rules_config_protection_ad6ea61d("config-protection.md")
     end
     subgraph other_agents_rules_attribution_and_scraping_md_249d1a13[".agents/rules/attribution-and-scraping.md"]
         agents_rules_attribution_and_scraping_rule_third_44236f70("Rule: Third-Party Data Sourcing and Att...<br/><small>.agents/rules/attribution-and-scraping.md</small>")
         agents_rules_attribution_and_scraping_ed312c16("attribution-and-scraping.md")
     end
+    subgraph other_agents_rules_fastapi_backend_md_2f48589d[".agents/rules/fastapi-backend.md"]
+        agents_rules_fastapi_backend_1_architectural_str_318b812f("1. Architectural Structure<br/><small>.agents/rules/fastapi-backend.md</small>")
+        agents_rules_fastapi_backend_2_async_correctness_45d83929("2. Async Correctness<br/><small>.agents/rules/fastapi-backend.md</small>")
+    end
     subgraph other_src_components_LandingPageView_jsx_c29e423c["src/components/LandingPageView.jsx"]
         frontend_src_components_landingpageview_3ff37151("LandingPageView.jsx")
         frontend_src_components_landingpageview_landingp_b93fb2e2("LandingPageView()<br/><small>src/components/LandingPageView.jsx</small>")
     end
-    agents_rules_graphify_graphify_dd1d4f66("graphify<br/><small>.agents/rules/graphify.md</small>")
     backend_app_init_f4bd9b21("__init__.py")
-    backend_app_services_cv_tailor_ats_checker_atsch_8503b856("to_dict()<br/><small>services/cv_tailor/ats_checker.py</small>")
-    backend_app_services_cv_tailor_tailor_service_cv_887093e7("__init__()<br/><small>services/cv_tailor/tailor_service.py</small>")
-    backend_app_services_llm_base_llmprovider_genera_17217e1e("generate()<br/><small>services/llm/base.py</small>")
+    scripts_dev_469e2c5f("dev.ps1")
     frontend_src_components_landingpageview_landingp_b93fb2e2 -->|calls| frontend_src_utils_theme_gettheme_de6eb26b
     frontend_src_components_landingpageview_landingp_b93fb2e2 -->|calls| frontend_src_utils_theme_settheme_29bc4253
     frontend_src_utils_theme_settheme_29bc4253 -->|calls| frontend_src_utils_theme_applytheme_347681ca
@@ -3613,25 +3680,25 @@ flowchart LR
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_gettheme_de6eb26b
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_settheme_29bc4253
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_dc30391e
-    %% Omitted for readability: 8 nodes, 0 edges
+    %% Omitted for readability: 29 nodes, 0 edges
     class frontend_src_utils_theme_usetheme_cf80f4fe ui;
     class frontend_src_utils_theme_gettheme_de6eb26b function;
     class frontend_src_utils_theme_settheme_29bc4253 function;
     class frontend_src_utils_theme_applytheme_347681ca function;
     class frontend_src_utils_theme_getinitialtheme_f504c62e function;
     class frontend_src_utils_theme_dc30391e module;
-    class backend_app_services_llm_base_py_any_a4639565 klass;
-    class backend_app_services_cv_tailor_tailor_service_py_58a8ce01 klass;
-    class backend_app_services_cv_tailor_ats_checker_py_an_dfa9a2cf function;
+    class agents_rules_config_protection_config_assertion_5b22b257 concept;
+    class agents_rules_config_protection_principle_fix_the_ae789acf concept;
+    class agents_rules_config_protection_protected_targets_1bd85872 concept;
+    class agents_rules_config_protection_ad6ea61d concept;
     class agents_rules_attribution_and_scraping_rule_third_44236f70 concept;
     class agents_rules_attribution_and_scraping_ed312c16 concept;
+    class agents_rules_fastapi_backend_1_architectural_str_318b812f concept;
+    class agents_rules_fastapi_backend_2_async_correctness_45d83929 concept;
     class frontend_src_components_landingpageview_3ff37151 ui;
     class frontend_src_components_landingpageview_landingp_b93fb2e2 ui;
-    class agents_rules_graphify_graphify_dd1d4f66 concept;
     class backend_app_init_f4bd9b21 module;
-    class backend_app_services_cv_tailor_ats_checker_atsch_8503b856 function;
-    class backend_app_services_cv_tailor_tailor_service_cv_887093e7 function;
-    class backend_app_services_llm_base_llmprovider_genera_17217e1e function;
+    class scripts_dev_469e2c5f function;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -3719,147 +3786,179 @@ flowchart LR
 </tr>
 <tr>
   <td>9</td>
-  <td><code>.generate()</code><br><small style="color:var(--muted)">services/llm/base.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>LLMProvider</code><br><small style="color:var(--muted)">services/llm/base.py</small></td>
+  <td><code>qa.md</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>.generate() node in services/llm/base.py.</td>
+  <td>Documentation node describing qa.md.</td>
 </tr>
 <tr>
   <td>10</td>
-  <td><code>Any</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
+  <td><code>1. SuperAdmin Ops Center &amp; Tenant Management</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Any node in project.</td>
+  <td>Documentation node describing 1. SuperAdmin Ops Center &amp; Tenant Management.</td>
 </tr>
 <tr>
   <td>11</td>
-  <td><code>Generate text response given a prompt and optional context. Args: prompt: The…</code><br><small style="color:var(--muted)">services/llm/base.py</small></td>
+  <td><code>2. Job Radar Ingestion &amp; Integrity Shield</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Design note for Generate text response given a prompt and optional context. Args: prompt: The….</td>
+  <td>Documentation node describing 2. Job Radar Ingestion &amp; Integrity Shield.</td>
 </tr>
 <tr>
   <td>12</td>
-  <td><code>attribution-and-scraping.md</code><br><small style="color:var(--muted)">.agents/rules/attribution-and-scraping.md</small></td>
+  <td><code>3. Dynamic LLM Failover Engine</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing attribution-and-scraping.md.</td>
+  <td>Documentation node describing 3. Dynamic LLM Failover Engine.</td>
 </tr>
 <tr>
   <td>13</td>
-  <td><code>Rule: Third-Party Data Sourcing and Attribution</code><br><small style="color:var(--muted)">.agents/rules/attribution-and-scraping.md</small></td>
+  <td><code>4. CV Tailoring &amp; Application Studio</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Rule: Third-Party Data Sourcing and Attribution.</td>
+  <td>Documentation node describing 4. CV Tailoring &amp; Application Studio.</td>
 </tr>
 <tr>
   <td>14</td>
-  <td><code>human-in-the-loop.md</code><br><small style="color:var(--muted)">.agents/rules/human-in-the-loop.md</small></td>
+  <td><code>QA &amp; Validation Context — Job Application Agent SaaS</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing human-in-the-loop.md.</td>
+  <td>Documentation node describing QA &amp; Validation Context — Job Application Agent SaaS.</td>
 </tr>
 <tr>
   <td>15</td>
-  <td><code>Rule: Human-In-The-Loop on Send</code><br><small style="color:var(--muted)">.agents/rules/human-in-the-loop.md</small></td>
+  <td><code>Validation Scenarios</code><br><small style="color:var(--muted)">contexts/qa.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Rule: Human-In-The-Loop on Send.</td>
+  <td>Documentation node describing Validation Scenarios.</td>
 </tr>
 <tr>
   <td>16</td>
-  <td><code>rules/graphify.md</code><br><small style="color:var(--muted)">.agents/rules/graphify.md</small></td>
+  <td><code>fastapi-backend.md</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing rules/graphify.md.</td>
+  <td>Documentation node describing fastapi-backend.md.</td>
 </tr>
 <tr>
   <td>17</td>
-  <td><code>graphify</code><br><small style="color:var(--muted)">.agents/rules/graphify.md</small></td>
+  <td><code>1. Architectural Structure</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing graphify.</td>
+  <td>Documentation node describing 1. Architectural Structure.</td>
 </tr>
 <tr>
   <td>18</td>
-  <td><code>extraction-spec.md</code><br><small style="color:var(--muted)">graphify/references/extraction-spec.md</small></td>
+  <td><code>2. Async Correctness</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing extraction-spec.md.</td>
+  <td>Documentation node describing 2. Async Correctness.</td>
 </tr>
 <tr>
   <td>19</td>
-  <td><code>graphify reference: extraction subagent prompt</code><br><small style="color:var(--muted)">graphify/references/extraction-spec.md</small></td>
+  <td><code>3. Dependency Injection</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing graphify reference: extraction subagent prompt.</td>
+  <td>Documentation node describing 3. Dependency Injection.</td>
 </tr>
 <tr>
   <td>20</td>
-  <td><code>workflows/graphify.md</code><br><small style="color:var(--muted)">.agents/workflows/graphify.md</small></td>
+  <td><code>5. Testing</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing workflows/graphify.md.</td>
+  <td>Documentation node describing 5. Testing.</td>
 </tr>
 <tr>
   <td>21</td>
-  <td><code>Workflow: graphify</code><br><small style="color:var(--muted)">.agents/workflows/graphify.md</small></td>
+  <td><code>FastAPI Backend Development Standards (adapted from ECC)</code><br><small style="color:var(--muted)">.agents/rules/fastapi-backend.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Documentation node describing Workflow: graphify.</td>
+  <td>Documentation node describing FastAPI Backend Development Standards (adapted from ECC).</td>
 </tr>
 <tr>
   <td>22</td>
-  <td><code>.to_dict()</code><br><small style="color:var(--muted)">services/cv_tailor/ats_checker.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>ATSCheckResult</code><br><small style="color:var(--muted)">services/cv_tailor/ats_checker.py</small></td>
+  <td><code>react-frontend.md</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>.to_dict() node in services/cv_tailor/ats_checker.py.</td>
+  <td>Documentation node describing react-frontend.md.</td>
 </tr>
 <tr>
   <td>23</td>
-  <td><code>any</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-func">Function</span></td>
+  <td><code>1. Anti-Template Quality &amp; Design System</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>any node in project.</td>
+  <td>Documentation node describing 1. Anti-Template Quality &amp; Design System.</td>
 </tr>
 <tr>
   <td>24</td>
-  <td><code>.__init__()</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
-  <td><span class="tag tag-func">Function</span></td>
-  <td><code>CVTailorService</code><br><small style="color:var(--muted)">services/cv_tailor/tailor_service.py</small></td>
+  <td><code>2. Modal Backdrops &amp; Glassmorphism</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>.__init__() node in services/cv_tailor/tailor_service.py.</td>
+  <td>Documentation node describing 2. Modal Backdrops &amp; Glassmorphism.</td>
 </tr>
 <tr>
   <td>25</td>
-  <td><code>Session</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
+  <td><code>3. Component Architecture &amp; State</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Session node in project.</td>
+  <td>Documentation node describing 3. Component Architecture &amp; State.</td>
 </tr>
 <tr>
   <td>26</td>
-  <td><code>app/__init__.py</code><br><small style="color:var(--muted)">backend/app/__init__.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
+  <td><code>4. Accessibility &amp; Responsiveness</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
-  <td>Module file in backend/app/__init__.py.</td>
+  <td>Documentation node describing 4. Accessibility &amp; Responsiveness.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>React Frontend Development Standards (adapted from ECC)</code><br><small style="color:var(--muted)">.agents/rules/react-frontend.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing React Frontend Development Standards (adapted from ECC).</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>config-protection.md</code><br><small style="color:var(--muted)">.agents/rules/config-protection.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing config-protection.md.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>Config &amp; Assertion Protection Standard (adapted from ECC)</code><br><small style="color:var(--muted)">.agents/rules/config-protection.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Config &amp; Assertion Protection Standard (adapted from ECC).</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>Principle: Fix the Code, Never Weaken the Guardrail</code><br><small style="color:var(--muted)">.agents/rules/config-protection.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Principle: Fix the Code, Never Weaken the Guardrail.</td>
 </tr>
 </table>
 
@@ -3868,19 +3967,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>src/utils/theme.js</code></td><td>6 nodes</td></tr>
+      <tr><td><code>contexts/qa.md</code></td><td>7 nodes</td></tr>
+<tr><td><code>.agents/rules/fastapi-backend.md</code></td><td>6 nodes</td></tr>
+<tr><td><code>.agents/rules/react-frontend.md</code></td><td>6 nodes</td></tr>
+<tr><td><code>src/utils/theme.js</code></td><td>6 nodes</td></tr>
+<tr><td><code>.agents/rules/config-protection.md</code></td><td>4 nodes</td></tr>
+<tr><td><code>.agents/rules/verification-loop.md</code></td><td>4 nodes</td></tr>
 <tr><td><code>.agents/rules/attribution-and-scraping.md</code></td><td>2 nodes</td></tr>
 <tr><td><code>.agents/rules/graphify.md</code></td><td>2 nodes</td></tr>
-<tr><td><code>.agents/rules/human-in-the-loop.md</code></td><td>2 nodes</td></tr>
-<tr><td><code>graphify/references/extraction-spec.md</code></td><td>2 nodes</td></tr>
-<tr><td><code>.agents/workflows/graphify.md</code></td><td>2 nodes</td></tr>
-<tr><td><code>services/llm/base.py</code></td><td>2 nodes</td></tr>
-<tr><td><code>src/components/LandingPageView.jsx</code></td><td>2 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x11, calls x5, references x3, imports x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x33, calls x5, imports x2, imports x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -3891,18 +3990,18 @@ flowchart LR
   <div class="card">
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>Nodes</td><td>1349</td></tr>
-      <tr><td>Edges</td><td>3358</td></tr>
+      <tr><td>Nodes</td><td>1458</td></tr>
+      <tr><td>Edges</td><td>3494</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>83</td></tr>
+      <tr><td>Communities</td><td>91</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>2958</td></tr>
-      <tr><td>INFERRED</td><td>400</td></tr>
+      <tr><td>EXTRACTED</td><td>3082</td></tr>
+      <tr><td>INFERRED</td><td>412</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
   </div>
@@ -3910,7 +4009,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>job-agent-saas — Architecture Documentation</p>
-  <p>Generated: 2026-10-28 11:12 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-10-29 10:09 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

@@ -17,11 +17,14 @@ backend/app/
   db/               # session, migrations (Alembic), seed data
   workers/          # async/background tasks (Celery or Arq) — not needed yet,
                     # but new background jobs go here when they're added
-backend/tests/      # mirror the app/ structure; one test file per module (142 tests)
+backend/tests/      # mirror the app/ structure; one test file per module (151 tests)
 frontend/           # React + Vite SPA (Obsidian & Cyber Emerald theme)
   src/components/   # Dashboard, Jobs, ApplicationStudio, Pipeline, InterviewCoach, Profile, AdminView
 cv_templates/       # admin-curated LaTeX templates, never user-uploaded code
 docs/               # reference docs — read, don't edit as a side effect of a task
+contexts/           # operational mode contexts (dev.md, review.md, qa.md)
+scripts/            # developer tooling (doctor.py, verify.py, dev.ps1)
+.agents/            # agent rules & skills (fastapi, react, security, verification-loop)
 graphify-out/       # Graphify knowledge graph (graph.json, callflow HTML, tree, wiki)
 ```
 

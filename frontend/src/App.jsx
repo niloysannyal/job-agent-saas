@@ -68,6 +68,7 @@ function CareerAppInner() {
   const [toastMessage, setToastMessage] = useState(null);
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [adminTab, setAdminTab] = useState('overview');
 
   // Sync accountId with authenticated user or impersonated tenant
   useEffect(() => {
@@ -140,18 +141,26 @@ function CareerAppInner() {
         return;
       }
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
-        else if (e.key === '2') { e.preventDefault(); setActiveSection('jobs'); }
-        else if (e.key === '3') { e.preventDefault(); setActiveSection('studio'); }
-        else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
-        else if (e.key === '5') { e.preventDefault(); setActiveSection('interview'); }
-        else if (e.key === '6') { e.preventDefault(); setActiveSection('profile'); }
-        else if (e.key === '7' && isSuperadmin) { e.preventDefault(); setActiveSection('admin'); }
+        if (isSuperadmin && !isImpersonating) {
+          if (e.key === '1') { e.preventDefault(); setActiveSection('admin'); setAdminTab('overview'); }
+          else if (e.key === '2') { e.preventDefault(); setActiveSection('admin'); setAdminTab('tenants'); }
+          else if (e.key === '3') { e.preventDefault(); setActiveSection('admin'); setAdminTab('providers'); }
+          else if (e.key === '4') { e.preventDefault(); setActiveSection('admin'); setAdminTab('sources'); }
+          else if (e.key === '5') { e.preventDefault(); setActiveSection('admin'); setAdminTab('templates'); }
+          else if (e.key === '6') { e.preventDefault(); setActiveSection('admin'); setAdminTab('flagged'); }
+        } else {
+          if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
+          else if (e.key === '2') { e.preventDefault(); setActiveSection('jobs'); }
+          else if (e.key === '3') { e.preventDefault(); setActiveSection('studio'); }
+          else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
+          else if (e.key === '5') { e.preventDefault(); setActiveSection('interview'); }
+          else if (e.key === '6') { e.preventDefault(); setActiveSection('profile'); }
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSuperadmin]);
+  }, [isSuperadmin, isImpersonating]);
 
   // Initial Data Loading - Only fetch candidate data for tenants or when superadmin is impersonating
   useEffect(() => {
@@ -680,10 +689,12 @@ function CareerAppInner() {
 
   return (
     <div className="career-os-root">
-      {/* SIDEBAR NAVIGATION (Candidate OS Workspace) */}
+      {/* SIDEBAR NAVIGATION (Role-Gated Workspace) */}
       <Sidebar
         activeSection={effectiveSection}
         setActiveSection={setActiveSection}
+        adminTab={adminTab}
+        setAdminTab={setAdminTab}
         profileName={
           impersonatedTenant
             ? (impersonatedTenant.name || impersonatedTenant.email)
@@ -697,6 +708,7 @@ function CareerAppInner() {
             : (user?.email || (isSuperadmin ? 'admin@jobeazy.com' : 'niloy@example.com'))
         }
         isSuperadmin={isSuperadmin}
+        isImpersonating={isImpersonating}
         showToast={showToast}
         theme={theme}
         setTheme={setTheme}
@@ -738,7 +750,18 @@ function CareerAppInner() {
         {effectiveSection === 'admin' && isSuperadmin && (
           <AdminView
             currentSuperadminId={user?.id || accountId}
-            onImpersonateTenant={(tenant) => {
+            activeTab={adminTab}
+            setActiveTab={setAdminTab}
+            authHeaders={authHeaders}
+            onImpersonateTenant={async (tenant) => {
+              try {
+                await fetch(`/api/v1/admin/tenants/${tenant.id}/impersonate`, {
+                  method: 'POST',
+                  headers: { ...authHeaders },
+                });
+              } catch (e) {
+                console.warn('Impersonation audit call failed:', e);
+              }
               impersonateTenant(tenant);
               setActiveSection('dashboard');
               showToast(`Acting as tenant: ${tenant.email}`);

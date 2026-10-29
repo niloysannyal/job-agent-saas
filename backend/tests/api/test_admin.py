@@ -227,3 +227,48 @@ def test_require_superadmin_forbidden(tenant_client: TestClient):
     resp = tenant_client.get("/api/v1/admin/metrics")
     assert resp.status_code == 403
     assert "Superadmin privileges required" in resp.json()["detail"]
+
+
+def test_toggle_job_source(admin_client: TestClient):
+    # Toggle remotive source
+    resp = admin_client.post("/api/v1/admin/jobs/sources/remotive/toggle")
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "remotive"
+    new_status = resp.json()["is_active"]
+
+    # Verify reflected in sources list
+    sources_resp = admin_client.get("/api/v1/admin/jobs/sources")
+    assert sources_resp.status_code == 200
+    remotive = next(s for s in sources_resp.json() if s["name"] == "remotive")
+    assert remotive["is_active"] == new_status
+
+
+def test_flagged_jobs_dismiss_and_purge(admin_client: TestClient, admin_test_db: Session, superadmin_account: Account):
+    # Create a flagged job
+    job = Job(
+        account_id=superadmin_account.id,
+        company="AdversarialCorp",
+        role="Prompt Engineer",
+        apply_link="https://adversarial.com/apply",
+        source="adzuna",
+        integrity_status="flagged",
+        vetoed=True,
+    )
+    admin_test_db.add(job)
+    admin_test_db.commit()
+    admin_test_db.refresh(job)
+
+    # 1. List flagged jobs
+    flagged_resp = admin_client.get("/api/v1/admin/jobs/flagged")
+    assert flagged_resp.status_code == 200
+    assert any(j["id"] == job.id for j in flagged_resp.json())
+
+    # 2. Dismiss flag (mark clean)
+    dismiss_resp = admin_client.post(f"/api/v1/admin/jobs/{job.id}/dismiss-flag")
+    assert dismiss_resp.status_code == 200
+    assert dismiss_resp.json()["integrity_status"] == "clean"
+
+    # 3. Purge job
+    del_resp = admin_client.delete(f"/api/v1/admin/jobs/{job.id}")
+    assert del_resp.status_code == 200
+    assert del_resp.json()["status"] == "deleted"
