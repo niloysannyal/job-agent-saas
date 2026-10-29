@@ -82,7 +82,12 @@ class MatchingService:
         Embed the Master CV and target-roles section of USER_PROFILE.md,
         upserting the vector into Qdrant.
         """
-        parsed = ProfileParser.parse(cv_path=cv_path, profile_path=profile_path)
+        parsed = ProfileParser.parse_from_db(
+            db=self.db,
+            account_id=account_id,
+            cv_path=cv_path,
+            profile_path=profile_path,
+        )
         vector = await self.embedder.embed(parsed.combined_embedding_text)
         self._cached_profile_vectors[account_id] = vector
 
@@ -147,7 +152,12 @@ class MatchingService:
             )
 
         # 2. Parse language rules from profile
-        parsed_profile = ProfileParser.parse(cv_path=cv_path, profile_path=profile_path)
+        parsed_profile = ProfileParser.parse_from_db(
+            db=self.db,
+            account_id=account_id,
+            cv_path=cv_path,
+            profile_path=profile_path,
+        )
         language_gate = LanguageGate(declared_languages=parsed_profile.declared_languages)
 
         # 3. Determine clean and flagged jobs to evaluate

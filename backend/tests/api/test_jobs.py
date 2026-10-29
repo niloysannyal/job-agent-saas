@@ -575,3 +575,37 @@ def test_trigger_ingestion_endpoint(client: TestClient, seeded_accounts, monkeyp
     assert "German" in german_job["veto_reason"]
 
 
+def test_strict_jwt_and_forbidden_cross_tenant_access(client: TestClient, seeded_accounts, test_db: Session):
+    """
+    Verify:
+    1. Unauthenticated request without token or account identifier returns 401.
+    2. A regular tenant attempting to query another tenant's workspace returns 403 Forbidden.
+    """
+    from app.core.auth import create_access_token
+    account_1, account_2 = seeded_accounts
+
+    # 1. Totally unauthenticated request with no query, header, or bearer token -> 401
+    res_unauth = client.get("/api/v1/jobs")
+    assert res_unauth.status_code == 401
+    assert "Authentication required" in res_unauth.json()["detail"]
+
+    # 2. Authenticated as account_1 attempting to access account_2 -> 403 Forbidden
+    token_1 = create_access_token(
+        data={"sub": account_1.id, "email": account_1.email, "role": "tenant"}
+    )
+    res_cross = client.get(
+        f"/api/v1/jobs?account_id={account_2.id}",
+        headers={"Authorization": f"Bearer {token_1}"},
+    )
+    assert res_cross.status_code == 403
+    assert "Cannot access another tenant's workspace" in res_cross.json()["detail"]
+
+    # 3. Authenticated as account_1 accessing own jobs without passing account_id query param -> 200
+    res_own = client.get(
+        "/api/v1/jobs",
+        headers={"Authorization": f"Bearer {token_1}"},
+    )
+    assert res_own.status_code == 200
+
+
+

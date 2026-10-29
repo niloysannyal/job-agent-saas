@@ -143,3 +143,71 @@ class ProfileParser:
             cv_clean_text=cv_clean_text,
             combined_embedding_text=combined.strip(),
         )
+
+    @classmethod
+    def parse_from_db(
+        cls,
+        db: Any,
+        account_id: str,
+        cv_path: Optional[Path] = None,
+        profile_path: Optional[Path] = None,
+    ) -> ParsedProfile:
+        """
+        Dynamically extracts candidate profile and CV data from database models
+        (UserProfile, TargetDesignation, SpokenLanguage).
+        Falls back to local template files if profile is uninitialized.
+        """
+        from app.models.profile import UserProfile
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        profile = None
+        if db is not None:
+            try:
+                stmt = (
+                    select(UserProfile)
+                    .where(UserProfile.account_id == account_id)
+                    .options(
+                        selectinload(UserProfile.target_designations),
+                        selectinload(UserProfile.spoken_languages),
+                    )
+                )
+                profile = db.scalars(stmt).first()
+            except Exception as e:
+                logger.warning(f"Failed to query UserProfile from DB for {account_id}: {e}")
+
+        if profile:
+            # 1. Target roles from TargetDesignation rows or current_role
+            roles = [td.title for td in (profile.target_designations or []) if td.title]
+            if not roles and profile.current_role:
+                roles = [profile.current_role]
+            target_roles_text = ", ".join(roles)
+
+            # 2. Dealbreakers
+            dealbreakers_text = profile.dealbreakers or ""
+
+            # 3. Spoken languages
+            langs = [sl.language.lower().strip() for sl in (profile.spoken_languages or []) if sl.language]
+            declared_languages = langs if langs else ["english"]
+
+            # 4. CV Text
+            cv_clean_text = ""
+            if profile.master_cv_latex:
+                cv_clean_text = cls.extract_clean_cv_text(profile.master_cv_latex)
+            else:
+                cv_file = cv_path or settings.resolve_cv_path()
+                if cv_file and cv_file.exists():
+                    cv_clean_text = cls.extract_clean_cv_text(cv_file.read_text(encoding="utf-8"))
+
+            combined = f"TARGET ROLES:\n{target_roles_text}\n\nEXPERIENCE AND SKILLS:\n{cv_clean_text}"
+            return ParsedProfile(
+                target_roles_text=target_roles_text,
+                dealbreakers_text=dealbreakers_text,
+                declared_languages=declared_languages,
+                cv_clean_text=cv_clean_text,
+                combined_embedding_text=combined.strip(),
+            )
+
+        # Clean fallback to disk files
+        return cls.parse(cv_path=cv_path, profile_path=profile_path)
+

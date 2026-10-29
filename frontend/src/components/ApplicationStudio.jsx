@@ -25,6 +25,10 @@ import {
   Play,
   RotateCcw,
   Scissors,
+  CheckSquare,
+  HelpCircle,
+  Check,
+  Compass,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { formatSalary } from './JobsView';
@@ -67,7 +71,15 @@ export default function ApplicationStudio({
   const [editedCoverDraft, setEditedCoverDraft] = useState('');
   const [editedOutreachDraft, setEditedOutreachDraft] = useState('');
   const [editedLatex, setEditedLatex] = useState('');
-  const [activeDraftTab, setActiveDraftTab] = useState('latex'); // latex | cover | outreach
+  const [activeDraftTab, setActiveDraftTab] = useState('latex'); // latex | cover | outreach | form_qa
+
+  // Form Detective & Questionnaire State
+  const [channelInspection, setChannelInspection] = useState(null);
+  const [isDetectingChannel, setIsDetectingChannel] = useState(false);
+  const [formQuestions, setFormQuestions] = useState([]);
+  const [formAnswers, setFormAnswers] = useState({});
+  const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false);
+  const [copiedQuestionId, setCopiedQuestionId] = useState(null);
 
   // Overleaf-style Compiler State
   const [isCompiling, setIsCompiling] = useState(false);
@@ -179,6 +191,7 @@ ${candidateEmail} | ${candidateLinkedin}`;
       }
 
       runFitAnalysis(selectedJob.id, selectedJob.description, comp, jobTitle);
+      handleDetectChannel(selectedJob);
     }
   }, [selectedJob, applications, profile]);
 
@@ -279,6 +292,184 @@ ${candidateEmail} | ${candidateLinkedin}`;
       console.error('Fit analysis error:', err);
     } finally {
       setIsEvaluatingFit(false);
+    }
+  };
+
+  // Form Detective & Questionnaire API
+  const handleDetectChannel = async (targetJob = null) => {
+    const job = targetJob || selectedJob;
+    const jId = job?.id || activeJobId;
+    const applyUrl = job?.apply_link || '';
+    const text = (targetJob ? targetJob.description : customPostingText) || job?.description || '';
+    const comp = (targetJob ? targetJob.company : customCompany) || job?.company || '';
+    const role = (targetJob ? (targetJob.title || targetJob.role) : customRole) || job?.title || job?.role || '';
+
+    try {
+      setIsDetectingChannel(true);
+      const res = await fetch('/api/v1/applications/detect-channel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: profile?.account_id,
+          job_id: jId || undefined,
+          apply_url: applyUrl || undefined,
+          posting_text: text || undefined,
+          company_name: comp || undefined,
+          role_title: role || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setChannelInspection(data);
+        const questions = data.questions || data.detected_questions || [];
+        setFormQuestions(questions);
+
+        // Intelligently sync channel pill if detected platform is definitive
+        if (data.channel_type === 'google_form' || data.channel_type === 'typeform') {
+          setChannel('form');
+        } else if (data.channel_type === 'direct_email') {
+          setChannel('email');
+        } else if (data.channel_type === 'direct_message') {
+          setChannel('dm');
+        }
+
+        showToast(`Detected apply channel: ${data.platform_name || data.channel_type}!`);
+      }
+    } catch (err) {
+      console.error('Channel detection error:', err);
+    } finally {
+      setIsDetectingChannel(false);
+    }
+  };
+
+  const handleGenerateFormAnswers = async () => {
+    if (!formQuestions || formQuestions.length === 0) {
+      showToast('No form questionnaire fields detected yet. Click "Detect Channel & Forms" first.', 4000);
+      return;
+    }
+
+    try {
+      setIsGeneratingAnswers(true);
+      const res = await fetch('/api/v1/applications/generate-form-answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: profile?.account_id,
+          job_id: activeJobId || undefined,
+          company_name: customCompany || 'Company',
+          role_title: customRole || 'AI Engineer',
+          job_description: customPostingText || '',
+          questions: formQuestions,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const answersMap = {};
+        (data.answers || []).forEach((a) => {
+          answersMap[a.question_id] = {
+            answer: a.answer,
+            candidate_angles: a.candidate_angles || [],
+            composed_rationale: a.composed_rationale || '',
+            verified_facts_used: a.verified_facts_used || [],
+            char_count: a.char_count || a.answer.length,
+          };
+        });
+        setFormAnswers(answersMap);
+        showToast(`Synthesized ${data.total_questions} bespoke answers using Propose-Probe-Compose!`);
+      } else {
+        showToast('Failed to generate form answers', 4000);
+      }
+    } catch (err) {
+      console.error('Answer synthesis error:', err);
+      showToast('Error generating questionnaire answers', 4000);
+    } finally {
+      setIsGeneratingAnswers(false);
+    }
+  };
+
+  const handleCopyAllAnswers = () => {
+    if (!formQuestions || formQuestions.length === 0) return;
+    const formatted = formQuestions
+      .map((q, idx) => {
+        const ansObj = formAnswers[q.id];
+        const ansText = ansObj ? ansObj.answer : '(No answer generated)';
+        return `[Field ${idx + 1}] ${q.prompt}\n${ansText}\n`;
+      })
+      .join('\n----------------------------------------\n\n');
+
+    navigator.clipboard.writeText(formatted);
+    showToast('All form answers copied to clipboard!');
+  };
+
+  const handleCopySingleAnswer = (questionId, text) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedQuestionId(questionId);
+    setTimeout(() => setCopiedQuestionId(null), 2000);
+    showToast('Answer copied to clipboard!');
+  };
+
+  const handleUpdateSingleAnswer = (questionId, newText) => {
+    setFormAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...(prev[questionId] || {}),
+        answer: newText,
+        char_count: newText.length,
+      },
+    }));
+  };
+
+  const handleDownloadEml = async () => {
+    try {
+      showToast('Preparing .eml draft with attached tailored CV...');
+      const comp = customCompany || 'Company';
+      const role = customRole || 'AI Engineer';
+      const candidateName = profile?.full_name || 'Niloy Sannyal';
+      const toEmail = channelInspection?.recruiter_email || 'recruiter@company.com';
+      const subject = `Application: ${role} - ${candidateName}`;
+
+      let pdfBase64 = null;
+      try {
+        const doc = compileParsedLatexToPdf(parsedDoc, `Tailored_CV_${sanitizeFileName(comp)}.pdf`);
+        const pdfOutput = doc.output('datauristring');
+        if (pdfOutput.includes(',')) {
+          pdfBase64 = pdfOutput.split(',')[1];
+        }
+      } catch (pdfErr) {
+        console.warn('PDF compile for eml fallback:', pdfErr);
+      }
+
+      const res = await fetch('/api/v1/applications/draft-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: profile?.account_id,
+          to_email: toEmail,
+          subject,
+          body_text: editedOutreachDraft || editedCoverDraft,
+          from_email: 'niloysannyal@gmail.com',
+          attachment_pdf_base64: pdfBase64,
+          attachment_filename: `Tailored_CV_${sanitizeFileName(comp)}.pdf`,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([data.eml_content], { type: 'message/rfc822' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Draft_Application_${sanitizeFileName(comp)}.eml`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('Downloaded .eml draft! Double-click to open in Outlook/Apple Mail.');
+      }
+    } catch (err) {
+      console.error('EML export error:', err);
+      showToast('Failed to download .eml draft', 3000);
     }
   };
 
@@ -558,6 +749,16 @@ ${candidateEmail} | ${candidateLinkedin}`;
             </button>
 
             <button
+              className="action-btn-secondary"
+              disabled={isDetectingChannel || (!activeJobId && !customPostingText.trim())}
+              onClick={() => handleDetectChannel()}
+              title="Autonomous Detective discovers whether target job applies via Google Form, Email, ATS, or DM"
+            >
+              {isDetectingChannel ? <RefreshCw className="btn-icon icon-spin" /> : <Compass className="btn-icon" />}
+              <span>Detect Channel & Forms</span>
+            </button>
+
+            <button
               className="action-btn-primary"
               disabled={isTailoring || (!activeJobId && !customPostingText.trim())}
               onClick={handleExecuteTailor}
@@ -578,6 +779,88 @@ ${candidateEmail} | ${candidateLinkedin}`;
           </div>
         </div>
       </div>
+
+      {/* AUTONOMOUS APPLY CHANNEL & DISPATCH RADAR */}
+      {channelInspection && (
+        <div className="channel-intelligence-banner panel-card">
+          <div className="channel-banner-left">
+            <div className="channel-icon-pill">
+              {channelInspection.channel_type === 'google_form' || channelInspection.channel_type === 'typeform' ? (
+                <FileText className="channel-type-icon text-emerald" />
+              ) : channelInspection.channel_type === 'direct_email' ? (
+                <Mail className="channel-type-icon text-cyan" />
+              ) : channelInspection.channel_type === 'direct_message' ? (
+                <MessageSquare className="channel-type-icon text-indigo" />
+              ) : (
+                <Building2 className="channel-type-icon text-amber" />
+              )}
+              <span className="channel-type-label">
+                {channelInspection.platform_name || channelInspection.channel_type.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="channel-banner-info">
+              <h4>{channelInspection.action_summary}</h4>
+              <div className="channel-banner-meta">
+                {channelInspection.recruiter_email && (
+                  <span className="meta-tag email">
+                    <Mail className="meta-icon" />
+                    <strong>Recruiter:</strong> {channelInspection.recruiter_email}
+                  </span>
+                )}
+                {channelInspection.target_handle && (
+                  <span className="meta-tag handle">
+                    <MessageSquare className="meta-icon" />
+                    <strong>Contact:</strong> {channelInspection.target_handle}
+                  </span>
+                )}
+                <span className="meta-tag confidence">
+                  <strong>Confidence:</strong> {Math.round(channelInspection.detection_confidence * 100)}%
+                </span>
+                <span className="meta-tag questions-count">
+                  <CheckSquare className="meta-icon" />
+                  <strong>{formQuestions.length} Questions Ready</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="channel-banner-actions">
+            {channelInspection.apply_url && (
+              <a
+                href={channelInspection.apply_url}
+                target="_blank"
+                rel="noreferrer"
+                className="action-btn-sm action-btn-accent"
+              >
+                <span>Open {channelInspection.platform_name}</span>
+                <ExternalLink className="btn-icon-xs" />
+              </a>
+            )}
+
+            {channelInspection.recruiter_email && (
+              <a
+                href={`mailto:${channelInspection.recruiter_email}?subject=${encodeURIComponent(
+                  `Application: ${customRole || 'AI Engineer'} - ${profile?.full_name || 'Niloy Sannyal'}`
+                )}&body=${encodeURIComponent(editedOutreachDraft || editedCoverDraft || '')}`}
+                className="action-btn-sm action-btn-mailto"
+                title="Launch mail client pre-filled with recruiter contact and tailored cover note"
+              >
+                <Mail className="btn-icon-xs" />
+                <span>Launch Mail Draft</span>
+              </a>
+            )}
+
+            <button
+              className="action-btn-sm action-btn-qa"
+              onClick={() => setActiveDraftTab('form_qa')}
+            >
+              <CheckSquare className="btn-icon-xs" />
+              <span>Review Form Q&A ({formQuestions.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* FIT ANALYSIS & DIMENSIONS CARD */}
       {fitResult && (
@@ -693,6 +976,13 @@ ${candidateEmail} | ${candidateLinkedin}`;
               <Mail className="tab-icon-sm" />
               <span>Channel Outreach ({channel.toUpperCase()})</span>
             </button>
+            <button
+              className={`draft-tab ${activeDraftTab === 'form_qa' ? 'active' : ''}`}
+              onClick={() => setActiveDraftTab('form_qa')}
+            >
+              <CheckSquare className="tab-icon-sm" />
+              <span>Form Questionnaire ({formQuestions.length})</span>
+            </button>
           </div>
 
           <div className="audit-badges-group">
@@ -717,32 +1007,45 @@ ${candidateEmail} | ${candidateLinkedin}`;
                     ? 'main.tex (LaTeX Source)'
                     : activeDraftTab === 'cover'
                     ? 'cover_letter.txt'
+                    : activeDraftTab === 'form_qa'
+                    ? 'form_questionnaire.json'
                     : `outreach_${channel}.txt`}
                 </strong>
               </div>
 
               <div className="toolbar-actions">
-                <button
-                  className="action-btn-xs"
-                  onClick={() =>
-                    handleCopyDraft(
-                      activeDraftTab === 'cover'
-                        ? editedCoverDraft
-                        : activeDraftTab === 'outreach'
-                        ? editedOutreachDraft
-                        : editedLatex,
-                      activeDraftTab === 'cover'
-                        ? 'Cover Letter'
-                        : activeDraftTab === 'outreach'
-                        ? 'Outreach Message'
-                        : 'LaTeX Source'
-                    )
-                  }
-                  title="Copy content"
-                >
-                  <Copy className="btn-icon-xxs" />
-                  <span>Copy</span>
-                </button>
+                {activeDraftTab === 'form_qa' ? (
+                  <button
+                    className="action-btn-xs"
+                    onClick={handleCopyAllAnswers}
+                    title="Copy all questions and generated answers into formatted text"
+                  >
+                    <Copy className="btn-icon-xxs" />
+                    <span>Copy All Q&A</span>
+                  </button>
+                ) : (
+                  <button
+                    className="action-btn-xs"
+                    onClick={() =>
+                      handleCopyDraft(
+                        activeDraftTab === 'cover'
+                          ? editedCoverDraft
+                          : activeDraftTab === 'outreach'
+                          ? editedOutreachDraft
+                          : editedLatex,
+                        activeDraftTab === 'cover'
+                          ? 'Cover Letter'
+                          : activeDraftTab === 'outreach'
+                          ? 'Outreach Message'
+                          : 'LaTeX Source'
+                      )
+                    }
+                    title="Copy content"
+                  >
+                    <Copy className="btn-icon-xxs" />
+                    <span>Copy</span>
+                  </button>
+                )}
 
                 {activeDraftTab === 'latex' && (
                   <>
@@ -807,6 +1110,31 @@ ${candidateEmail} | ${candidateLinkedin}`;
                       <span>Copy</span>
                     </button>
                   </div>
+
+                  {channel === 'email' && (
+                    <div className="email-dispatch-action-bar">
+                      <a
+                        href={`mailto:${channelInspection?.recruiter_email || ''}?subject=${encodeURIComponent(
+                          `Application: ${customRole || 'AI Engineer'} - ${profile?.full_name || 'Niloy Sannyal'}`
+                        )}&body=${encodeURIComponent(editedOutreachDraft || editedCoverDraft || '')}`}
+                        className="action-btn-xs action-btn-mailto"
+                        title="Open default email client with recruiter and pitch pre-filled"
+                      >
+                        <Mail className="btn-icon-xxs" />
+                        <span>Launch in Email Client</span>
+                      </a>
+
+                      <button
+                        className="action-btn-xs action-btn-accent"
+                        onClick={handleDownloadEml}
+                        title="Download RFC 822 .eml draft file with tailored CV attached"
+                      >
+                        <Download className="btn-icon-xxs" />
+                        <span>Download .eml Draft with CV</span>
+                      </button>
+                    </div>
+                  )}
+
                   <textarea
                     rows={18}
                     className="code-textarea outreach-body-textarea"
@@ -828,14 +1156,249 @@ ${candidateEmail} | ${candidateLinkedin}`;
                   placeholder="\documentclass[a4paper,11pt]{article}..."
                 />
               )}
+
+              {activeDraftTab === 'form_qa' && (
+                <div className="form-qa-editor-view">
+                  {/* Top Action Row */}
+                  <div className="form-qa-action-row">
+                    <div className="qa-action-info">
+                      <CheckSquare className="icon-xs text-emerald" />
+                      <span>{formQuestions.length} Structured Form Fields Detected</span>
+                    </div>
+
+                    <div className="qa-action-buttons">
+                      <button
+                        className="action-btn-xs action-btn-accent"
+                        disabled={isGeneratingAnswers || formQuestions.length === 0}
+                        onClick={handleGenerateFormAnswers}
+                        title="Synthesizes candidate angles and verifies facts against STAR stories and fact ledger"
+                      >
+                        {isGeneratingAnswers ? (
+                          <>
+                            <RefreshCw className="btn-icon-xxs icon-spin" />
+                            <span>Synthesizing STAR Answers...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="btn-icon-xxs" />
+                            <span>Generate Tailored Answers</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        className="action-btn-xs"
+                        disabled={formQuestions.length === 0}
+                        onClick={handleCopyAllAnswers}
+                      >
+                        <Copy className="btn-icon-xxs" />
+                        <span>Copy All Answers</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {formQuestions.length === 0 ? (
+                    <div className="empty-qa-state">
+                      <HelpCircle className="empty-qa-icon" />
+                      <h4>No Questions Detected Yet</h4>
+                      <p>
+                        Click <strong>Detect Channel & Forms</strong> above to scan the target posting
+                        and apply URL for Google Forms, ATS, or custom questionnaire fields.
+                      </p>
+                      <button
+                        className="action-btn-secondary"
+                        disabled={isDetectingChannel}
+                        onClick={() => handleDetectChannel()}
+                      >
+                        <Compass className="btn-icon-xs" />
+                        <span>Detect Questions Now</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="qa-cards-scroll">
+                      {formQuestions.map((q, idx) => {
+                        const ansObj = formAnswers[q.id];
+                        const answerText = ansObj ? ansObj.answer : '';
+                        const isCopied = copiedQuestionId === q.id;
+                        const charLimit = q.char_limit || 2000;
+
+                        return (
+                          <div key={q.id || idx} className="qa-card">
+                            <div className="qa-card-header">
+                              <div className="qa-prompt-wrap">
+                                <span className="qa-q-num">Q{idx + 1}</span>
+                                <strong className="qa-prompt-text">{q.prompt}</strong>
+                              </div>
+                              <div className="qa-card-badges">
+                                <span className="qa-badge-type">{q.field_type}</span>
+                                {q.char_limit && (
+                                  <span className="qa-badge-limit">Limit: {q.char_limit}</span>
+                                )}
+                                {q.is_required && (
+                                  <span className="qa-badge-req">Required</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Deliberated Candidate Angles (Harness² recursion) */}
+                            {ansObj?.candidate_angles && ansObj.candidate_angles.length > 0 && (
+                              <div className="qa-angles-box">
+                                <div className="angles-title">
+                                  <Sparkles className="icon-xxs text-emerald" />
+                                  <span>Candidate Angles Deliberated (Harness² Recursion):</span>
+                                </div>
+                                <ul className="angles-list">
+                                  {ansObj.candidate_angles.map((ang, aIdx) => (
+                                    <li key={aIdx}>{ang}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Verified Fact Ledger Grounding */}
+                            {ansObj?.verified_facts_used && ansObj.verified_facts_used.length > 0 && (
+                              <div className="qa-facts-box">
+                                <span className="facts-label">✓ Verified Grounding:</span>
+                                <div className="facts-tags-row">
+                                  {ansObj.verified_facts_used.map((fact, fIdx) => (
+                                    <span key={fIdx} className="fact-pill">
+                                      {fact}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Editable Answer Field */}
+                            <div className="qa-textarea-wrap">
+                              <textarea
+                                rows={q.field_type === 'short_text' || q.field_type === 'url' ? 2 : 4}
+                                className="code-textarea qa-textarea"
+                                value={answerText}
+                                onChange={(e) => handleUpdateSingleAnswer(q.id, e.target.value)}
+                                placeholder="Answer will be generated here, or type response..."
+                              />
+                            </div>
+
+                            <div className="qa-card-footer">
+                              <span className="qa-char-count">
+                                {answerText.length} / {charLimit} characters
+                              </span>
+                              <button
+                                className={`action-btn-xs ${isCopied ? 'btn-copied' : ''}`}
+                                disabled={!answerText}
+                                onClick={() => handleCopySingleAnswer(q.id, answerText)}
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="btn-icon-xxs" />
+                                    <span>Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="btn-icon-xxs" />
+                                    <span>Copy Field</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* RIGHT COLUMN: OVERLEAF COMPILE BAR & LIVE PREVIEW (HIDDEN FOR EMAIL OUTREACH) */}
           {activeDraftTab !== 'outreach' && (
             <div className="preview-column overleaf-preview-column">
-              {/* OVERLEAF PREVIEW TOOLBAR (WITH COMPILE BUTTON IN PLACE OF STATIC LABEL) */}
-              <div className="column-toolbar overleaf-toolbar">
+              {activeDraftTab === 'form_qa' ? (
+                <div className="dispatch-assistant-container">
+                  <div className="column-toolbar overleaf-toolbar">
+                    <div className="column-title">
+                      <Compass className="icon-xxs text-emerald" />
+                      <strong>Form Dispatch & Autofill Assistant</strong>
+                    </div>
+                  </div>
+
+                  <div className="dispatch-assistant-body">
+                    <div className="dispatch-card-item highlight">
+                      <div className="dispatch-card-title">
+                        <span className="channel-badge-emerald">
+                          {channelInspection?.platform_name || channelInspection?.channel_type || 'Detected Form'}
+                        </span>
+                        {channelInspection?.detection_confidence && (
+                          <span className="dispatch-conf-pill">
+                            {Math.round(channelInspection.detection_confidence * 100)}% Match
+                          </span>
+                        )}
+                      </div>
+                      <p className="dispatch-desc">
+                        {channelInspection?.action_summary ||
+                          'Review synthesized answers on the left. Click "Copy Field" to paste into the external application form.'}
+                      </p>
+                      {channelInspection?.apply_url && (
+                        <a
+                          href={channelInspection.apply_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="dispatch-external-btn"
+                        >
+                          <span>Open Form in New Tab</span>
+                          <ExternalLink className="icon-xxs" />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="dispatch-card-item">
+                      <h5>Quick 3-Step Autofill Workflow:</h5>
+                      <ol className="dispatch-steps">
+                        <li>
+                          <strong>1. Synthesize:</strong> Click "Generate Tailored Answers" to craft structured responses grounded in your STAR story bank.
+                        </li>
+                        <li>
+                          <strong>2. Open Form:</strong> Open the target Google Form or ATS portal in a neighboring tab.
+                        </li>
+                        <li>
+                          <strong>3. 1-Click Paste:</strong> Click "Copy Field" on each answer to paste into the corresponding form field with zero re-typing.
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="dispatch-card-item">
+                      <h5>Verified Profile References:</h5>
+                      <div className="dispatch-ref-grid">
+                        <div className="ref-row">
+                          <span className="ref-k">Full Name:</span>
+                          <span className="ref-v">{profile?.full_name || 'Niloy Sannyal'}</span>
+                        </div>
+                        <div className="ref-row">
+                          <span className="ref-k">Email:</span>
+                          <span className="ref-v">niloysannyal@gmail.com</span>
+                        </div>
+                        <div className="ref-row">
+                          <span className="ref-k">Portfolio:</span>
+                          <span className="ref-v">{profile?.portfolio_url || 'https://www.niloysannyal.me/'}</span>
+                        </div>
+                        <div className="ref-row">
+                          <span className="ref-k">GitHub:</span>
+                          <span className="ref-v">{profile?.github_url || 'https://github.com/niloysannyal'}</span>
+                        </div>
+                        <div className="ref-row">
+                          <span className="ref-k">Notice:</span>
+                          <span className="ref-v">{profile?.notice_period || '2 weeks'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* OVERLEAF PREVIEW TOOLBAR (WITH COMPILE BUTTON IN PLACE OF STATIC LABEL) */}
+                  <div className="column-toolbar overleaf-toolbar">
                 <div className="overleaf-toolbar-left">
                   {activeDraftTab === 'latex' ? (
                     <button
@@ -1113,8 +1676,10 @@ ${candidateEmail} | ${candidateLinkedin}`;
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
+        </div>
+      )}
         </div>
 
         {/* STRICT HUMAN-IN-THE-LOOP SEND GATE */}

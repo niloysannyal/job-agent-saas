@@ -37,11 +37,13 @@ def check_models_tenancy():
     return passed, checked, errors
 
 def check_alembic_heads():
-    alembic_dir = ROOT / "backend" / "alembic" / "versions"
+    alembic_dir = ROOT / "backend" / "app" / "db" / "migrations" / "versions"
+    if not alembic_dir.exists():
+        alembic_dir = ROOT / "backend" / "alembic" / "versions"
     if not alembic_dir.exists():
         return True, 0, []
     
-    versions = list(alembic_dir.glob("*.py"))
+    versions = [p for p in alembic_dir.glob("*.py") if p.name != "__init__.py"]
     down_revisions = set()
     revision_ids = set()
 

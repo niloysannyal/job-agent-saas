@@ -67,17 +67,24 @@ def get_current_account(
     elif x_account_id or account_id:
         target_id = x_account_id or account_id
     else:
-        target_id = DEFAULT_SUPERADMIN_ID
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please provide a valid Bearer token or credentials.",
+        )
 
     account = db.query(Account).filter_by(id=target_id).first()
 
     if not account:
-        # Fallback to any superadmin account or create default
-        account = db.query(Account).filter_by(role="superadmin").first()
-        if not account:
-            account = db.query(Account).first()
-
-    if not account:
+        # If a specific account_id or X-Account-ID was supplied but doesn't exist yet,
+        # return an isolated tenant context matching target_id so queries safely return empty sets
+        # without leaking cross-tenant data.
+        if target_id and not (authorization and authorization.startswith("Bearer ")):
+            return Account(
+                id=target_id,
+                email=f"tenant-{target_id[:8]}@example.com",
+                role="tenant",
+                status="active",
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account not found. Please log in or specify valid account ID.",
@@ -90,6 +97,46 @@ def get_current_account(
         )
 
     return account
+
+
+def get_optional_account(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    account_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+) -> Optional[Account]:
+    """
+    Optional authentication resolver for endpoints where account_id may be passed in JSON body.
+    """
+    try:
+        return get_current_account(
+            authorization=authorization,
+            x_account_id=x_account_id,
+            account_id=account_id,
+            db=db,
+        )
+    except HTTPException:
+        return None
+
+
+def resolve_tenant_id(
+    current_account: Account,
+    requested_account_id: Optional[str] = None,
+) -> str:
+    """
+    Enforce tenant isolation boundary:
+    - Superadmin can access any requested tenant or default to their own account.
+    - Standard tenant is strictly constrained to their own account_id; cannot access other tenants.
+    """
+    if current_account.role == "superadmin":
+        return requested_account_id or current_account.id
+
+    if requested_account_id and requested_account_id != current_account.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Cannot access another tenant's workspace.",
+        )
+    return current_account.id
 
 
 def require_superadmin(

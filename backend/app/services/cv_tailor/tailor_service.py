@@ -71,20 +71,24 @@ def prune_and_budget_latex(
         return re.sub(pat, "", b)
 
     body = latex_body
-    body = remove_section(body, "Career Highlights")
-    body = remove_section(body, "Enterprise AI Systems & Initiatives")
-    body = remove_section(body, "Technical Leadership & Ownership")
-    body = remove_section(body, "Certifications & Courses")
+    is_master_template = (
+        "Betopia" in latex_body or "Full Send Sports" in latex_body or "Niloy Sannyal" in latex_body
+    )
+    if is_master_template:
+        body = remove_section(body, "Career Highlights")
+        body = remove_section(body, "Enterprise AI Systems & Initiatives")
+        body = remove_section(body, "Technical Leadership & Ownership")
+        body = remove_section(body, "Certifications & Courses")
 
-    job_text = f"{job_role} {job_description}".lower()
-    needs_robotics = any(k in job_text for k in ["robot", "embedded", "hardware", "arduino", "drone", "iot", "firmware"])
+        job_text = f"{job_role} {job_description}".lower()
+        needs_robotics = any(k in job_text for k in ["robot", "embedded", "hardware", "arduino", "drone", "iot", "firmware"])
 
-    # Curate Projects section to 2-3 flagship projects
-    selected_projects = []
+        # Curate Projects section to 2-3 flagship projects
+        selected_projects = []
 
-    # 1. UFC ML Platform (Sub-100ms, FastAPI, MLOps, AWS) - high relevance for AI/ML/Backend
-    selected_projects.append(
-        r"""\resumeTrioHeading{Full Send Sports AI -- UFC Prediction Platform \hspace{2pt} \textbullet \hspace{2pt}
+        # 1. UFC ML Platform (Sub-100ms, FastAPI, MLOps, AWS) - high relevance for AI/ML/Backend
+        selected_projects.append(
+            r"""\resumeTrioHeading{Full Send Sports AI -- UFC Prediction Platform \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://apps.apple.com/us/app/full-send-sports-ai/id6751740118}{\uline{App Store}}}}}{}{}
 \vspace{-6pt}
 \resumeItemListStart{}
@@ -92,12 +96,12 @@ def prune_and_budget_latex(
   \resumeItem{Live on the iOS App Store, serving production traffic with high-availability cloud deployment.}
   \resumeItem{\textbf{Tech Stack:} Python, XGBoost, LightGBM, Scikit-learn, FastAPI, AWS.}
 \resumeItemListEnd{}"""
-    )
+        )
 
-    # 2. Company Policy Chatbot or Domain Project
-    if any(k in job_text for k in ["llm", "rag", "agent", "chat", "genai", "nlp", "langchain"]):
-        selected_projects.append(
-            r"""\resumeTrioHeading{Company Policy Chatbot \hspace{2pt} \textbullet \hspace{2pt}
+        # 2. Company Policy Chatbot or Domain Project
+        if any(k in job_text for k in ["llm", "rag", "agent", "chat", "genai", "nlp", "langchain"]):
+            selected_projects.append(
+                r"""\resumeTrioHeading{Company Policy Chatbot \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://github.com/niloysannyal/Company_Policy_Chatbot}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
 \href{https://company-policy-chatbot.vercel.app/}{\uline{Live Demo}}}}}{}{}
 \vspace{-6pt}
@@ -105,10 +109,10 @@ def prune_and_budget_latex(
   \resumeItem{RAG-based chatbot answering HR and IT policy questions with context-aware responses, using vector similarity search and persisted conversation memory.}
   \resumeItem{\textbf{Tech Stack:} Python, Streamlit, Gemini API, FAISS, LangChain, HTML, CSS, JavaScript.}
 \resumeItemListEnd{}"""
-        )
-    elif any(k in job_text for k in ["vision", "cv", "cnn", "image", "crop"]):
-        selected_projects.append(
-            r"""\resumeTrioHeading{Crop Disease Classifier \hspace{2pt} \textbullet \hspace{2pt}
+            )
+        elif any(k in job_text for k in ["vision", "cv", "cnn", "image", "crop"]):
+            selected_projects.append(
+                r"""\resumeTrioHeading{Crop Disease Classifier \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://github.com/niloysannyal/Crop_Disease_Classifier}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
 \href{https://cropdiseaseclassifier.streamlit.app/}{\uline{Live Demo}}}}}{}{}
 \vspace{-6pt}
@@ -116,10 +120,10 @@ def prune_and_budget_latex(
   \resumeItem{CNN-based web app for plant disease detection across corn, potato, wheat, and rice leaves; trained from scratch achieving \textbf{97\% average accuracy} after processing and augmenting thousands of images.}
   \resumeItem{\textbf{Tech Stack:} Python, NumPy, TensorFlow, Keras, Streamlit.}
 \resumeItemListEnd{}"""
-        )
-    else:
-        selected_projects.append(
-            r"""\resumeTrioHeading{Dhaka Home Rent Prediction \hspace{2pt} \textbullet \hspace{2pt}
+            )
+        else:
+            selected_projects.append(
+                r"""\resumeTrioHeading{Dhaka Home Rent Prediction \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://github.com/niloysannyal/Data_Science/tree/main/projects/DhakaHomeRentPrediction}{\uline{GitHub}} \hspace{2pt} \textbar{} \hspace{2pt}
 \href{https://dhakahomerentprediction.onrender.com/}{\uline{Live Demo}}}}}{}{}
 \vspace{-6pt}
@@ -127,41 +131,41 @@ def prune_and_budget_latex(
   \resumeItem{ML regression system predicting Dhaka residential rent across \textbf{28,000+ listings}; Random Forest regression achieving \textbf{95\%+ accuracy} after tuning and cross-validation, with extensive feature engineering and outlier handling.}
   \resumeItem{\textbf{Tech Stack:} Python, Pandas, NumPy, Scikit-learn, Flask, Render.}
 \resumeItemListEnd{}"""
-        )
+            )
 
-    # 3. FIFA World Cup 2026 Forecast (Full stack, React, FastAPI, AWS, 32k matches)
-    selected_projects.append(
-        r"""\resumeTrioHeading{FIFA World Cup 2026 Forecast \hspace{2pt} \textbullet \hspace{2pt}
+        # 3. FIFA World Cup 2026 Forecast (Full stack, React, FastAPI, AWS, 32k matches)
+        selected_projects.append(
+            r"""\resumeTrioHeading{FIFA World Cup 2026 Forecast \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://fifawc2026-simulator.netlify.app/}{\uline{Live Demo}}}}}{}{}
 \vspace{-6pt}
 \resumeItemListStart{}
   \resumeItem{Built and deployed a football forecasting platform using \textbf{32,247 international matches (1990--2025)}, featuring custom Elo ratings, probabilistic match prediction, and tournament simulation.}
   \resumeItem{\textbf{Tech Stack:} Python, Scikit-learn, FastAPI, React, Vite, Tailwind CSS, SQLite, AWS, Pandas, NumPy.}
 \resumeItemListEnd{}"""
-    )
+        )
 
-    if needs_robotics:
-        selected_projects.append(
-            r"""\resumeTrioHeading{Arduino Robo-Car \hspace{2pt} \textbullet \hspace{2pt}
+        if needs_robotics:
+            selected_projects.append(
+                r"""\resumeTrioHeading{Arduino Robo-Car \hspace{2pt} \textbullet \hspace{2pt}
 {\normalsize \textnormal{\href{https://github.com/niloysannyal/Robo-Car}{\uline{GitHub}}}}}{}{}
 \vspace{-6pt}
 \resumeItemListStart{}
   \resumeItem{Multifunctional Bluetooth-controlled robot car with custom Android app, supporting Manual, Line Following, Obstacle Avoidance via IR and ESP32-CAM sensor integration.}
   \resumeItem{\textbf{Tech Stack:} Arduino, C++, MIT App Inventor, Bluetooth HC-05, ESP32-CAM.}
 \resumeItemListEnd{}"""
+            )
+
+        projects_block = (
+            "\\section{Projects}\n\\resumeHeadingListStart{}\n\n"
+            + "\n\n".join(selected_projects)
+            + "\n\n\\resumeHeadingListEnd{}\n\n"
         )
 
-    projects_block = (
-        "\\section{Projects}\n\\resumeHeadingListStart{}\n\n"
-        + "\n\n".join(selected_projects)
-        + "\n\n\\resumeHeadingListEnd{}\n\n"
-    )
-
-    body = re.sub(
-        r"\\section\{Projects\}[\s\S]*?(?=(\\section\{Problem Solving\}|\\section\{Education\}|\\end\{document\}|$))",
-        lambda m: projects_block,
-        body,
-    )
+        body = re.sub(
+            r"\\section\{Projects\}[\s\S]*?(?=(\\section\{Problem Solving\}|\\section\{Education\}|\\end\{document\}|$))",
+            lambda m: projects_block,
+            body,
+        )
 
     body = re.sub(r"\n{3,}", "\n\n", body.strip())
     return body
@@ -223,9 +227,12 @@ class CVTailorService:
         """
         # Step 1: Load master CV template source (from DB profile if available, else disk)
         master_source = None
+        candidate_name = "Niloy Sannyal"
         if self.db_session:
             from app.models.profile import UserProfile
             user_prof = self.db_session.query(UserProfile).filter_by(account_id=account_id).first()
+            if user_prof and user_prof.full_name and user_prof.full_name.strip():
+                candidate_name = user_prof.full_name
             if user_prof and user_prof.master_cv_latex and user_prof.master_cv_latex.strip():
                 master_source = user_prof.master_cv_latex
 
@@ -256,7 +263,7 @@ class CVTailorService:
 
         drafter_prompt = f"""
 Act as a Senior Recruiter with 20 years of technical hiring experience.
-Tailor Niloy Sannyal's Master CV and application outreach for the following target job:
+Tailor {candidate_name}'s Master CV and application outreach for the following target job:
 
 TARGET OPPORTUNITY:
 - Company: {company_clean}
@@ -276,7 +283,7 @@ NON-NEGOTIABLE INTEGRITY RULES:
    - sub-100ms inference latency for production FastAPI APIs
    - 28,000+ listings, 95%+ accuracy
 2. RELEVANCE & ATS IMPACT:
-   - Craft a high-impact tailored Executive Summary bullet specifically positioning Niloy for {company_clean}'s {role_clean}.
+   - Craft a high-impact tailored Executive Summary bullet specifically positioning {candidate_name} for {company_clean}'s {role_clean}.
    - Identify skills demanded by the job to highlight.
    - Budget strictly for 1-2 pages maximum.
 3. OUTREACH:

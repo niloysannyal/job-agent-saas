@@ -4,7 +4,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_account, get_optional_account, resolve_tenant_id
 from app.db.session import get_db
+from app.models.account import Account
 from app.models.job import Job, JobRead, JobSearchQuery
 from app.services.job_ingestion import JobIngestionService
 from app.services.job_sources import get_available_sources
@@ -56,9 +58,15 @@ class IngestionResponse(BaseModel):
 )
 async def trigger_ingestion(
     payload: IngestionRequest,
+    current_account: Optional[Account] = Depends(get_optional_account),
     db: Session = Depends(get_db),
 ) -> IngestionResponse:
     """Trigger job ingestion pipeline for an account."""
+    if current_account:
+        effective_account_id = resolve_tenant_id(current_account, payload.account_id)
+    else:
+        effective_account_id = payload.account_id
+
     # 1. Resolve selected job sources
     job_sources = get_available_sources(payload.sources)
     if not job_sources:
@@ -73,7 +81,7 @@ async def trigger_ingestion(
     # 3. Execute ingestion and synchronous matching
     service = JobIngestionService(db=db)
     result = await service.ingest(
-        account_id=payload.account_id,
+        account_id=effective_account_id,
         sources=job_sources,
         search_queries=queries,
         target_companies=payload.target_companies,
@@ -105,7 +113,7 @@ async def trigger_ingestion(
     ),
 )
 def list_jobs(
-    account_id: str = Query(..., description="Target account ID"),
+    account_id: Optional[str] = Query(None, description="Target account ID"),
     include_vetoed: bool = Query(
         False,
         description="Include jobs vetoed by the deal-breaker/language gate",
@@ -120,13 +128,15 @@ def list_jobs(
     ),
     limit: int = Query(100, ge=1, le=500, description="Max number of jobs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
+    current_account: Account = Depends(get_current_account),
     db: Session = Depends(get_db),
 ) -> List[JobRead]:
     """
     Fetch jobs for an account ordered by match_score descending.
     Excludes vetoed and flagged postings by default.
     """
-    stmt = select(Job).where(Job.account_id == account_id)
+    effective_account_id = resolve_tenant_id(current_account, account_id)
+    stmt = select(Job).where(Job.account_id == effective_account_id)
 
     # Exclude vetoed jobs unless explicitly requested or show_all is set
     allow_vetoed = include_vetoed or show_all
