@@ -21,11 +21,7 @@ multi-tenant schema, with no shortcuts that would need rearchitecting later.
 - [x] Greenhouse/Lever integration for the user's Target Company list — all Layer
       1/1b sources now complete (Adzuna, Remotive, RemoteOK, Greenhouse, Lever,
       freehire.me, LinkedIn public endpoint)
-- [ ] Greenhouse/Lever pagination (ARCHITECTURE.md §4) — both currently return
-      only the first page for companies with large job boards (Greenhouse: Link
-      header pagination unhandled; Lever: limit/skip pagination unhandled).
-      Low priority until a target company's board actually exceeds one page, but
-      don't let it get forgotten once real usage starts.
+- [x] Greenhouse/Lever pagination (ARCHITECTURE.md §4) — full multi-page traversal loops implemented: Greenhouse follows RFC 5988 `Link` headers with `rel="next"` and circular loop guards; Lever utilizes offset pagination via `skip` and `limit` batches. Both enforced with configurable safety caps (`max_pages`, `max_postings`).
 - [x] Posting integrity gate (ARCHITECTURE.md §4) — runs before any posting is persisted or sent to an LLM; fully wired into `JobIngestionService.ingest()`, flagging injection/instructions and marking status as `clean` or `flagged`.
 - [x] Match scoring via Qdrant embedding similarity against MASTER_CV.tex + USER_PROFILE.md target roles — built 2026-10-19.
 - [x] **Wire matching into the pipeline.** Wired synchronously at the end of `job_ingestion.py` — newly persisted clean jobs are automatically scored and gated upon ingestion, while flagged jobs are skipped from scoring until human review (built 2026-10-19). Ready to transition to a background worker later when volume demands it (ARCHITECTURE.md §9).

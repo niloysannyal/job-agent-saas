@@ -141,3 +141,156 @@ async def test_greenhouse_http_error():
 
     assert exc_info.value.status_code == 404
     assert "nonexistent_company" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_greenhouse_pagination_multi_page():
+    """Traverse RFC 5988 Link headers across multiple pages until rel='next' terminates."""
+    requested_urls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url_str = str(request.url)
+        requested_urls.append(url_str)
+
+        if "page=2" in url_str:
+            # Page 2: Last page, only rel="prev"
+            return httpx.Response(
+                200,
+                headers={"Link": '<https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&page=1>; rel="prev"'},
+                json={
+                    "jobs": [
+                        {
+                            "id": 103,
+                            "title": "Data Scientist",
+                            "company_name": "Acme",
+                            "absolute_url": "https://boards.greenhouse.io/acme/jobs/103",
+                        },
+                        {
+                            "id": 104,
+                            "title": "Product Manager",
+                            "company_name": "Acme",
+                            "absolute_url": "https://boards.greenhouse.io/acme/jobs/104",
+                        },
+                    ]
+                },
+            )
+        else:
+            # Page 1: Has rel="next"
+            return httpx.Response(
+                200,
+                headers={"Link": '<https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&page=2>; rel="next"'},
+                json={
+                    "jobs": [
+                        {
+                            "id": 101,
+                            "title": "Backend Engineer",
+                            "company_name": "Acme",
+                            "absolute_url": "https://boards.greenhouse.io/acme/jobs/101",
+                        },
+                        {
+                            "id": 102,
+                            "title": "Frontend Engineer",
+                            "company_name": "Acme",
+                            "absolute_url": "https://boards.greenhouse.io/acme/jobs/102",
+                        },
+                    ]
+                },
+            )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = GreenhouseJobSource(client=client)
+
+    postings = await source.fetch("acme")
+
+    assert len(requested_urls) == 2
+    assert "page=2" in requested_urls[1]
+    assert len(postings) == 4
+    assert [p.id for p in postings] == [
+        "greenhouse:101",
+        "greenhouse:102",
+        "greenhouse:103",
+        "greenhouse:104",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_greenhouse_pagination_respects_max_pages():
+    """Verify max_pages safely halts pagination even if next link exists."""
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        return httpx.Response(
+            200,
+            headers={"Link": f'<https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&page={call_count + 1}>; rel="next"'},
+            json={
+                "jobs": [
+                    {"id": 200 + call_count, "title": f"Engineer {call_count}"}
+                ]
+            },
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = GreenhouseJobSource(client=client, max_pages=2)
+
+    postings = await source.fetch("acme")
+
+    assert call_count == 2
+    assert len(postings) == 2
+    assert [p.id for p in postings] == ["greenhouse:201", "greenhouse:202"]
+
+
+@pytest.mark.asyncio
+async def test_greenhouse_pagination_respects_max_postings():
+    """Verify max_postings stops accumulation as soon as cap is reached."""
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        return httpx.Response(
+            200,
+            headers={"Link": f'<https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true&page={call_count + 1}>; rel="next"'},
+            json={
+                "jobs": [
+                    {"id": 300 + call_count * 10 + 1, "title": "Role A"},
+                    {"id": 300 + call_count * 10 + 2, "title": "Role B"},
+                ]
+            },
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = GreenhouseJobSource(client=client, max_postings=3)
+
+    postings = await source.fetch("acme")
+
+    assert len(postings) == 3
+    assert [p.id for p in postings] == [
+        "greenhouse:311",
+        "greenhouse:312",
+        "greenhouse:321",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_greenhouse_pagination_circular_link_guard():
+    """Verify circular next links are detected and do not cause infinite loops."""
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        # Circular link: next points right back to page 1
+        return httpx.Response(
+            200,
+            headers={"Link": '<https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true>; rel="next"'},
+            json={"jobs": [{"id": 501, "title": "Dev"}]},
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = GreenhouseJobSource(client=client, max_pages=10)
+
+    postings = await source.fetch("acme")
+    assert call_count == 1
+    assert len(postings) == 1

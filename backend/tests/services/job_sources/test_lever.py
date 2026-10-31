@@ -175,3 +175,136 @@ async def test_lever_http_error():
 
     assert exc_info.value.status_code == 404
     assert "nonexistent_company" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_lever_pagination_multi_page():
+    """Verify offset pagination with skip parameter across multiple pages."""
+    captured_requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = dict(request.url.params)
+        captured_requests.append(params)
+        skip = int(params.get("skip", 0))
+
+        if skip == 0:
+            # Page 1: returns full page of 2 items
+            return httpx.Response(
+                200,
+                json=[
+                    {"id": "lev-1", "text": "Staff Engineer"},
+                    {"id": "lev-2", "text": "Senior Engineer"},
+                ],
+            )
+        elif skip == 2:
+            # Page 2: returns partial page of 1 item (< page_size)
+            return httpx.Response(
+                200,
+                json=[
+                    {"id": "lev-3", "text": "Lead Engineer"},
+                ],
+            )
+        return httpx.Response(200, json=[])
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = LeverJobSource(client=client, page_size=2)
+
+    postings = await source.fetch("netflix")
+
+    assert len(captured_requests) == 2
+    assert "skip" not in captured_requests[0]
+    assert captured_requests[0].get("limit") == "2"
+    assert captured_requests[1].get("skip") == "2"
+    assert captured_requests[1].get("limit") == "2"
+
+    assert len(postings) == 3
+    assert [p.id for p in postings] == [
+        "lever:lev-1",
+        "lever:lev-2",
+        "lever:lev-3",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_lever_pagination_default_page_size_100():
+    """Verify standard 100-batch pagination traversing to page 2 with skip=100."""
+    captured_requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = dict(request.url.params)
+        captured_requests.append(params)
+        skip = int(params.get("skip", 0))
+
+        if skip == 0:
+            # Page 1: 100 items
+            batch = [{"id": f"lev-{i}", "text": f"Role {i}"} for i in range(1, 101)]
+            return httpx.Response(200, json=batch)
+        elif skip == 100:
+            # Page 2: 5 items (final page)
+            batch = [{"id": f"lev-{i}", "text": f"Role {i}"} for i in range(101, 106)]
+            return httpx.Response(200, json=batch)
+        return httpx.Response(200, json=[])
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = LeverJobSource(client=client)  # default page_size=100
+
+    postings = await source.fetch("spotify")
+
+    assert len(captured_requests) == 2
+    assert "skip" not in captured_requests[0]
+    assert captured_requests[1].get("skip") == "100"
+
+    assert len(postings) == 105
+    assert postings[0].id == "lever:lev-1"
+    assert postings[99].id == "lever:lev-100"
+    assert postings[104].id == "lever:lev-105"
+
+
+@pytest.mark.asyncio
+async def test_lever_pagination_respects_max_pages():
+    """Verify max_pages safely terminates pagination even if full batches continue."""
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        # Always return 100 items
+        batch = [{"id": f"lev-{call_count}-{i}", "text": "Role"} for i in range(100)]
+        return httpx.Response(200, json=batch)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = LeverJobSource(client=client, max_pages=2)
+
+    postings = await source.fetch("spotify")
+
+    assert call_count == 2
+    assert len(postings) == 200
+
+
+@pytest.mark.asyncio
+async def test_lever_pagination_respects_max_postings():
+    """Verify max_postings stops accumulation as soon as cap is reached."""
+    call_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        return httpx.Response(
+            200,
+            json=[
+                {"id": f"lev-{call_count}-a", "text": "Role A"},
+                {"id": f"lev-{call_count}-b", "text": "Role B"},
+            ],
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    source = LeverJobSource(client=client, page_size=2, max_postings=3)
+
+    postings = await source.fetch("spotify")
+
+    assert len(postings) == 3
+    assert [p.id for p in postings] == [
+        "lever:lev-1-a",
+        "lever:lev-1-b",
+        "lever:lev-2-a",
+    ]

@@ -95,10 +95,16 @@ class LeverJobSource(JobSource):
         base_url: str = LEVER_BASE_URL,
         client: Optional[httpx.AsyncClient] = None,
         timeout: float = 15.0,
+        page_size: int = 100,
+        max_pages: int = 10,
+        max_postings: int = 500,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.client = client
         self.timeout = timeout
+        self.page_size = page_size
+        self.max_pages = max_pages
+        self.max_postings = max_postings
 
     def _build_url(self, company_slug: str) -> str:
         return f"{self.base_url}/{company_slug}"
@@ -211,9 +217,12 @@ class LeverJobSource(JobSource):
     async def fetch(
         self,
         query: Union[JobSearchQuery, str, Dict[str, Any]],
+        max_pages: Optional[int] = None,
+        max_postings: Optional[int] = None,
     ) -> List[JobPosting]:
         """
-        Asynchronously fetch all open job postings for a company from Lever.
+        Asynchronously fetch all open job postings for a company from Lever,
+        traversing offset pagination via skip/limit parameters up to the safety limit.
 
         Pass the company's Lever board slug as the query (string, dict with
         'what', or JobSearchQuery.what). All open roles for that company are
@@ -222,27 +231,58 @@ class LeverJobSource(JobSource):
         norm_query = self.normalize_query(query)
         company_slug = norm_query.what.strip().lower()
         url = self._build_url(company_slug)
-        params: Dict[str, Any] = {"mode": "json"}
 
-        # KNOWN LIMITATION: Lever's public postings API paginates results for boards
-        # with >100 postings via `limit` (default 100) and `skip` query parameters.
-        # Currently, this implementation only issues a single GET request and does not
-        # loop with `skip=` offsets, returning only the first batch of postings for
-        # companies with large job boards. Follow-up pagination loop needed in a future pass.
+        effective_max_pages = max_pages if max_pages is not None else self.max_pages
+        effective_max_postings = max_postings if max_postings is not None else self.max_postings
+
+        all_raw_jobs: List[Dict[str, Any]] = []
+        seen_job_ids = set()
+        pages_fetched = 0
+        skip = 0
+
+        async def _do_fetch(client: httpx.AsyncClient) -> None:
+            nonlocal skip, pages_fetched
+            while pages_fetched < effective_max_pages and len(all_raw_jobs) < effective_max_postings:
+                pages_fetched += 1
+                params: Dict[str, Any] = {"mode": "json"}
+                if self.page_size != 100:
+                    params["limit"] = self.page_size
+                if skip > 0:
+                    params["skip"] = skip
+
+                response = await client.get(url, params=params, timeout=self.timeout)
+                if response.status_code != 200:
+                    raise JobSourceHTTPError(
+                        f"Lever API request failed for company '{company_slug}' "
+                        f"with status {response.status_code}: {response.text}",
+                        status_code=response.status_code,
+                        response_text=response.text,
+                    )
+
+                data = response.json()
+                raw_jobs: List[Dict[str, Any]] = data if isinstance(data, list) else []
+                if not raw_jobs:
+                    break
+
+                for item in raw_jobs:
+                    jid = item.get("id")
+                    if jid is None or jid not in seen_job_ids:
+                        if jid is not None:
+                            seen_job_ids.add(jid)
+                        all_raw_jobs.append(item)
+                        if len(all_raw_jobs) >= effective_max_postings:
+                            break
+
+                skip += len(raw_jobs)
+
+                # If the batch returned fewer than page_size items, we have reached the end
+                if len(raw_jobs) < self.page_size:
+                    break
+
         if self.client:
-            response = await self.client.get(url, params=params, timeout=self.timeout)
+            await _do_fetch(self.client)
         else:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.get(url, params=params)
+                await _do_fetch(client)
 
-        if response.status_code != 200:
-            raise JobSourceHTTPError(
-                f"Lever API request failed for company '{company_slug}' "
-                f"with status {response.status_code}: {response.text}",
-                status_code=response.status_code,
-                response_text=response.text,
-            )
-
-        data = response.json()
-        raw_jobs: List[Dict[str, Any]] = data if isinstance(data, list) else []
-        return self._parse_results(raw_jobs, company_slug)
+        return self._parse_results(all_raw_jobs, company_slug)

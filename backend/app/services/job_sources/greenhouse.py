@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timezone
 from html import unescape
 from typing import Any, Dict, List, Optional, Union
+from urllib.parse import urljoin
 
 import httpx
 
@@ -91,10 +92,35 @@ class GreenhouseJobSource(JobSource):
         base_url: str = GREENHOUSE_BASE_URL,
         client: Optional[httpx.AsyncClient] = None,
         timeout: float = 15.0,
+        max_pages: int = 10,
+        max_postings: int = 500,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.client = client
         self.timeout = timeout
+        self.max_pages = max_pages
+        self.max_postings = max_postings
+
+    @staticmethod
+    def _extract_next_link(response: httpx.Response) -> Optional[str]:
+        """
+        Extract the RFC 5988 'next' relation URL from the HTTP Link response header.
+        Supports both httpx.Response.links parsing and regex extraction fallback.
+        """
+        try:
+            if hasattr(response, "links") and response.links:
+                next_entry = response.links.get("next")
+                if next_entry and isinstance(next_entry, dict) and next_entry.get("url"):
+                    return str(next_entry["url"])
+        except Exception:
+            pass
+
+        link_header = response.headers.get("link") or response.headers.get("Link")
+        if link_header:
+            match = re.search(r'<([^>]+)>;\s*rel="?next"?', link_header, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return None
 
     def _build_url(self, company_slug: str) -> str:
         return f"{self.base_url}/{company_slug}/jobs"
@@ -168,9 +194,12 @@ class GreenhouseJobSource(JobSource):
     async def fetch(
         self,
         query: Union[JobSearchQuery, str, Dict[str, Any]],
+        max_pages: Optional[int] = None,
+        max_postings: Optional[int] = None,
     ) -> List[JobPosting]:
         """
-        Asynchronously fetch all open job postings for a company from Greenhouse.
+        Asynchronously fetch all open job postings for a company from Greenhouse,
+        traversing RFC 5988 Link headers across pages up to the safety limit.
 
         Pass the company's Greenhouse board slug as the query (string, dict with
         'what', or JobSearchQuery.what). All open roles for that company are
@@ -179,27 +208,61 @@ class GreenhouseJobSource(JobSource):
         norm_query = self.normalize_query(query)
         company_slug = norm_query.what.strip().lower()
         url = self._build_url(company_slug)
-        params: Dict[str, Any] = {"content": "true"}
 
-        # KNOWN LIMITATION: Greenhouse paginates large job boards via HTTP RFC 5988
-        # Link response headers (e.g. Link: <url>; rel="next"). Currently, this
-        # implementation only issues a single GET request and does not traverse
-        # next-page Link headers, returning only the first page of results for
-        # companies with large job boards. Follow-up pagination loop needed in a future pass.
+        effective_max_pages = max_pages if max_pages is not None else self.max_pages
+        effective_max_postings = max_postings if max_postings is not None else self.max_postings
+
+        all_raw_jobs: List[Dict[str, Any]] = []
+        seen_job_ids = set()
+        visited_urls = set()
+        current_url: Optional[str] = url
+        current_params: Optional[Dict[str, Any]] = {"content": "true"}
+        pages_fetched = 0
+
+        async def _do_fetch(client: httpx.AsyncClient) -> None:
+            nonlocal current_url, current_params, pages_fetched
+            while current_url and pages_fetched < effective_max_pages and len(all_raw_jobs) < effective_max_postings:
+                pages_fetched += 1
+
+                response = await client.get(current_url, params=current_params, timeout=self.timeout)
+                visited_urls.add(str(response.url))
+
+                if response.status_code != 200:
+                    raise JobSourceHTTPError(
+                        f"Greenhouse API request failed for company '{company_slug}' "
+                        f"with status {response.status_code}: {response.text}",
+                        status_code=response.status_code,
+                        response_text=response.text,
+                    )
+
+                data = response.json()
+                raw_jobs: List[Dict[str, Any]] = data.get("jobs") or []
+                for item in raw_jobs:
+                    jid = item.get("id")
+                    if jid is None or jid not in seen_job_ids:
+                        if jid is not None:
+                            seen_job_ids.add(jid)
+                        all_raw_jobs.append(item)
+                        if len(all_raw_jobs) >= effective_max_postings:
+                            break
+
+                if len(all_raw_jobs) >= effective_max_postings:
+                    break
+
+                raw_next = self._extract_next_link(response)
+                if raw_next:
+                    next_resolved = urljoin(str(response.url), raw_next)
+                    if next_resolved in visited_urls:
+                        break
+                    current_url = next_resolved
+                    current_params = None  # Query parameters are already encoded in the link URL
+                else:
+                    current_url = None
+
         if self.client:
-            response = await self.client.get(url, params=params, timeout=self.timeout)
+            await _do_fetch(self.client)
         else:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.get(url, params=params)
+                await _do_fetch(client)
 
-        if response.status_code != 200:
-            raise JobSourceHTTPError(
-                f"Greenhouse API request failed for company '{company_slug}' "
-                f"with status {response.status_code}: {response.text}",
-                status_code=response.status_code,
-                response_text=response.text,
-            )
-
-        data = response.json()
-        raw_jobs: List[Dict[str, Any]] = data.get("jobs") or []
-        return self._parse_results(raw_jobs, company_slug)
+        return self._parse_results(all_raw_jobs, company_slug)
