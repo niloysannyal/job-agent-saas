@@ -10,7 +10,7 @@ from app.core.crypto import encrypt_secret, decrypt_secret
 from app.db.session import get_db
 from app.models.account import Account
 from app.models.oauth import OAuthConnection
-from app.models.application import Application
+from app.models.application import Application, ApplicationFormAnswer
 from app.models.profile import UserProfile
 from app.services.integrations.google_service import GoogleIntegrationService
 
@@ -278,12 +278,16 @@ def get_autofill_bookmarklet(
     cover_note = ""
     if app_record:
         cover_note = app_record.draft_content or ""
-        if app_record.form_answers:
-            for fa in app_record.form_answers:
-                custom_answers.append({
-                    "prompt": fa.question_prompt,
-                    "answer": fa.tailored_answer,
-                })
+        answers_list = (
+            db.query(ApplicationFormAnswer)
+            .filter_by(application_id=app_record.id)
+            .all()
+        )
+        for fa in answers_list:
+            custom_answers.append({
+                "prompt": fa.question_prompt,
+                "answer": fa.tailored_answer,
+            })
 
     custom_answers_json = json.dumps(custom_answers)
 
