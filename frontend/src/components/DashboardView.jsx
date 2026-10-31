@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   Target,
@@ -11,6 +11,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   Compass,
+  Cpu,
+  RefreshCw,
+  Zap,
+  Lightbulb,
+  BarChart3,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function DashboardView({
@@ -18,6 +24,7 @@ export default function DashboardView({
   monitorSummary = {},
   profile = {},
   topJobs = [],
+  authHeaders = {},
   onNavigate,
   onSelectJobForStudio,
 }) {
@@ -33,6 +40,32 @@ export default function DashboardView({
     : 0;
 
   const designations = profile?.target_designations || [];
+
+  // Autonomous Experience Reflector state
+  const [insights, setInsights] = useState(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+
+  const fetchInsights = async () => {
+    if (!profile?.account_id) return;
+    try {
+      setIsLoadingInsights(true);
+      const res = await fetch(`/api/v1/profile/experience-insights?account_id=${profile.account_id}`, {
+        headers: { ...(authHeaders || {}) },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInsights(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch experience insights:', err);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsights();
+  }, [profile?.account_id]);
 
   return (
     <div className="section-container dashboard-view">
@@ -253,6 +286,174 @@ export default function DashboardView({
             <div>
               <strong>Human Gate Protection Active</strong>
               <p>Every application and follow-up strictly pauses at Draft until you approve.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Autonomous Experience Radar Panel */}
+      <div className="panel-card experience-radar-panel">
+        <div className="panel-header experience-radar-header">
+          <div className="panel-title-group">
+            <div className="radar-icon-badge">
+              <Cpu className="panel-icon text-emerald" />
+            </div>
+            <div>
+              <div className="radar-title-row">
+                <h3>Autonomous Experience Radar</h3>
+                <span className="radar-active-tag">
+                  <span className="pulsing-dot"></span>
+                  Harness² Self-Refining Loop Active
+                </span>
+              </div>
+              <p className="panel-subtext">
+                Recursive outcome reflection adjusting channel prioritization & dynamic skill match weights based on live applications.
+              </p>
+            </div>
+          </div>
+
+          <button
+            className="action-btn-xs refresh-insights-btn"
+            onClick={fetchInsights}
+            disabled={isLoadingInsights}
+            title="Re-run Experience Reflector"
+          >
+            <RefreshCw className={`btn-icon-xxs ${isLoadingInsights ? 'icon-spin' : ''}`} />
+            <span>{isLoadingInsights ? 'Reflecting...' : 'Refresh Insights'}</span>
+          </button>
+        </div>
+
+        {/* 3-Column Experience Radar Grid */}
+        <div className="experience-radar-grid">
+          {/* 1. Channel Performance Conversion */}
+          <div className="radar-subcard channel-radar-card">
+            <div className="subcard-header">
+              <div className="subcard-title-group">
+                <BarChart3 className="subcard-icon text-cyan" />
+                <h4>Channel Conversion Matrix</h4>
+              </div>
+              <span className="subcard-stat-pill">
+                {insights?.overall_conversion_rate != null ? `${insights.overall_conversion_rate}%` : '0%'} Overall
+              </span>
+            </div>
+            <p className="subcard-desc">Interview yield comparison across detected dispatch channels.</p>
+
+            <div className="channel-bars-list">
+              {['email', 'form', 'dm'].map((ch) => {
+                const stat = insights?.channel_performance?.[ch] || { total_applied: 0, interviews: 0, offers: 0, conversion_rate: 0 };
+                const conv = stat.conversion_rate || 0;
+                const label = ch === 'email' ? 'Direct Email' : ch === 'form' ? 'Application Form' : 'Direct Message';
+                const isWinner = insights?.strategic_recommendations?.[0]?.toLowerCase().includes(ch);
+
+                return (
+                  <div key={ch} className="channel-bar-row">
+                    <div className="channel-bar-label">
+                      <span className="ch-name">
+                        {label}
+                        {isWinner && <span className="winner-tag">Top Converting</span>}
+                      </span>
+                      <span className="ch-metrics">
+                        {stat.interviews + stat.offers} interviews / {stat.total_applied} sent ({conv}%)
+                      </span>
+                    </div>
+                    <div className="channel-progress-track">
+                      <div
+                        className={`channel-progress-fill fill-${ch}`}
+                        style={{ width: `${Math.min(100, Math.max(conv, stat.total_applied > 0 ? 15 : 4))}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. Dynamic Skill Multipliers */}
+          <div className="radar-subcard skills-radar-card">
+            <div className="subcard-header">
+              <div className="subcard-title-group">
+                <Zap className="subcard-icon text-amber" />
+                <h4>Adaptive Skill Multipliers</h4>
+              </div>
+              <span className="subcard-stat-pill text-amber">
+                Match Weight Tuning
+              </span>
+            </div>
+            <p className="subcard-desc">Dynamic boosts applied to semantic ranking from verified interview outcomes.</p>
+
+            <div className="skill-multipliers-list">
+              {insights?.top_performing_skills && insights.top_performing_skills.length > 0 ? (
+                insights.top_performing_skills.map((s) => (
+                  <div key={s.skill} className="skill-mult-item boosted">
+                    <div className="skill-mult-info">
+                      <span className="skill-mult-name">{s.skill}</span>
+                      <span className="skill-mult-freq">{s.success_frequency} positive outcome(s)</span>
+                    </div>
+                    <span className="skill-mult-badge">
+                      {s.multiplier}x (+{Math.round((s.multiplier - 1) * 100)}%)
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="baseline-skills-grid">
+                  {['FastAPI', 'Qdrant', 'Agentic AI', 'PyTorch', 'PostgreSQL', 'Docker'].map((sk) => {
+                    const mult = insights?.skill_weight_multipliers?.[sk] || 1.0;
+                    return (
+                      <div key={sk} className="skill-mult-item baseline">
+                        <span className="skill-mult-name">{sk}</span>
+                        <span className="skill-mult-badge-subtle">{mult}x Baseline</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {insights?.underperforming_keywords && insights.underperforming_keywords.length > 0 && (
+                <div className="underperforming-box">
+                  <AlertTriangle className="icon-xxs text-amber" />
+                  <span>De-prioritizing keywords: <strong>{insights.underperforming_keywords.join(', ')}</strong></span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Strategic Algorithmic Guidance */}
+          <div className="radar-subcard recommendations-radar-card">
+            <div className="subcard-header">
+              <div className="subcard-title-group">
+                <Lightbulb className="subcard-icon text-emerald" />
+                <h4>Strategic AI Guidance</h4>
+              </div>
+              <span className="subcard-stat-pill text-emerald">
+                Active Directives
+              </span>
+            </div>
+            <p className="subcard-desc">Recursive policy advice generated from outcome patterns.</p>
+
+            <div className="recommendations-list">
+              {insights?.strategic_recommendations && insights.strategic_recommendations.length > 0 ? (
+                insights.strategic_recommendations.map((rec, i) => (
+                  <div key={i} className="recommendation-item">
+                    <div className="rec-bullet">
+                      <CheckCircle2 className="icon-xxs text-emerald" />
+                    </div>
+                    <p className="rec-text">{rec}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="empty-subtext">Awaiting initial application outcomes to formulate directives.</p>
+              )}
+            </div>
+
+            <div className="radar-actions-row">
+              <button className="action-btn-xs" onClick={() => onNavigate('pipeline')}>
+                <span>View Pipeline</span>
+                <ArrowRight className="btn-icon-xxs" />
+              </button>
+              <button className="action-btn-xs action-btn-accent" onClick={() => onNavigate('jobs')}>
+                <span>Apply Recommended</span>
+                <Sparkles className="btn-icon-xxs" />
+              </button>
             </div>
           </div>
         </div>

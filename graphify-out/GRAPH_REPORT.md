@@ -1,7 +1,7 @@
-# Graph Report - job-agent-saas  (2026-10-29)
+# Graph Report - job-agent-saas  (2026-10-31)
 
 ## Corpus Check
-- 175 files · ~111,213 words
+- 175 files · ~111,772 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 13 file(s) not represented in the graph (top: (none) 5, .css 2, .ini 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2c25bc36`
+- Built from commit: `a3ecf6ee`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -506,9 +506,9 @@ Nodes (3): get_me(), get, Retrieve authenticated account profile and permissions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Account` connect `Account` to `test_cv_tailor.py`, `test_job_ingestion.py`, `api/profile.py`, `test_application_status_update`, `client`, `applications.py`, `account.py`, `tasks.py`, `UserProfile`, `Job`, `JobPosting`, `TestClient`, `Base`, `integrations.py`, `test_admin.py`, `test_models.py`, `admin.py`, `core/auth.py`, `TestClient`, `models/__init__.py`, `trigger_ingestion`, `TestClient`, `client`, `test_google_callback_and_status`, `test_monitor_followups_task`, `get_google_auth_url`, `test_cv_tailor_service_end_to_end`, `get_me`?**
-  _High betweenness centrality (0.126) - this node is a cross-community bridge._
+  _High betweenness centrality (0.127) - this node is a cross-community bridge._
 - **Why does `Job` connect `Job` to `test_cv_tailor.py`, `test_job_ingestion.py`, `test_admin.py`, `test_application_status_update`, `test_cv_tailor_service_end_to_end`, `test_models.py`, `admin.py`, `applications.py`, `account.py`, `tasks.py`, `UserProfile`, `models/__init__.py`, `JobPosting`, `Base`, `TestClient`, `trigger_ingestion`, `test_monitor_followups_task`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Why does `JobPosting` connect `JobPosting` to `run_posting_guard`, `test_job_ingestion.py`, `AdzunaJobSource`, `.fetch`, `LinkedInJobSource`, `test_models.py`, `GreenhouseJobSource`, `FreehireJobSource`, `test_lever_fetch_with_mock_client`, `RemotiveJobSource`, `Job`, `models/__init__.py`, `TestClient`, `Base`?**
   _High betweenness centrality (0.055) - this node is a cross-community bridge._
 - **Are the 88 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**

@@ -2898,7 +2898,7 @@
       "file_type": "code",
       "norm_label": "dashboardview()",
       "source_file": "frontend/src/components/DashboardView.jsx",
-      "source_location": "L16"
+      "source_location": "L22"
     },
     {
       "id": "frontend_src_components_followupmodal_followupmodal",
@@ -8490,7 +8490,7 @@
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "frontend/src/App.jsx",
-      "source_location": "L930"
+      "source_location": "L931"
     },
     {
       "id": "backend_app_services_cv_tailor_scorer_extract_keywords_from_job",
@@ -19415,6 +19415,30 @@
       "type": "external"
     },
     {
+      "id": "arq",
+      "label": "arq",
+      "_origin": "semantic",
+      "community": 15,
+      "community_name": "tasks.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "arq",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "arq_connections",
+      "label": "arq_connections",
+      "_origin": "semantic",
+      "community": 15,
+      "community_name": "tasks.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "arq_connections",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "pydantic_settings",
       "label": "pydantic_settings",
       "_origin": "semantic",
@@ -19435,6 +19459,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "urllib_parse",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "collections",
+      "label": "collections",
+      "_origin": "semantic",
+      "community": 20,
+      "community_name": "Job",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "collections",
       "source_file": "",
       "type": "external"
     },
@@ -19715,6 +19751,30 @@
       "type": "external"
     },
     {
+      "id": "cryptography_fernet",
+      "label": "cryptography_fernet",
+      "_origin": "semantic",
+      "community": 29,
+      "community_name": "google_service.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "cryptography_fernet",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "email",
+      "label": "email",
+      "_origin": "semantic",
+      "community": 29,
+      "community_name": "google_service.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "email",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "email_mime_application",
       "label": "email_mime_application",
       "_origin": "semantic",
@@ -19747,6 +19807,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "email_mime_text",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "hashlib",
+      "label": "hashlib",
+      "_origin": "semantic",
+      "community": 29,
+      "community_name": "google_service.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "hashlib",
       "source_file": "",
       "type": "external"
     },
@@ -19831,72 +19903,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "frontend_src_index",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "arq",
-      "label": "arq",
-      "community": 15,
-      "community_name": "tasks.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "arq",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "arq_connections",
-      "label": "arq_connections",
-      "community": 15,
-      "community_name": "tasks.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "arq_connections",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "collections",
-      "label": "collections",
-      "community": 20,
-      "community_name": "Job",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "collections",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "cryptography_fernet",
-      "label": "cryptography_fernet",
-      "community": 29,
-      "community_name": "google_service.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "cryptography_fernet",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "email",
-      "label": "email",
-      "community": 29,
-      "community_name": "google_service.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "email",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "hashlib",
-      "label": "hashlib",
-      "community": 29,
-      "community_name": "google_service.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "hashlib",
       "source_file": "",
       "type": "external"
     }
@@ -55916,7 +55922,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/App.jsx",
-      "source_location": "L930",
+      "source_location": "L931",
       "weight": 1.0
     },
     {
@@ -55960,7 +55966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/DashboardView.jsx",
-      "source_location": "L16",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -68968,5 +68974,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2c25bc36bbec8b0166548e166816e1cbfdf8c6da"
+  "built_at_commit": "a3ecf6ee5b79a51ced4e4313850a0ddf85fc7366"
 }

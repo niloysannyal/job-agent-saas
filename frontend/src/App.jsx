@@ -777,6 +777,7 @@ function CareerAppInner() {
             monitorSummary={monitorSummary}
             profile={profile}
             topJobs={topJobs}
+            authHeaders={authHeaders}
             onNavigate={setActiveSection}
             onSelectJobForStudio={handleSelectJobForStudio}
           />

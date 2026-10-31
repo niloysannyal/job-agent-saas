@@ -8344,3 +8344,340 @@
   align-items: center;
   gap: 8px;
 }
+
+/* ==========================================================================
+   Autonomous Experience Radar & Outcome Reflector
+   ========================================================================== */
+.experience-radar-panel {
+  margin-top: 24px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--emerald-500);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-md);
+}
+
+.experience-radar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.radar-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--emerald-400);
+}
+
+.radar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radar-title-row h3 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.radar-active-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--emerald-400);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pulsing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-400);
+  box-shadow: 0 0 6px var(--emerald-400);
+  animation: pulse-emerald 2s infinite ease-in-out;
+}
+
+@keyframes pulse-emerald {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.experience-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 1024px) {
+  .experience-radar-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.radar-subcard {
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+[data-theme="light"] .radar-subcard {
+  background: #f8fafc;
+}
+
+.radar-subcard:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.subcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.subcard-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subcard-title-group h4 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.subcard-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.subcard-stat-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.subcard-stat-pill.text-amber {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.subcard-stat-pill.text-emerald {
+  color: var(--emerald-400);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.subcard-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 0 0 14px 0;
+  line-height: 1.4;
+}
+
+/* Channel Bars List */
+.channel-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.channel-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.channel-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+}
+
+.ch-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.winner-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.18);
+  color: var(--emerald-400);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ch-metrics {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.channel-progress-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.channel-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.channel-progress-fill.fill-email {
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+}
+
+.channel-progress-fill.fill-form {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.channel-progress-fill.fill-dm {
+  background: linear-gradient(90deg, #a855f7, #6366f1);
+}
+
+/* Skill Multipliers List */
+.skill-multipliers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.baseline-skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.skill-mult-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+}
+
+.skill-mult-item.boosted {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.skill-mult-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.skill-mult-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-mult-freq {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.skill-mult-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+}
+
+.skill-mult-badge-subtle {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.underperforming-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 9px;
+  border-radius: var(--radius-xs);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+/* Strategic AI Recommendations */
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-xs);
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.rec-bullet {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rec-text {
+  margin: 0;
+  font-size: 11.8px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.radar-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}

@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793255322.1003416,
-    "seen": 1793256768.2667375,
-    "ast_hash": "a0156185e183910ae72fdfab36fbb1d0",
+    "mtime": 1793414755.000793,
+    "seen": 1793415315.123905,
+    "ast_hash": "031851476760f39a9ee76881c6106263",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -480,9 +480,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
-    "mtime": 1793079824.9979272,
-    "seen": 1793162601.727493,
-    "ast_hash": "1861ae2ab18c4b520616c0ca7b994b77",
+    "mtime": 1793414796.497876,
+    "seen": 1793415315.1239097,
+    "ast_hash": "56c7139f52f75fbbd5f6270b4cb02cf2",
     "semantic_hash": ""
   },
   "frontend/src/components/FollowUpModal.jsx": {
