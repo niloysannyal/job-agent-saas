@@ -810,6 +810,7 @@ function CareerAppInner() {
             accountId={accountId}
             authHeaders={authHeaders}
             onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
+            onRefreshProfile={fetchProfile}
           />
         )}
 

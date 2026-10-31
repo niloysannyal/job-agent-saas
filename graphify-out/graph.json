@@ -6610,7 +6610,7 @@
       "file_type": "code",
       "norm_label": "get_experience_insights()",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1284"
+      "source_location": "L1293"
     },
     {
       "id": "backend_app_api_profile_get_profile",
@@ -6706,7 +6706,7 @@
       "file_type": "code",
       "norm_label": "preview_cv()",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1170"
+      "source_location": "L1179"
     },
     {
       "id": "backend_app_db_session_get_db",
@@ -9610,7 +9610,7 @@
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "frontend/src/App.jsx",
-      "source_location": "L950"
+      "source_location": "L951"
     },
     {
       "id": "backend_app_api_integrations_get_google_auth_url",
@@ -21315,6 +21315,18 @@
       "type": "external"
     },
     {
+      "id": "io",
+      "label": "io",
+      "_origin": "semantic",
+      "community": 53,
+      "community_name": "cv_parser.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "io",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "json",
       "label": "json",
       "_origin": "semantic",
@@ -21323,6 +21335,42 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "json",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "pypdf",
+      "label": "pypdf",
+      "_origin": "semantic",
+      "community": 53,
+      "community_name": "cv_parser.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "pypdf",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "xml_etree_elementtree",
+      "label": "xml_etree_elementtree",
+      "_origin": "semantic",
+      "community": 53,
+      "community_name": "cv_parser.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "xml_etree_elementtree",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "zipfile",
+      "label": "zipfile",
+      "_origin": "semantic",
+      "community": 53,
+      "community_name": "cv_parser.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "zipfile",
       "source_file": "",
       "type": "external"
     },
@@ -21599,50 +21647,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "urllib_parse",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "io",
-      "label": "io",
-      "community": 53,
-      "community_name": "cv_parser.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "io",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "pypdf",
-      "label": "pypdf",
-      "community": 53,
-      "community_name": "cv_parser.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "pypdf",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "xml_etree_elementtree",
-      "label": "xml_etree_elementtree",
-      "community": 53,
-      "community_name": "cv_parser.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "xml_etree_elementtree",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "zipfile",
-      "label": "zipfile",
-      "community": 53,
-      "community_name": "cv_parser.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "zipfile",
       "source_file": "",
       "type": "external"
     }
@@ -22413,7 +22417,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1212",
+      "source_location": "L1221",
       "weight": 1.0
     },
     {
@@ -28197,7 +28201,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1280",
+      "source_location": "L1289",
       "weight": 1.0
     },
     {
@@ -28329,7 +28333,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1166",
+      "source_location": "L1175",
       "weight": 1.0
     },
     {
@@ -30093,7 +30097,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1170",
+      "source_location": "L1179",
       "weight": 1.0
     },
     {
@@ -50313,7 +50317,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1284",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -50469,7 +50473,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1170",
+      "source_location": "L1179",
       "weight": 1.0
     },
     {
@@ -54762,7 +54766,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1170",
+      "source_location": "L1179",
       "weight": 1.0
     },
     {
@@ -54784,7 +54788,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1284",
+      "source_location": "L1293",
       "weight": 1.0
     },
     {
@@ -61615,7 +61619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/App.jsx",
-      "source_location": "L950",
+      "source_location": "L951",
       "weight": 1.0
     },
     {
@@ -71697,7 +71701,7 @@
       "confidence_score": 0.95,
       "context": "parameter_type",
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1286",
+      "source_location": "L1295",
       "weight": 0.8
     },
     {
@@ -73595,13 +73599,24 @@
     },
     {
       "source": "backend_app_api_profile_apply_parsed_cv",
+      "target": "backend_app_models_cv_template_cvtemplate",
+      "relation": "uses",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/app/api/profile.py",
+      "source_location": "L1045",
+      "weight": 0.8
+    },
+    {
+      "source": "backend_app_api_profile_apply_parsed_cv",
       "target": "backend_app_models_profile_targetdesignation",
       "relation": "uses",
       "_origin": "ast",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1048",
+      "source_location": "L1057",
       "weight": 0.8
     },
     {
@@ -73612,7 +73627,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1064",
+      "source_location": "L1073",
       "weight": 0.8
     },
     {
@@ -73623,7 +73638,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1084",
+      "source_location": "L1093",
       "weight": 0.8
     },
     {
@@ -73634,7 +73649,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1107",
+      "source_location": "L1116",
       "weight": 0.8
     },
     {
@@ -73645,7 +73660,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1125",
+      "source_location": "L1134",
       "weight": 0.8
     },
     {
@@ -73656,7 +73671,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1144",
+      "source_location": "L1153",
       "weight": 0.8
     },
     {
@@ -73832,7 +73847,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1290",
+      "source_location": "L1299",
       "weight": 0.8
     },
     {
@@ -73997,7 +74012,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1176",
+      "source_location": "L1185",
       "weight": 0.8
     },
     {
@@ -74008,7 +74023,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1197",
+      "source_location": "L1206",
       "weight": 0.8
     },
     {
@@ -74019,7 +74034,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "backend/app/api/profile.py",
-      "source_location": "L1212",
+      "source_location": "L1221",
       "weight": 0.8
     },
     {
@@ -76917,5 +76932,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "863f9a0d3971aaf713e58c000a0c23bb8d88d50f"
+  "built_at_commit": "5cbb6329c5339bdbbcf3df37db01b75f2d7d95d2"
 }

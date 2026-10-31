@@ -9,7 +9,7 @@ see ARCHITECTURE.md §13 for the Phase 3 auth migration plan).
 import json
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -439,7 +439,7 @@ def add_skill(
 )
 def bulk_skills(
     account_id: str = Query(...),
-    payload: List[ProfileSkillCreate] = ...,
+    payload: List[ProfileSkillCreate] = Body(...),
     replace: bool = Query(False),
     db: Session = Depends(get_db),
 ) -> List[ProfileSkillRead]:
@@ -1019,7 +1019,7 @@ async def parse_cv_file(
 )
 def apply_parsed_cv(
     account_id: str = Query(...),
-    payload: Dict[str, Any] = ...,
+    payload: Dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     profile = _get_or_create_profile(db, account_id)
@@ -1038,6 +1038,15 @@ def apply_parsed_cv(
     ]:
         if payload.get(field):
             setattr(profile, field, payload[field])
+
+    # 1b. Set active template if selected
+    tmpl_name = payload.get("template_name") or payload.get("selected_template")
+    if tmpl_name:
+        tmpl = db.scalars(select(CvTemplate).where(CvTemplate.name == tmpl_name)).first()
+        if tmpl:
+            profile.active_template_id = tmpl.id
+    elif payload.get("active_template_id"):
+        profile.active_template_id = payload["active_template_id"]
 
     # 2. Add Target Designations
     if payload.get("target_designations"):

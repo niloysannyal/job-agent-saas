@@ -42,6 +42,7 @@ export default function ProfileView({
   accountId,
   authHeaders = {},
   onOpenOnboarding,
+  onRefreshProfile,
 }) {
   const [activeTab, setActiveTab] = useState('identity'); // identity | experience | education | skills | projects | targets | template
 
@@ -159,7 +160,7 @@ export default function ProfileView({
       if (!res.ok) throw new Error('Failed to save experience.');
       showToast?.(editingExp ? 'Work experience updated.' : 'Work experience added.');
       setIsExpModalOpen(false);
-      window.location.reload(); // Quick refresh to update state
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error saving experience.');
     }
@@ -174,7 +175,7 @@ export default function ProfileView({
       });
       if (!res.ok) throw new Error('Failed to delete experience.');
       showToast?.('Work experience removed.');
-      window.location.reload();
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error deleting experience.');
     }
@@ -211,7 +212,7 @@ export default function ProfileView({
       if (!res.ok) throw new Error('Failed to save education.');
       showToast?.(editingEdu ? 'Education updated.' : 'Education added.');
       setIsEduModalOpen(false);
-      window.location.reload();
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error saving education.');
     }
@@ -226,7 +227,7 @@ export default function ProfileView({
       });
       if (!res.ok) throw new Error('Failed to delete education.');
       showToast?.('Education removed.');
-      window.location.reload();
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error deleting education.');
     }
@@ -249,7 +250,7 @@ export default function ProfileView({
       if (!res.ok) throw new Error('Failed to add skill.');
       showToast?.(`Skill added: ${newSkillName}`);
       setNewSkillName('');
-      window.location.reload();
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error adding skill.');
     }
@@ -263,7 +264,7 @@ export default function ProfileView({
       });
       if (!res.ok) throw new Error('Failed to remove skill.');
       showToast?.('Skill removed.');
-      window.location.reload();
+      if (onRefreshProfile) await onRefreshProfile();
     } catch (err) {
       showToast?.(err.message || 'Error deleting skill.');
     }
@@ -977,7 +978,7 @@ export default function ProfileView({
         <div className="modal-backdrop">
           <div className="modal-content modal-medium">
             <div className="modal-header">
-              <h3>Add Education Background</h3>
+              <h3>{editingEdu ? 'Edit Education Background' : 'Add Education Background'}</h3>
               <button className="btn-icon-close" onClick={() => setIsEduModalOpen(false)}>
                 <X size={18} />
               </button>

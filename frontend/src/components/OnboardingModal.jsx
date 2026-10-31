@@ -25,6 +25,7 @@ export default function OnboardingModal({
   const [step, setStep] = useState(1); // 1: Upload, 2: Review, 3: Template
   const [file, setFile] = useState(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [parsedData, setParsedData] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState('01_MODERN_TECH');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +51,27 @@ export default function OnboardingModal({
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
     }
   };
 
@@ -107,13 +129,17 @@ export default function OnboardingModal({
     try {
       setIsSubmitting(true);
       // 1. Apply parsed data
+      const applyPayload = {
+        ...formData,
+        selected_template: selectedTemplate,
+      };
       const applyRes = await fetch(`/api/v1/profile/apply-parsed-cv?account_id=${accountId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...authHeaders,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(applyPayload),
       });
 
       if (!applyRes.ok) {
@@ -172,7 +198,12 @@ export default function OnboardingModal({
                 skills, and projects into structured data without any manual data entry.
               </p>
 
-              <div className="dropzone-box">
+              <div
+                className={`dropzone-box ${isDragging ? 'dragging' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <Upload className="dropzone-icon" size={44} />
                 <h3>Drag & Drop your resume file here</h3>
                 <p>Supports PDF, Word (.docx), or plain text format</p>

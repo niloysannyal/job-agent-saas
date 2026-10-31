@@ -78,9 +78,9 @@ class CVTemplateCompiler:
         if summary_text.strip():
             summary_section = (
                 "\\section{Summary}\n"
-                "\\resumeItemListStart\n"
-                f"  \\resumeItem{{{escape_latex(summary_text.strip())}}}\n"
-                "\\resumeItemListEnd\n"
+                "\\begin{itemize}[leftmargin=0.15in, label={}]\n"
+                f"  \\small{{\\item {escape_latex(summary_text.strip())}}}\n"
+                "\\end{itemize}\n"
                 "\\vspace{-5pt}"
             )
 

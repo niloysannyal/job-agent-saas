@@ -1,17 +1,17 @@
 # Graph Report - job-agent-saas  (2026-10-31)
 
 ## Corpus Check
-- 183 files · ~125,569 words
+- 183 files · ~125,680 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
 ## Summary
-- 1841 nodes · 4770 edges · 111 communities (94 shown, 17 thin omitted)
-- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 616 edges (avg confidence: 0.94)
+- 1841 nodes · 4771 edges · 111 communities (94 shown, 17 thin omitted)
+- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 617 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `863f9a0d`
+- Built from commit: `5cbb6329`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -538,7 +538,7 @@ Nodes (4): add_language(), SpokenLanguageBase, SpokenLanguageCreate, SpokenLangu
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Account` connect `Account` to `test_cv_tailor.py`, `JobIngestionService`, `models/__init__.py`, `Application`, `applications.py`, `jobs.py`, `job.py`, `TestClient`, `client`, `create_gmail_draft`, `Architecture — Job Application Agent SaaS`, `Session`, `Base`, `test_auth.py`, `api/profile.py`, `Job`, `admin.py`, `test_profile.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `models/profile.py`, `TestClient`, `tasks.py`, `trigger_ingestion`, `GoogleIntegrationService`, `test_matching_service_score_and_gate_clean_jobs`, `SpokenLanguage`, `test_generate_form_answers_api_endpoint`, `test_monitor_followups_task`, `test_matching.py`, `api/auth.py`?**
-  _High betweenness centrality (0.134) - this node is a cross-community bridge._
+  _High betweenness centrality (0.135) - this node is a cross-community bridge._
 - **Why does `JobPosting` connect `JobPosting` to `run_posting_guard`, `JobIngestionService`, `models/__init__.py`, `tasks.py`, `AdzunaJobSource`, `Account`, `GreenhouseJobSource`, `FreehireJobSource`, `RemoteOKJobSource`, `LeverJobSource`, `JobSearchQuery`, `job.py`, `Base`?**
   _High betweenness centrality (0.063) - this node is a cross-community bridge._
 - **Why does `Job` connect `Job` to `test_cv_tailor.py`, `JobIngestionService`, `models/__init__.py`, `Application`, `MatchingService`, `applications.py`, `jobs.py`, `worker.py`, `UserProfile`, `job.py`, `TestClient`, `Base`, `Account`, `admin.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `tasks.py`, `trigger_ingestion`, `test_matching_service_score_and_gate_clean_jobs`, `test_monitor_followups_task`, `test_matching.py`?**
