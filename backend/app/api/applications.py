@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.core.auth import get_optional_account, resolve_tenant_id
 from app.db.session import get_db
 from app.models.account import Account
-from app.models.application import Application, ApplicationRead
+from app.models.application import Application, ApplicationFormAnswer, ApplicationRead
 from app.models.cv_template import AccountCvVersion, AccountCvVersionRead
 from app.models.interview import StarStory
 from app.models.job import Job
@@ -443,6 +443,31 @@ async def generate_form_answers(
         star_stories=stories,
     )
 
+    # Persist answers if linked to an existing application
+    if account_id and payload.job_id:
+        app_record = (
+            db.query(Application)
+            .filter_by(account_id=account_id, job_id=payload.job_id)
+            .first()
+        )
+        if app_record:
+            db.query(ApplicationFormAnswer).filter_by(application_id=app_record.id).delete()
+            import json
+            for a in result.answers:
+                fa = ApplicationFormAnswer(
+                    account_id=account_id,
+                    application_id=app_record.id,
+                    question_id=a.question_id,
+                    question_prompt=a.question_prompt,
+                    field_type="paragraph",
+                    tailored_answer=a.answer,
+                    candidate_angles=json.dumps(a.candidate_angles),
+                    verified_facts_used=json.dumps(a.verified_facts_used),
+                    char_count=a.char_count,
+                )
+                db.add(fa)
+            db.commit()
+
     return GenerateFormAnswersResponse(
         company_name=result.company_name,
         role_title=result.role_title,
@@ -602,7 +627,11 @@ def list_applications(
     """
     query = (
         db.query(Application)
-        .options(joinedload(Application.job))
+        .options(
+            joinedload(Application.job),
+            joinedload(Application.cv_version),
+            selectinload(Application.form_answers),
+        )
         .filter(Application.account_id == account_id)
     )
     if status_filter:

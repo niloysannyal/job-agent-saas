@@ -836,6 +836,7 @@ function CareerAppInner() {
             isSending={isSending}
             showToast={showToast}
             onNavigate={setActiveSection}
+            authHeaders={authHeaders}
           />
         )}
 
@@ -850,6 +851,7 @@ function CareerAppInner() {
             onViewMaterials={(app) => setViewingMaterialsApp(app)}
             onNavigate={setActiveSection}
             showToast={showToast}
+            authHeaders={authHeaders}
           />
         )}
 
@@ -863,6 +865,7 @@ function CareerAppInner() {
             onAddStory={handleAddStory}
             onDeleteStory={handleDeleteStory}
             showToast={showToast}
+            authHeaders={authHeaders}
           />
         )}
       </main>

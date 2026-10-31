@@ -17,7 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from app.db.session import SessionLocal
-from app.models.application import Application
+from app.models.application import Application, ApplicationFormAnswer
 from app.models.cv_template import AccountCvVersion
 from app.models.interview import StarStory
 from app.models.job import Job
@@ -111,12 +111,14 @@ async def run():
                 .first()
             )
 
+            target_app = None
             if existing_app:
                 print(f"  3. CV & Application already persisted:")
                 print(f"     App ID: {existing_app.id} | Status: {existing_app.status} | Channel: {existing_app.channel}")
                 cv_ver = db.query(AccountCvVersion).filter_by(id=existing_app.cv_version_id).first()
                 if cv_ver:
                     print(f"     CV Version: {cv_ver.id} | ATS Score: {cv_ver.ats_score:.1f}% | Pages: {cv_ver.page_count}")
+                target_app = existing_app
                 results.append((job, existing_app, qa_res))
             else:
                 tailor_res = await cv_tailor.tailor_for_job(
@@ -132,7 +134,28 @@ async def run():
                 print(f"     Identified Gaps: {tailor_res.gaps_detected}")
                 print(f"     Application Record Created: ID={tailor_res.application.id}")
                 print(f"     Status: {tailor_res.application.status} (Strict Human-in-the-Loop, sent_at={tailor_res.application.sent_at})")
+                target_app = tailor_res.application
                 results.append((job, tailor_res.application, qa_res))
+
+            # 4. Persist structured form answers
+            if target_app and qa_res.answers:
+                db.query(ApplicationFormAnswer).filter_by(application_id=target_app.id).delete()
+                import json
+                for a in qa_res.answers:
+                    fa = ApplicationFormAnswer(
+                        account_id=NILOY_ID,
+                        application_id=target_app.id,
+                        question_id=a.question_id,
+                        question_prompt=a.question_prompt,
+                        field_type="paragraph",
+                        tailored_answer=a.answer,
+                        candidate_angles=json.dumps(a.candidate_angles),
+                        verified_facts_used=json.dumps(a.verified_facts_used),
+                        char_count=a.char_count,
+                    )
+                    db.add(fa)
+                db.commit()
+                print(f"  4. Form Q&A DB Persistence: {len(qa_res.answers)} answers linked to app {target_app.id}")
 
         print("\n" + "=" * 72)
         print(f"  DOGFOODING VALIDATION COMPLETED -- {len(results)} APPLICATIONS READY FOR HUMAN REVIEW")

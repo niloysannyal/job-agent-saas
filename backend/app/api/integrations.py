@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status
+import json
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -238,36 +239,76 @@ async def create_gmail_draft(
 
 @router.get("/autofill/bookmarklet", response_model=BookmarkletResponse)
 def get_autofill_bookmarklet(
+    job_id: Optional[str] = Query(None, description="Target job UUID to bundle bespoke STAR answers"),
+    application_id: Optional[str] = Query(None, description="Target application UUID to bundle bespoke STAR answers"),
     current_account: Account = Depends(get_current_account),
     db: Session = Depends(get_db),
 ):
     """
-    Generate an intelligent JavaScript bookmarklet code tailored to the current user's profile.
+    Generate an intelligent JavaScript bookmarklet code tailored to the current user's profile
+    and optionally bundled with tailored STAR answers for a target job application.
     Candidate can drag to browser bookmarks bar or copy.
-    Clicking it on any Google Form or ATS portal auto-fills fields matching profile facts.
+    Clicking it on any Google Form or ATS portal auto-fills fields matching profile facts and Q&A.
     """
     profile = db.query(UserProfile).filter_by(account_id=current_account.id).first()
 
     name = profile.full_name if profile else "Candidate"
+    name_parts = name.strip().split() if name else ["Candidate"]
+    first_name = name_parts[0] if name_parts else "Candidate"
+    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
     email = current_account.email
     phone = getattr(profile, "phone", "") or ""
+    city = getattr(profile, "location_city", "") or ""
+    country = getattr(profile, "location_country", "") or ""
+    current_role = getattr(profile, "current_role", "") or ""
+    current_company = getattr(profile, "current_company", "") or ""
     github = (profile.github_url if profile else "") or ""
     linkedin = (profile.linkedin_url if profile else "") or ""
     portfolio = (profile.portfolio_url if profile else "") or ""
 
-    # Minified JavaScript bookmarklet
+    # Optional bespoke answers for target job/application
+    app_record = None
+    if application_id:
+        app_record = db.query(Application).filter_by(id=application_id, account_id=current_account.id).first()
+    elif job_id:
+        app_record = db.query(Application).filter_by(job_id=job_id, account_id=current_account.id).first()
+
+    custom_answers = []
+    cover_note = ""
+    if app_record:
+        cover_note = app_record.draft_content or ""
+        if app_record.form_answers:
+            for fa in app_record.form_answers:
+                custom_answers.append({
+                    "prompt": fa.question_prompt,
+                    "answer": fa.tailored_answer,
+                })
+
+    custom_answers_json = json.dumps(custom_answers)
+
+    # Minified intelligent JavaScript bookmarklet
     bookmarklet = f"""javascript:(function(){{
         var data = {{
             name: {repr(name)},
+            first_name: {repr(first_name)},
+            last_name: {repr(last_name)},
             email: {repr(email)},
             phone: {repr(phone)},
+            city: {repr(city)},
+            country: {repr(country)},
+            role: {repr(current_role)},
+            company: {repr(current_company)},
             github: {repr(github)},
             linkedin: {repr(linkedin)},
-            portfolio: {repr(portfolio)}
+            portfolio: {repr(portfolio)},
+            cover_note: {repr(cover_note)},
+            custom_answers: {custom_answers_json}
         }};
         var inputs = document.querySelectorAll('input, textarea');
         var filledCount = 0;
         inputs.forEach(function(el) {{
+            if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return;
             var label = '';
             var id = el.id || '';
             var nameAttr = el.name || '';
@@ -277,12 +318,13 @@ def get_autofill_bookmarklet(
             var labelEl = document.querySelector('label[for="' + id + '"]');
             if (labelEl) label += labelEl.innerText + ' ';
             
-            var parent = el.closest('div, .freebirdFormviewerViewNumberedItemContainer');
+            var parent = el.closest('div, .freebirdFormviewerViewNumberedItemContainer, .field, .form-group, [role="listitem"]');
             if (parent) label += parent.innerText + ' ';
             
             var probe = (label + ' ' + nameAttr + ' ' + placeholder + ' ' + ariaLabel).toLowerCase();
 
             function setVal(val) {{
+                if (!val || el.value === val) return;
                 el.value = val;
                 el.dispatchEvent(new Event('input', {{ bubbles: true }}));
                 el.dispatchEvent(new Event('change', {{ bubbles: true }}));
@@ -291,22 +333,49 @@ def get_autofill_bookmarklet(
 
             if (data.email && (probe.includes('email') || el.type === 'email')) {{
                 setVal(data.email);
-            }} else if (data.name && (probe.includes('full name') || probe.includes('your name') || probe.includes('candidate name'))) {{
+            }} else if (data.first_name && (probe.includes('first name') || probe.includes('given name') || nameAttr === 'first_name' || id === 'first_name')) {{
+                setVal(data.first_name);
+            }} else if (data.last_name && (probe.includes('last name') || probe.includes('surname') || probe.includes('family name') || nameAttr === 'last_name' || id === 'last_name')) {{
+                setVal(data.last_name);
+            }} else if (data.name && (probe.includes('full name') || probe.includes('your name') || probe.includes('candidate name') || probe.includes('name'))) {{
                 setVal(data.name);
             }} else if (data.phone && (probe.includes('phone') || probe.includes('mobile') || probe.includes('contact number') || el.type === 'tel')) {{
                 setVal(data.phone);
-            }} else if (data.github && (probe.includes('github') || probe.includes('git profile'))) {{
+            }} else if (data.city && (probe.includes('city') || probe.includes('location') || probe.includes('address'))) {{
+                setVal(data.city);
+            }} else if (data.role && (probe.includes('current title') || probe.includes('current role') || probe.includes('job title'))) {{
+                setVal(data.role);
+            }} else if (data.company && (probe.includes('current company') || probe.includes('current employer') || probe.includes('employer'))) {{
+                setVal(data.company);
+            }} else if (data.github && (probe.includes('github') || probe.includes('git profile') || probe.includes('repository'))) {{
                 setVal(data.github);
             }} else if (data.linkedin && (probe.includes('linkedin') || probe.includes('linked-in'))) {{
                 setVal(data.linkedin);
-            }} else if (data.portfolio && (probe.includes('portfolio') || probe.includes('website') || probe.includes('personal site'))) {{
+            }} else if (data.portfolio && (probe.includes('portfolio') || probe.includes('website') || probe.includes('personal site') || probe.includes('url'))) {{
                 setVal(data.portfolio);
+            }} else if (el.tagName === 'TEXTAREA' && data.cover_note && (probe.includes('cover letter') || probe.includes('note') || probe.includes('additional information') || probe.includes('comments'))) {{
+                setVal(data.cover_note);
+            }} else if (el.tagName === 'TEXTAREA' && data.custom_answers && data.custom_answers.length > 0) {{
+                for (var i = 0; i < data.custom_answers.length; i++) {{
+                    var ca = data.custom_answers[i];
+                    var pWords = ca.prompt.toLowerCase().split(/[^a-z0-9]+/).filter(function(w){{ return w.length > 3; }});
+                    var matchScore = 0;
+                    pWords.forEach(function(w){{ if (probe.includes(w)) matchScore++; }});
+                    if (matchScore >= 2 || (pWords.length > 0 && matchScore / pWords.length >= 0.4)) {{
+                        setVal(ca.answer);
+                        break;
+                    }}
+                }}
             }}
         }});
-        alert('✨ Job Application Agent autofilled ' + filledCount + ' field(s) on this form!');
+        
+        var banner = document.createElement('div');
+        banner.style = 'position:fixed;top:20px;right:20px;z-index:9999999;background:#064e3b;color:#a7f3d0;padding:14px 22px;border-radius:8px;font-family:system-ui,-apple-system,sans-serif;font-size:14px;font-weight:600;box-shadow:0 12px 30px rgba(0,0,0,0.35);border:1px solid #10b981;display:flex;align-items:center;gap:10px;';
+        banner.innerHTML = '⚡ <span>JobEazy Candidate OS: Autofilled ' + filledCount + ' field(s)!</span>';
+        document.body.appendChild(banner);
+        setTimeout(function(){{ banner.remove(); }}, 4500);
     }})();"""
 
-    # Strip newlines and excess whitespace for valid bookmarklet URL
     clean_js = " ".join(line.strip() for line in bookmarklet.splitlines() if line.strip())
 
     return BookmarkletResponse(

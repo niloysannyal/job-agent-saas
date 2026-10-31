@@ -248,6 +248,16 @@ class ApplicationFormAnswerRead(ApplicationFormAnswerBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ApplicationCvVersionRead(BaseModel):
+    id: str
+    tailored_latex: Optional[str] = None
+    ats_score: Optional[float] = None
+    page_count: Optional[int] = None
+    status: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ApplicationRead(ApplicationBase):
     id: str
     job_company: Optional[str] = None
@@ -255,5 +265,6 @@ class ApplicationRead(ApplicationBase):
     created_at: datetime
     updated_at: datetime
     form_answers: List[ApplicationFormAnswerRead] = []
+    cv_version: Optional[ApplicationCvVersionRead] = None
 
     model_config = ConfigDict(from_attributes=True)

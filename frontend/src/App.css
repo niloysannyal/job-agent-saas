@@ -8681,3 +8681,29 @@
   padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
 }
+
+.draggable-bookmarklet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px dashed var(--emerald-500);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  color: var(--emerald-400);
+  font-size: 11.5px;
+  text-decoration: none;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.draggable-bookmarklet-badge:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: var(--emerald-400);
+  transform: translateY(-1px);
+}
+
+.draggable-bookmarklet-badge:active {
+  cursor: grabbing;
+}

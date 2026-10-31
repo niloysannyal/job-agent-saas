@@ -30,6 +30,7 @@ import {
   Check,
   Compass,
   Bookmark,
+  Zap,
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { formatSalary } from './JobsView';
@@ -56,6 +57,7 @@ export default function ApplicationStudio({
   isSending = false,
   showToast,
   onNavigate,
+  authHeaders = {},
 }) {
   // Opportunity inputs
   const [activeJobId, setActiveJobId] = useState(selectedJob?.id || '');
@@ -81,6 +83,7 @@ export default function ApplicationStudio({
   const [formAnswers, setFormAnswers] = useState({});
   const [isGeneratingAnswers, setIsGeneratingAnswers] = useState(false);
   const [copiedQuestionId, setCopiedQuestionId] = useState(null);
+  const [bookmarkletJs, setBookmarkletJs] = useState('');
 
   // Google OAuth & Gmail State
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -179,26 +182,71 @@ ${candidateEmail} | ${candidateLinkedin}`;
 
       // Check if an application already exists in pipeline for this job
       const existingApp = applications.find((a) => a.job_id === selectedJob.id);
-      if (existingApp && existingApp.draft_content) {
-        setEditedCoverDraft(decodeHtmlEntities(existingApp.draft_content));
+      if (existingApp) {
+        if (existingApp.channel) {
+          setChannel(existingApp.channel);
+        }
+        if (existingApp.draft_content) {
+          setEditedCoverDraft(decodeHtmlEntities(existingApp.draft_content));
+        }
         const { initialOutreach } = generateInitialDrafts(comp, jobTitle);
         setEditedOutreachDraft(initialOutreach);
+
+        // Load tailored LaTeX from existing application if present
+        if (existingApp.cv_version?.tailored_latex) {
+          const cleanCode = cleanInitialLatex(existingApp.cv_version.tailored_latex);
+          setEditedLatex(cleanCode);
+          const parsed = parseLatexDocument(cleanCode);
+          setParsedDoc(parsed);
+          setCompileStatus('success');
+        } else if (profile?.master_cv_latex) {
+          const cleanCode = cleanInitialLatex(profile.master_cv_latex);
+          setEditedLatex(cleanCode);
+          const parsed = parseLatexDocument(cleanCode);
+          setParsedDoc(parsed);
+        }
+
+        // Restore existing form answers if present
+        if (existingApp.form_answers && existingApp.form_answers.length > 0) {
+          const answersMap = {};
+          const qList = [];
+          existingApp.form_answers.forEach((fa) => {
+            let angles = [];
+            let facts = [];
+            try { angles = JSON.parse(fa.candidate_angles || '[]'); } catch (_) {}
+            try { facts = JSON.parse(fa.verified_facts_used || '[]'); } catch (_) {}
+            answersMap[fa.question_id] = {
+              answer: fa.tailored_answer,
+              candidate_angles: angles,
+              verified_facts_used: facts,
+              char_count: fa.char_count || fa.tailored_answer.length,
+            };
+            qList.push({
+              id: fa.question_id,
+              prompt: fa.question_prompt,
+              field_type: fa.field_type || 'paragraph',
+              is_required: true,
+            });
+          });
+          setFormAnswers(answersMap);
+          setFormQuestions(qList);
+        }
       } else {
         const { initialCover, initialOutreach } = generateInitialDrafts(comp, jobTitle);
         setEditedCoverDraft(initialCover);
         setEditedOutreachDraft(initialOutreach);
-      }
 
-      // Initialize LaTeX from profile or master without control comments
-      if (profile?.master_cv_latex) {
-        const cleanCode = cleanInitialLatex(profile.master_cv_latex);
-        setEditedLatex(cleanCode);
-        const parsed = parseLatexDocument(cleanCode);
-        setParsedDoc(parsed);
+        if (profile?.master_cv_latex) {
+          const cleanCode = cleanInitialLatex(profile.master_cv_latex);
+          setEditedLatex(cleanCode);
+          const parsed = parseLatexDocument(cleanCode);
+          setParsedDoc(parsed);
+        }
       }
 
       runFitAnalysis(selectedJob.id, selectedJob.description, comp, jobTitle);
       handleDetectChannel(selectedJob);
+      fetchBookmarklet(selectedJob.id);
     }
   }, [selectedJob, applications, profile]);
 
@@ -232,7 +280,7 @@ ${candidateEmail} | ${candidateLinkedin}`;
     const checkGoogleStatus = async () => {
       try {
         const res = await fetch('/api/v1/integrations/google/status', {
-          headers: { 'X-Account-ID': profile?.account_id || '' },
+          headers: { ...(authHeaders || {}), 'X-Account-ID': profile?.account_id || '' },
         });
         if (res.ok) {
           const data = await res.json();
@@ -334,7 +382,11 @@ ${candidateEmail} | ${candidateLinkedin}`;
       setIsDetectingChannel(true);
       const res = await fetch('/api/v1/applications/detect-channel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeaders || {}),
+          'X-Account-ID': profile?.account_id || '',
+        },
         body: JSON.stringify({
           account_id: profile?.account_id,
           job_id: jId || undefined,
@@ -379,7 +431,11 @@ ${candidateEmail} | ${candidateLinkedin}`;
       setIsGeneratingAnswers(true);
       const res = await fetch('/api/v1/applications/generate-form-answers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authHeaders || {}),
+          'X-Account-ID': profile?.account_id || '',
+        },
         body: JSON.stringify({
           account_id: profile?.account_id,
           job_id: activeJobId || undefined,
@@ -404,6 +460,9 @@ ${candidateEmail} | ${candidateLinkedin}`;
         });
         setFormAnswers(answersMap);
         showToast(`Synthesized ${data.total_questions} bespoke answers using Propose-Probe-Compose!`);
+        if (activeJobId) {
+          fetchBookmarklet(activeJobId);
+        }
       } else {
         showToast('Failed to generate form answers', 4000);
       }
@@ -562,16 +621,34 @@ ${candidateEmail} | ${candidateLinkedin}`;
 
   const handleCopyBookmarklet = async () => {
     try {
-      const res = await fetch('/api/v1/integrations/autofill/bookmarklet', {
-        headers: { 'X-Account-ID': profile?.account_id || '' },
+      const qParams = activeJobId ? `?job_id=${encodeURIComponent(activeJobId)}` : '';
+      const res = await fetch(`/api/v1/integrations/autofill/bookmarklet${qParams}`, {
+        headers: { ...(authHeaders || {}), 'X-Account-ID': profile?.account_id || '' },
       });
       if (res.ok) {
         const data = await res.json();
+        setBookmarkletJs(data.bookmarklet_js);
         await navigator.clipboard.writeText(data.bookmarklet_js);
-        showToast('📋 Autofill Bookmarklet copied! Create a browser bookmark with this URL and click it on any job form.');
+        showToast('📋 Job-specific Autofill Bookmarklet copied! Click it on any job application or ATS page.');
       }
     } catch (e) {
       showToast('Failed to copy bookmarklet');
+    }
+  };
+
+  const fetchBookmarklet = async (jobId = null) => {
+    try {
+      const targetJId = jobId || activeJobId;
+      const qParams = targetJId ? `?job_id=${encodeURIComponent(targetJId)}` : '';
+      const res = await fetch(`/api/v1/integrations/autofill/bookmarklet${qParams}`, {
+        headers: { ...(authHeaders || {}), 'X-Account-ID': profile?.account_id || '' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBookmarkletJs(data.bookmarklet_js);
+      }
+    } catch (e) {
+      // quiet fallback
     }
   };
 
@@ -1118,6 +1195,22 @@ ${candidateEmail} | ${candidateLinkedin}`;
               <div className="toolbar-actions">
                 {activeDraftTab === 'form_qa' ? (
                   <div className="btn-group-row">
+                    {bookmarkletJs && (
+                      <a
+                        href={bookmarkletJs}
+                        className="draggable-bookmarklet-badge"
+                        title="Drag this link to your browser bookmarks bar! Click it on any job application page to auto-fill."
+                        onClick={(e) => {
+                          if (!e.defaultPrevented) {
+                            e.preventDefault();
+                            handleCopyBookmarklet();
+                          }
+                        }}
+                      >
+                        <Zap className="btn-icon-xxs text-amber" />
+                        <span>Drag: <strong>⚡ JobEazy Autofill</strong></span>
+                      </a>
+                    )}
                     <button
                       className="action-btn-xs"
                       onClick={handleCopyBookmarklet}
@@ -1308,6 +1401,23 @@ ${candidateEmail} | ${candidateLinkedin}`;
                     </div>
 
                     <div className="qa-action-buttons">
+                      {bookmarkletJs && (
+                        <a
+                          href={bookmarkletJs}
+                          className="draggable-bookmarklet-badge"
+                          title="Drag this link to your browser bookmarks bar! Click it on any job application page to auto-fill."
+                          onClick={(e) => {
+                            if (!e.defaultPrevented) {
+                              e.preventDefault();
+                              handleCopyBookmarklet();
+                            }
+                          }}
+                        >
+                          <Zap className="btn-icon-xxs text-amber" />
+                          <span>Drag: <strong>⚡ JobEazy Autofill</strong></span>
+                        </a>
+                      )}
+
                       <button
                         className="action-btn-xs action-btn-accent"
                         disabled={isGeneratingAnswers || formQuestions.length === 0}

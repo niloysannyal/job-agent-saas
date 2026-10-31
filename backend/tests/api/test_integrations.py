@@ -154,3 +154,43 @@ def test_bookmarklet_generation(client: TestClient, api_test_db: Session):
     assert "javascript:(function()" in data["bookmarklet_js"]
     assert "Alex Mercer" in data["bookmarklet_js"]
     assert "alex.m@example.com" in data["bookmarklet_js"]
+
+
+def test_bookmarklet_generation_with_job_and_star_answers(client: TestClient, api_test_db: Session):
+    """Verify bookmarklet JS generation bundles custom STAR answers when job_id is passed."""
+    from app.models.job import Job
+    from app.models.application import Application, ApplicationFormAnswer
+
+    account_id = "test-tenant-bm-2"
+    acc = Account(id=account_id, email="sara@example.com", role="tenant")
+    api_test_db.add(acc)
+    prof = UserProfile(account_id=account_id, full_name="Sara Connor", location_city="London")
+    api_test_db.add(prof)
+
+    job = Job(id="job-bm-1", account_id=account_id, company="Cyberdyne", role="AI Engineer", source="test", apply_link="https://cyberdyne.com/jobs")
+    api_test_db.add(job)
+
+    app_rec = Application(id="app-bm-1", account_id=account_id, job_id=job.id, channel="form", draft_content="Passionate about AI.")
+    api_test_db.add(app_rec)
+
+    fa = ApplicationFormAnswer(
+        account_id=account_id,
+        application_id=app_rec.id,
+        question_id="q1",
+        question_prompt="Why join Cyberdyne?",
+        field_type="paragraph",
+        tailored_answer="I have built resilient autonomous systems for 5+ years.",
+    )
+    api_test_db.add(fa)
+    api_test_db.commit()
+
+    headers = {"X-Account-ID": account_id}
+    resp = client.get(f"/api/v1/integrations/autofill/bookmarklet?job_id={job.id}", headers=headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "Sara Connor" in data["bookmarklet_js"]
+    assert "Cyberdyne" in data["bookmarklet_js"]
+    assert "Why join Cyberdyne?" in data["bookmarklet_js"]
+    assert "resilient autonomous systems" in data["bookmarklet_js"]
+    assert "data.first_name" in data["bookmarklet_js"]
+    assert "JobEazy Candidate OS" in data["bookmarklet_js"]
