@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/matching/profile_parser.py": {
-    "mtime": 1793271702.3762932,
-    "seen": 1793272096.630986,
-    "ast_hash": "aa50c26933b05bfdb5b6d1680a99ce4d",
+    "mtime": 1793416746.3975098,
+    "seen": 1793417181.6749628,
+    "ast_hash": "b3471d241a0d12d7f96f353410abbc97",
     "semantic_hash": ""
   },
   "backend/app/services/matching/service.py": {
@@ -480,8 +480,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
-    "mtime": 1793414796.497876,
-    "seen": 1793415315.1239097,
+    "mtime": 1793415644.9790938,
+    "seen": 1793417181.6750407,
     "ast_hash": "56c7139f52f75fbbd5f6270b4cb02cf2",
     "semantic_hash": ""
   },
@@ -1104,9 +1104,15 @@
     "semantic_hash": ""
   },
   "docker-compose.yml": {
-    "mtime": 1793276346.0674272,
-    "seen": 1793276419.248532,
-    "ast_hash": "9bfca9e72acde814e92c5c344ce2a92d",
+    "mtime": 1793416903.5949783,
+    "seen": 1793417181.6751444,
+    "ast_hash": "9c03eb3fb598f778e5078d39de750d88",
+    "semantic_hash": ""
+  },
+  "scripts/run_live_dogfooding.py": {
+    "mtime": 1793416167.8944848,
+    "seen": 1793417181.6750813,
+    "ast_hash": "3c1761a4724fbbcc797979d8a8c7ff67",
     "semantic_hash": ""
   }
 }

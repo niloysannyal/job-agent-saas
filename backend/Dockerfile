@@ -13,11 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend application source
-COPY app/ app/
+COPY backend/app/ app/
+COPY backend/alembic.ini ./
 COPY cv_templates/ /app/cv_templates/
 COPY docs/ /app/docs/
 
