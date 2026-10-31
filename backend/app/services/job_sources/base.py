@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from app.models.job import JobPosting, JobSearchQuery
 
@@ -74,3 +74,42 @@ class JobSource(ABC):
         if isinstance(query, dict):
             return JobSearchQuery(**query)
         raise TypeError(f"Unsupported query type: {type(query)}")
+
+
+
+def classify_location_type(
+    explicit_mode: Optional[str] = None,
+    location_name: Optional[str] = None,
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+) -> str:
+    """
+    Robust location classifier prioritizing:
+    1. Explicit work mode if provided ('remote', 'hybrid', 'on-site', 'onsite')
+    2. Negative phrasing check ('not remote', 'non-remote', 'no remote') -> 'on-site'
+    3. 'hybrid' check (MUST run BEFORE 'remote' to avoid misclassifying hybrid jobs)
+    4. 'remote' / 'work from home' check
+    5. Default to 'on-site'
+    """
+    if explicit_mode:
+        m = explicit_mode.strip().lower()
+        if m in ("remote", "hybrid", "on-site"):
+            return m
+        if m == "onsite":
+            return "on-site"
+
+    combined = f"{title or ''} {location_name or ''} {description or ''}".lower()
+
+    # Negative remote check
+    if any(neg in combined for neg in ["not remote", "non-remote", "no remote", "not a remote", "in-office only", "office only"]):
+        return "on-site"
+
+    # Hybrid check BEFORE remote
+    if "hybrid" in combined or "flexible remote" in combined or "days in office" in combined or "days/week in office" in combined:
+        return "hybrid"
+
+    # Remote check
+    if any(rem in combined for rem in ["remote", "work from home", "wfh", "telecommute", "anywhere"]):
+        return "remote"
+
+    return "on-site"

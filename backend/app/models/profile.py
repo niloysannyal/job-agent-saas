@@ -1,7 +1,8 @@
 """
 Multi-tenant User Profile models matching ARCHITECTURE.md §7.
-Captures everything from USER_PROFILE.md that the Find/Apply/Monitor pipeline
-needs as structured data rather than free-text parsing at runtime.
+Captures standard career entities (Work Experiences, Education, Skills, Projects,
+Certifications) and preferences that the Find/Apply/Monitor pipeline needs as
+structured data rather than free-text parsing at runtime.
 """
 import uuid
 from datetime import datetime, timezone
@@ -39,6 +40,9 @@ class UserProfile(Base):
     )
     # --- Basic info ---
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    headline: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     current_role: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     current_company: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     education: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -68,7 +72,11 @@ class UserProfile(Base):
     # --- Tone & preferences ---
     tone_preferences: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # --- CV source ---
+    # --- Template selection & legacy source ---
+    active_template_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("cv_templates.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     master_cv_latex: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # --- Timestamps ---
@@ -96,6 +104,239 @@ class UserProfile(Base):
     )
     spoken_languages: Mapped[List["SpokenLanguage"]] = relationship(
         "SpokenLanguage", back_populates="profile", cascade="all, delete-orphan",
+    )
+    work_experiences: Mapped[List["WorkExperience"]] = relationship(
+        "WorkExperience", back_populates="profile", cascade="all, delete-orphan",
+        order_by="WorkExperience.order_index",
+    )
+    educations: Mapped[List["Education"]] = relationship(
+        "Education", back_populates="profile", cascade="all, delete-orphan",
+        order_by="Education.order_index",
+    )
+    skills: Mapped[List["ProfileSkill"]] = relationship(
+        "ProfileSkill", back_populates="profile", cascade="all, delete-orphan",
+        order_by="ProfileSkill.order_index",
+    )
+    projects: Mapped[List["Project"]] = relationship(
+        "Project", back_populates="profile", cascade="all, delete-orphan",
+        order_by="Project.order_index",
+    )
+    certifications: Mapped[List["Certification"]] = relationship(
+        "Certification", back_populates="profile", cascade="all, delete-orphan",
+        order_by="Certification.order_index",
+    )
+
+
+class WorkExperience(Base):
+    """
+    Structured work experience entity for candidates across all industries.
+    Provides verifiable, chronological career history for CV tailoring.
+    """
+    __tablename__ = "work_experiences"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    company: Mapped[str] = mapped_column(String(255), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    location_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="onsite",
+        doc="'onsite' | 'remote' | 'hybrid'",
+    )
+    start_date: Mapped[str] = mapped_column(String(50), nullable=False)
+    end_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    highlights: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True,
+        doc="JSON list of bullet points or newline-separated accomplishments",
+    )
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    profile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="work_experiences",
+    )
+
+
+class Education(Base):
+    """
+    Structured education background (degrees, high school, certifications, coursework).
+    """
+    __tablename__ = "educations"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    institution: Mapped[str] = mapped_column(String(255), nullable=False)
+    degree: Mapped[str] = mapped_column(String(255), nullable=False)
+    field_of_study: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    grade: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    activities: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    profile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="educations",
+    )
+
+
+class ProfileSkill(Base):
+    """
+    Structured skill entity with taxonomy categorization and proficiency.
+    """
+    __tablename__ = "profile_skills"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="Technical",
+        doc="e.g. 'Languages', 'Frameworks', 'Tools', 'Management', 'Soft Skills'",
+    )
+    proficiency: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="Intermediate",
+        doc="'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'",
+    )
+    years_of_experience: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    profile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="skills",
+    )
+
+
+class Project(Base):
+    """
+    Portfolio projects, open-source work, or major professional deliverables.
+    """
+    __tablename__ = "projects"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    end_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    highlights: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True,
+        doc="JSON list of bullet points or newline-separated achievements",
+    )
+    technologies: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True,
+        doc="Comma-separated or JSON list of tools/tech used",
+    )
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    profile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="projects",
+    )
+
+
+class Certification(Base):
+    """
+    Professional certifications, licenses, and credentials.
+    """
+    __tablename__ = "certifications"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    issuing_organization: Mapped[str] = mapped_column(String(255), nullable=False)
+    issue_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    expiration_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    credential_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    credential_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    profile: Mapped["UserProfile"] = relationship(
+        "UserProfile", back_populates="certifications",
     )
 
 
@@ -202,8 +443,6 @@ class CompensationExpectation(Base):
     is_negotiable: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True,
     )
-    # Never include salary in outbound messages unless user explicitly provides
-    # a figure for that specific application
     is_sensitive: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True,
     )
@@ -249,6 +488,183 @@ class SpokenLanguage(Base):
 # Pydantic Schemas
 # ---------------------------------------------------------------------------
 
+# WorkExperience Schemas
+class WorkExperienceBase(BaseModel):
+    company: str
+    title: str
+    location: Optional[str] = None
+    location_type: str = "onsite"
+    start_date: str
+    end_date: Optional[str] = None
+    is_current: bool = False
+    description: Optional[str] = None
+    highlights: Optional[str] = None
+    order_index: int = 0
+
+
+class WorkExperienceCreate(WorkExperienceBase):
+    pass
+
+
+class WorkExperienceUpdate(BaseModel):
+    company: Optional[str] = None
+    title: Optional[str] = None
+    location: Optional[str] = None
+    location_type: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    is_current: Optional[bool] = None
+    description: Optional[str] = None
+    highlights: Optional[str] = None
+    order_index: Optional[int] = None
+
+
+class WorkExperienceRead(WorkExperienceBase):
+    id: str
+    account_id: str
+    profile_id: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Education Schemas
+class EducationBase(BaseModel):
+    institution: str
+    degree: str
+    field_of_study: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    grade: Optional[str] = None
+    activities: Optional[str] = None
+    order_index: int = 0
+
+
+class EducationCreate(EducationBase):
+    pass
+
+
+class EducationUpdate(BaseModel):
+    institution: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    grade: Optional[str] = None
+    activities: Optional[str] = None
+    order_index: Optional[int] = None
+
+
+class EducationRead(EducationBase):
+    id: str
+    account_id: str
+    profile_id: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ProfileSkill Schemas
+class ProfileSkillBase(BaseModel):
+    name: str
+    category: str = "Technical"
+    proficiency: str = "Intermediate"
+    years_of_experience: Optional[float] = None
+    order_index: int = 0
+
+
+class ProfileSkillCreate(ProfileSkillBase):
+    pass
+
+
+class ProfileSkillUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    proficiency: Optional[str] = None
+    years_of_experience: Optional[float] = None
+    order_index: Optional[int] = None
+
+
+class ProfileSkillRead(ProfileSkillBase):
+    id: str
+    account_id: str
+    profile_id: str
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Project Schemas
+class ProjectBase(BaseModel):
+    title: str
+    role: Optional[str] = None
+    url: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    highlights: Optional[str] = None
+    technologies: Optional[str] = None
+    order_index: int = 0
+
+
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class ProjectUpdate(BaseModel):
+    title: Optional[str] = None
+    role: Optional[str] = None
+    url: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    highlights: Optional[str] = None
+    technologies: Optional[str] = None
+    order_index: Optional[int] = None
+
+
+class ProjectRead(ProjectBase):
+    id: str
+    account_id: str
+    profile_id: str
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Certification Schemas
+class CertificationBase(BaseModel):
+    name: str
+    issuing_organization: str
+    issue_date: Optional[str] = None
+    expiration_date: Optional[str] = None
+    credential_id: Optional[str] = None
+    credential_url: Optional[str] = None
+    order_index: int = 0
+
+
+class CertificationCreate(CertificationBase):
+    pass
+
+
+class CertificationUpdate(BaseModel):
+    name: Optional[str] = None
+    issuing_organization: Optional[str] = None
+    issue_date: Optional[str] = None
+    expiration_date: Optional[str] = None
+    credential_id: Optional[str] = None
+    credential_url: Optional[str] = None
+    order_index: Optional[int] = None
+
+
+class CertificationRead(CertificationBase):
+    id: str
+    account_id: str
+    profile_id: str
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Target & Preference Schemas
 class TargetDesignationBase(BaseModel):
     title: str
     priority: int = 0
@@ -320,8 +736,12 @@ class SpokenLanguageRead(SpokenLanguageBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# Core Profile Schemas
 class UserProfileBase(BaseModel):
     full_name: str
+    headline: Optional[str] = None
+    phone: Optional[str] = None
+    summary: Optional[str] = None
     current_role: Optional[str] = None
     current_company: Optional[str] = None
     education: Optional[str] = None
@@ -342,6 +762,7 @@ class UserProfileBase(BaseModel):
     visa_needs: Optional[str] = None
     reason_for_leaving: Optional[str] = None
     tone_preferences: Optional[str] = None
+    active_template_id: Optional[str] = None
     master_cv_latex: Optional[str] = None
 
 
@@ -351,6 +772,9 @@ class UserProfileCreate(UserProfileBase):
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
+    headline: Optional[str] = None
+    phone: Optional[str] = None
+    summary: Optional[str] = None
     current_role: Optional[str] = None
     current_company: Optional[str] = None
     education: Optional[str] = None
@@ -371,6 +795,7 @@ class UserProfileUpdate(BaseModel):
     visa_needs: Optional[str] = None
     reason_for_leaving: Optional[str] = None
     tone_preferences: Optional[str] = None
+    active_template_id: Optional[str] = None
     master_cv_latex: Optional[str] = None
 
 
@@ -381,6 +806,11 @@ class UserProfileRead(UserProfileBase):
     target_locations: List[TargetLocationRead] = Field(default_factory=list)
     compensation: Optional[CompensationRead] = None
     spoken_languages: List[SpokenLanguageRead] = Field(default_factory=list)
+    work_experiences: List[WorkExperienceRead] = Field(default_factory=list)
+    educations: List[EducationRead] = Field(default_factory=list)
+    skills: List[ProfileSkillRead] = Field(default_factory=list)
+    projects: List[ProjectRead] = Field(default_factory=list)
+    certifications: List[CertificationRead] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

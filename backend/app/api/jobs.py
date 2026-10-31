@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+import httpx
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -104,12 +106,11 @@ async def trigger_ingestion(
 @router.get(
     "",
     response_model=List[JobRead],
-    summary="List ranked jobs for an account",
+    summary="List ranked jobs for an account with workplace and recency filters",
     description=(
         "Returns jobs for a given account_id, ordered by match_score descending. "
-        "By default, excludes vetoed jobs (vetoed=True) and postings flagged by the "
-        "integrity gate (integrity_status='flagged'). "
-        "Query params allow human reviewers to inspect flagged and vetoed postings."
+        "By default, excludes vetoed jobs, flagged jobs, and expired jobs. "
+        "Query params allow filtering by workplace type (remote, hybrid, on-site) and recency."
     ),
 )
 def list_jobs(
@@ -126,6 +127,24 @@ def list_jobs(
         False,
         description="Override to include both vetoed and flagged jobs for human review",
     ),
+    location_type: Optional[str] = Query(
+        None,
+        description="Filter by workplace mode: 'remote', 'hybrid', 'on-site'",
+    ),
+    posted_within_days: Optional[int] = Query(
+        None,
+        ge=1,
+        le=365,
+        description="Only return jobs posted within the last N days",
+    ),
+    exclude_expired: bool = Query(
+        True,
+        description="Filter out expired deadlines or inactive jobs",
+    ),
+    sort_by: str = Query(
+        "match_score",
+        description="'match_score' | 'posted_at' | 'created_at'",
+    ),
     limit: int = Query(100, ge=1, le=500, description="Max number of jobs to return"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     current_account: Account = Depends(get_current_account),
@@ -137,6 +156,7 @@ def list_jobs(
     """
     effective_account_id = resolve_tenant_id(current_account, account_id)
     stmt = select(Job).where(Job.account_id == effective_account_id)
+    now = datetime.now(timezone.utc)
 
     # Exclude vetoed jobs unless explicitly requested or show_all is set
     allow_vetoed = include_vetoed or show_all
@@ -148,10 +168,80 @@ def list_jobs(
     if not allow_flagged:
         stmt = stmt.where(Job.integrity_status != "flagged")
 
-    # Order by match_score descending with un-scored / NULL values last,
-    # breaking ties by creation date descending
-    stmt = stmt.order_by(Job.match_score.desc().nulls_last(), Job.created_at.desc())
-    stmt = stmt.offset(offset).limit(limit)
+    # Workplace filter (remote, hybrid, on-site)
+    if location_type:
+        loc_normalized = location_type.strip().lower()
+        if loc_normalized in ("onsite", "on-site"):
+            stmt = stmt.where(Job.location_type.in_(["onsite", "on-site"]))
+        else:
+            stmt = stmt.where(Job.location_type == loc_normalized)
 
+    # Recency filter
+    if posted_within_days:
+        cutoff = now - timedelta(days=posted_within_days)
+        stmt = stmt.where(
+            (Job.posted_at >= cutoff) | ((Job.posted_at == None) & (Job.created_at >= cutoff))
+        )
+
+    # Expiration filter
+    if exclude_expired and not show_all:
+        stmt = stmt.where(Job.is_active == True)
+        stmt = stmt.where(
+            (Job.deadline == None) | (Job.deadline >= now)
+        )
+
+    # Sorting
+    if sort_by == "posted_at":
+        stmt = stmt.order_by(Job.posted_at.desc().nulls_last(), Job.created_at.desc())
+    elif sort_by == "created_at":
+        stmt = stmt.order_by(Job.created_at.desc())
+    else:
+        # Default: match_score desc
+        stmt = stmt.order_by(Job.match_score.desc().nulls_last(), Job.created_at.desc())
+
+    stmt = stmt.offset(offset).limit(limit)
     jobs = db.scalars(stmt).all()
     return list(jobs)
+
+
+@router.post(
+    "/{job_id}/check-liveness",
+    summary="Check if a job posting URL is still active and alive",
+)
+async def check_job_liveness(
+    job_id: str,
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    effective_account_id = resolve_tenant_id(current_account, account_id)
+    job = db.scalars(
+        select(Job).where(Job.id == job_id, Job.account_id == effective_account_id)
+    ).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+
+    is_alive = True
+    status_code = 200
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=8.0) as client:
+            resp = await client.get(job.apply_link)
+            status_code = resp.status_code
+            url_str = str(resp.url).lower()
+            if status_code >= 400 or "maintenance-page.html" in url_str or "error=true" in url_str:
+                is_alive = False
+    except Exception:
+        is_alive = False
+
+    job.is_active = is_alive
+    if not is_alive:
+        job.integrity_status = "dead_link"
+    db.commit()
+    db.refresh(job)
+
+    return {
+        "job_id": job.id,
+        "is_active": job.is_active,
+        "integrity_status": job.integrity_status,
+        "http_status": status_code,
+    }

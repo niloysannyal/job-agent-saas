@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 import httpx
 
 from app.models.job import JobPosting, JobSearchQuery
-from app.services.job_sources.base import JobSource
+from app.services.job_sources.base import JobSource, classify_location_type
 from app.services.job_sources.exceptions import JobSourceHTTPError
 
 # Lever public Postings API — no API key required.
@@ -54,23 +54,12 @@ def _detect_location_type(
     location_name: Optional[str],
     title: str,
 ) -> str:
-    """
-    Determine location type from Lever's workplaceType field, falling back
-    to title and location heuristics.
-    """
-    if workplace_type:
-        normalized = workplace_type.strip().lower()
-        if normalized in ("remote", "hybrid", "on-site"):
-            return normalized
-        if normalized == "onsite":
-            return "on-site"
-
-    combined = f"{title} {location_name or ''}".lower()
-    if "remote" in combined or "work from home" in combined:
-        return "remote"
-    if "hybrid" in combined:
-        return "hybrid"
-    return "on-site"
+    """Determine location type using centralized classifier."""
+    return classify_location_type(
+        explicit_mode=workplace_type,
+        location_name=location_name,
+        title=title,
+    )
 
 
 class LeverJobSource(JobSource):

@@ -1,0 +1,80 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{verbatim}
+\usepackage{titlesec}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{latexsym}
+\usepackage{marvosym}
+\usepackage[empty]{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage[english]{babel}
+\usepackage[default]{sourcesanspro}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0in}
+\renewcommand{\footrulewidth}{0in}
+\setlength{\tabcolsep}{0in}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\topmargin}{-0.5in}
+\addtolength{\textwidth}{1.0in}
+\addtolength{\textheight}{1.0in}
+
+\raggedbottom{}
+\raggedright{}
+
+\titleformat{\section}
+  {\scshape\large\bfseries}{}
+    {0em}{\color{black}}[\color{black}\titlerule\vspace{2pt}]
+
+\newcommand{\resumeItem}[1]{
+  \item\small{#1}
+}
+
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=0.15in, rightmargin=0.1in]}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+
+\newcommand{\resumeHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeHeadingListEnd}{\end{itemize}}
+
+\newcommand{\resumeSectionType}[3]{
+  \item\small{
+    \textbf{#1} #2 \hspace{0.5em} #3
+  }\vspace{-2pt}
+}
+
+\newcommand{\resumeQuadHeading}[4]{
+  \item
+  \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & \small #2 \\
+    \textit{\small#3} & \textit{\small #4} \\
+  \end{tabular*}\vspace{-2pt}
+}
+
+\begin{document}
+
+\begin{center}
+    {\Huge \scshape {{FULL_NAME}}} \\ \vspace{2pt}
+    {\large \textit{{{HEADLINE}}}} \\ \vspace{3pt}
+    \small {{CONTACT_LINE}}
+\end{center}
+\vspace{-8pt}
+
+{{SUMMARY_SECTION}}
+
+{{EXPERIENCE_SECTION}}
+
+{{EDUCATION_SECTION}}
+
+{{SKILLS_SECTION}}
+
+{{PROJECTS_SECTION}}
+
+{{CERTIFICATIONS_SECTION}}
+
+\end{document}
+

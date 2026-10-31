@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "backend/app/api/jobs.py": {
-    "mtime": 1793272204.9942791,
-    "seen": 1793273987.7804272,
-    "ast_hash": "631e36c15ed38dab26ae8153d5e514bf",
+    "mtime": 1793436233.1750653,
+    "seen": 1793437586.264595,
+    "ast_hash": "14b86ab6e1061cb1f3d3c62980c7e3f4",
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1793275323.3064919,
-    "seen": 1793276171.7262921,
-    "ast_hash": "840d3e2690094f681567be4a47d48e8b",
+    "mtime": 1793435819.3369074,
+    "seen": 1793437586.264597,
+    "ast_hash": "324f9450f185c573d2ea5f99927fa05a",
     "semantic_hash": ""
   },
   "backend/app/core/__init__.py": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "backend/app/db/seed.py": {
-    "mtime": 1793183784.1915474,
-    "seen": 1793184189.7638652,
-    "ast_hash": "9f9bb9bb3f96dee6013d6ab84028e936",
+    "mtime": 1793437370.645516,
+    "seen": 1793437586.2646313,
+    "ast_hash": "fcb0260d87d77c87bbb47ca75023bcf4",
     "semantic_hash": ""
   },
   "backend/app/db/session.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/__init__.py": {
-    "mtime": 1793274547.5555973,
-    "seen": 1793276171.7263258,
-    "ast_hash": "d12b59f6852a302bb0e689c221d51eb1",
+    "mtime": 1793434931.092387,
+    "seen": 1793437586.264637,
+    "ast_hash": "06577f60587c038409a19d848d006ed1",
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/job.py": {
-    "mtime": 1793157919.0152452,
-    "seen": 1793162601.7274444,
-    "ast_hash": "cb16ec3cc4ca532f878b43a1092c291e",
+    "mtime": 1793434621.9420953,
+    "seen": 1793437586.2646468,
+    "ast_hash": "47f3aa77ef610cf8f070576f253a5a67",
     "semantic_hash": ""
   },
   "backend/app/models/llm_provider.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/profile.py": {
-    "mtime": 1793012803.1212518,
-    "seen": 1793162601.727446,
-    "ast_hash": "6433dbcc6a9345b5a73e2532cb7ab6cd",
+    "mtime": 1793434895.06621,
+    "seen": 1793437586.2646527,
+    "ast_hash": "4af9bc0ba2d8fca0de61705c258fe68c",
     "semantic_hash": ""
   },
   "backend/app/models/subscription.py": {
@@ -192,15 +192,15 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/tailor_service.py": {
-    "mtime": 1793272205.0989711,
-    "seen": 1793273987.7804706,
-    "ast_hash": "87979150054e2dd96fcb1d7a7c62f225",
+    "mtime": 1793437515.600048,
+    "seen": 1793437586.2646704,
+    "ast_hash": "fdad93df0485b9e63c598f944765dd4b",
     "semantic_hash": ""
   },
   "backend/app/services/job_ingestion.py": {
-    "mtime": 1792994339.6160333,
-    "seen": 1793162601.7274537,
-    "ast_hash": "b21797fec0d1243cb422ac9ac4c5b4cb",
+    "mtime": 1793434658.0620694,
+    "seen": 1793437586.264687,
+    "ast_hash": "b4c96c5a21bedf922d3efd60672567bd",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/__init__.py": {
@@ -210,15 +210,15 @@
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/adzuna.py": {
-    "mtime": 1792831879.030188,
-    "seen": 1793162601.727455,
-    "ast_hash": "794f909212070147f30e7dea561be0b2",
+    "mtime": 1793436178.7453473,
+    "seen": 1793437586.264691,
+    "ast_hash": "f677ddd2859de5db0e67979eaeaab058",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/base.py": {
-    "mtime": 1792901995.7836764,
-    "seen": 1793162601.727456,
-    "ast_hash": "6d454636fb4e2d5ee58601956b9897a9",
+    "mtime": 1793436068.4308672,
+    "seen": 1793437586.2646933,
+    "ast_hash": "8b70a30e2c6f798fbf87092220fada80",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/exceptions.py": {
@@ -228,21 +228,21 @@
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/freehire.py": {
-    "mtime": 1792902547.9820309,
-    "seen": 1793162601.7274573,
-    "ast_hash": "2f0ecb5b806695a0c19ce0cd2c6af6c7",
+    "mtime": 1793436157.8693838,
+    "seen": 1793437586.264697,
+    "ast_hash": "737ec8fcf7a762f2c5a361255f60cd0b",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/greenhouse.py": {
-    "mtime": 1793422127.7721004,
-    "seen": 1793423637.6865468,
-    "ast_hash": "eb98618de981e79879d3c11b16967318",
+    "mtime": 1793436091.0080485,
+    "seen": 1793437586.264699,
+    "ast_hash": "0133fd1fd845b06d0b79b2cee11f187f",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/lever.py": {
-    "mtime": 1793422127.951452,
-    "seen": 1793423637.6865487,
-    "ast_hash": "8723589f0d47d4c267bd81db21be82b8",
+    "mtime": 1793436121.1381357,
+    "seen": 1793437586.2647007,
+    "ast_hash": "1d2d06e20ba2e9c076b1822b1e7eacc1",
     "semantic_hash": ""
   },
   "backend/app/services/job_sources/linkedin.py": {
@@ -360,10 +360,10 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_profile.py": {
-    "mtime": 1793069657.4208088,
-    "seen": 1793162601.7274754,
-    "ast_hash": "54ce45a4bc35c3ac19c19c86161487c4",
-    "semantic_hash": "54ce45a4bc35c3ac19c19c86161487c4"
+    "mtime": 1793435668.3637998,
+    "seen": 1793437586.2647605,
+    "ast_hash": "6f33dca267b52d8d3e594508494472d7",
+    "semantic_hash": ""
   },
   "backend/tests/conftest.py": {
     "mtime": 1792831399.8183098,
@@ -384,9 +384,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/tests/services/cv_tailor/test_cv_tailor.py": {
-    "mtime": 1793007224.6024427,
-    "seen": 1793162601.7274785,
-    "ast_hash": "f412ad303dddf4d19327b2fe3481b30f",
+    "mtime": 1793437542.061388,
+    "seen": 1793437586.2647657,
+    "ast_hash": "4cb4afadc32f803f3ee7c8f84e3a4c02",
     "semantic_hash": ""
   },
   "backend/tests/services/job_sources/test_adzuna.py": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793418801.2615824,
-    "seen": 1793419625.2093627,
-    "ast_hash": "b1f438901a8525895e968c4826a935cb",
+    "mtime": 1793436623.4552853,
+    "seen": 1793437586.264792,
+    "ast_hash": "562cc191242017702492ee1ea17d1436",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -504,9 +504,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/JobsView.jsx": {
-    "mtime": 1793079825.1972058,
-    "seen": 1793162601.7274961,
-    "ast_hash": "b328f25297ed562960693324954dc384",
+    "mtime": 1793436563.0869205,
+    "seen": 1793437586.2648056,
+    "ast_hash": "fbcc7b845cfe965d05883973a8358cf6",
     "semantic_hash": ""
   },
   "frontend/src/components/MaterialsModal.jsx": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1793071889.0736852,
-    "seen": 1793162601.7274988,
-    "ast_hash": "68b846d717a3d3e8f114c4ce5b3d9b0e",
+    "mtime": 1793436492.5011754,
+    "seen": 1793437586.2648175,
+    "ast_hash": "ce34f4af039651094096562672310a8b",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
@@ -1020,9 +1020,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/integrations.py": {
-    "mtime": 1793420761.602435,
-    "seen": 1793421850.306263,
-    "ast_hash": "04b0ee35cd353d7477a4ff21fdc6ddb3",
+    "mtime": 1793427272.3693924,
+    "seen": 1793437586.2645893,
+    "ast_hash": "96aabf80a9d3b1be57548a9da7cd1489",
     "semantic_hash": ""
   },
   "backend/app/core/crypto.py": {
@@ -1119,6 +1119,42 @@
     "mtime": 1793423462.1222286,
     "seen": 1793423637.6866372,
     "ast_hash": "f24017c5d18efbc2f6e83d35fe021552",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/f82a17d49b21_add_universal_career_tables_and_job_dates.py": {
+    "mtime": 1793435247.8566537,
+    "seen": 1793437586.264629,
+    "ast_hash": "a0b75222fdb87585f3f273a201f9a249",
+    "semantic_hash": ""
+  },
+  "backend/app/services/cv_tailor/template_compiler.py": {
+    "mtime": 1793437432.9013386,
+    "seen": 1793437586.2646723,
+    "ast_hash": "e1b780183560d34e2c79d9e3098bd774",
+    "semantic_hash": ""
+  },
+  "backend/app/services/profile/__init__.py": {
+    "mtime": 1793436900.4504197,
+    "seen": 1793437586.2647345,
+    "ast_hash": "b656e324feeda93816e71ac9be0aba73",
+    "semantic_hash": ""
+  },
+  "backend/app/services/profile/cv_parser.py": {
+    "mtime": 1793436900.637487,
+    "seen": 1793437586.264736,
+    "ast_hash": "eee2302525ca531d6c6ee0dca1656855",
+    "semantic_hash": ""
+  },
+  "backend/tests/services/test_template_compiler.py": {
+    "mtime": 1793436901.151811,
+    "seen": 1793437586.2647848,
+    "ast_hash": "aa085066d4bd2e22bbbcf1b2e267aeaf",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/OnboardingModal.jsx": {
+    "mtime": 1793436903.0832453,
+    "seen": 1793437586.2648134,
+    "ast_hash": "22ffc28f49086d3bec7d099fc10c7a1e",
     "semantic_hash": ""
   }
 }

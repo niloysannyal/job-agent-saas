@@ -277,3 +277,108 @@ def test_multi_tenant_isolation(client: TestClient, account_a: Account, account_
     # Alice's designation is still intact
     alice_desig = client.get(f"/api/v1/profile/designations?account_id={account_a.id}")
     assert len(alice_desig.json()) == 1
+
+
+
+def test_work_experiences_crud(client: TestClient, account_a: Account):
+    """Test full CRUD cycle for work experiences."""
+    # 1. Create experience
+    create_payload = {
+        "company": "Anthropic",
+        "title": "Systems Engineer",
+        "location": "London, UK",
+        "location_type": "hybrid",
+        "start_date": "2023-01",
+        "end_date": "Present",
+        "is_current": True,
+        "description": "Core infrastructure engineering.",
+        "highlights": "['Built low latency inference caching']",
+        "order_index": 0,
+    }
+    post_res = client.post(f"/api/v1/profile/experiences?account_id={account_a.id}", json=create_payload)
+    assert post_res.status_code == 201
+    exp_data = post_res.json()
+    exp_id = exp_data["id"]
+    assert exp_data["company"] == "Anthropic"
+    assert exp_data["is_current"] is True
+
+    # 2. List experiences
+    list_res = client.get(f"/api/v1/profile/experiences?account_id={account_a.id}")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) == 1
+
+    # 3. Update experience
+    patch_res = client.patch(
+        f"/api/v1/profile/experiences/{exp_id}?account_id={account_a.id}",
+        json={"title": "Staff Systems Engineer"},
+    )
+    assert patch_res.status_code == 200
+    assert patch_res.json()["title"] == "Staff Systems Engineer"
+
+    # 4. Delete experience
+    del_res = client.delete(f"/api/v1/profile/experiences/{exp_id}?account_id={account_a.id}")
+    assert del_res.status_code == 204
+    assert len(client.get(f"/api/v1/profile/experiences?account_id={account_a.id}").json()) == 0
+
+
+def test_educations_skills_and_preview(client: TestClient, account_a: Account):
+    """Test educations, bulk skills, and preview CV generation."""
+    # 1. Add Education
+    edu_res = client.post(
+        f"/api/v1/profile/educations?account_id={account_a.id}",
+        json={
+            "institution": "MIT",
+            "degree": "B.S.",
+            "field_of_study": "Computer Science",
+            "start_date": "2018",
+            "end_date": "2022",
+            "grade": "4.0",
+        },
+    )
+    assert edu_res.status_code == 201
+
+    # 2. Bulk Skills
+    skills_payload = [
+        {"name": "Rust", "category": "Languages", "proficiency": "Advanced"},
+        {"name": "Kubernetes", "category": "Cloud & DevOps", "proficiency": "Expert"},
+    ]
+    bulk_res = client.post(
+        f"/api/v1/profile/skills/bulk?account_id={account_a.id}",
+        json=skills_payload,
+    )
+    assert bulk_res.status_code == 200
+    assert len(bulk_res.json()) == 2
+
+    # 3. Apply parsed CV payload
+    apply_res = client.post(
+        f"/api/v1/profile/apply-parsed-cv?account_id={account_a.id}",
+        json={
+            "headline": "Lead Systems Architect",
+            "summary": "Proven track record in distributed cloud architecture.",
+            "target_designations": ["Systems Architect", "Cloud Architect"],
+            "projects": [
+                {
+                    "title": "HyperMesh",
+                    "role": "Creator",
+                    "technologies": "Rust, gRPC",
+                    "highlights": ["Sub-millisecond packet routing"],
+                }
+            ],
+            "certifications": [
+                {
+                    "name": "CKA (Certified Kubernetes Administrator)",
+                    "issuing_organization": "CNCF",
+                }
+            ],
+        },
+    )
+    assert apply_res.status_code == 200
+
+    # 4. Preview CV
+    prev_res = client.get(f"/api/v1/profile/preview-cv?account_id={account_a.id}")
+    assert prev_res.status_code == 200
+    latex = prev_res.json()["latex_source"]
+    assert "Lead Systems Architect" in latex
+    assert "MIT" in latex
+    assert "HyperMesh" in latex
+    assert "Rust" in latex

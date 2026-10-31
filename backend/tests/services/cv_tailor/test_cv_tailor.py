@@ -173,3 +173,136 @@ I am writing to apply for the AI Systems Engineer position. With hands-on experi
     assert result.application.id is not None
     assert result.application.account_id == account.id
     assert result.application.job_id == job.id
+
+
+@pytest.mark.asyncio
+async def test_cv_tailor_service_with_structured_profile(db_session: Session):
+    """
+    Verify CVTailorService with structured career entities (universal profile)
+    and curated CvTemplate placeholders compilation.
+    """
+    from app.models.profile import UserProfile, WorkExperience, Education, ProfileSkill, Project
+    from app.models.cv_template import CvTemplate
+
+    account = Account(email="sarah.connor@example.com")
+    db_session.add(account)
+    db_session.commit()
+
+    template = CvTemplate(
+        name="01_MODERN_TECH",
+        description="Clean tech resume",
+        latex_source=(
+            "\\documentclass{article}\n"
+            "\\newcommand{\\resumeItem}[1]{\\item #1}\n"
+            "\\newcommand{\\resumeItemListStart}{\\begin{itemize}}\n"
+            "\\newcommand{\\resumeItemListEnd}{\\end{itemize}}\n"
+            "\\newcommand{\\resumeHeadingListStart}{\\begin{itemize}}\n"
+            "\\newcommand{\\resumeHeadingListEnd}{\\end{itemize}}\n"
+            "\\newcommand{\\resumeSectionType}[3]{\\item \\textbf{#1} #2 #3}\n"
+            "\\newcommand{\\resumeQuadHeading}[4]{\\item \\textbf{#1} -- #2 -- #3 -- #4}\n"
+            "\\begin{document}\n"
+            "\\section{Header} {{FULL_NAME}} - {{HEADLINE}} - {{CONTACT_LINE}}\n"
+            "{{SUMMARY_SECTION}}\n"
+            "{{EXPERIENCE_SECTION}}\n"
+            "{{EDUCATION_SECTION}}\n"
+            "{{SKILLS_SECTION}}\n"
+            "{{PROJECTS_SECTION}}\n"
+            "\\end{document}"
+        ),
+        is_admin_default=True,
+    )
+    db_session.add(template)
+    db_session.commit()
+
+    profile = UserProfile(
+        account_id=account.id,
+        full_name="Sarah Connor",
+        headline="Senior Systems & Distributed Architect",
+        active_template_id=template.id,
+        summary="Senior Systems Engineer with 8 years of distributed systems and Kubernetes infrastructure experience.",
+    )
+    db_session.add(profile)
+    db_session.commit()
+
+    exp = WorkExperience(
+        account_id=account.id,
+        profile_id=profile.id,
+        company="Cyberdyne Systems",
+        title="Lead Cloud Architect",
+        start_date="2021-01",
+        end_date=None,
+        is_current=True,
+        highlights="Architected multi-region Kubernetes clusters with 99.999% uptime.",
+    )
+    db_session.add(exp)
+
+    edu = Education(
+        account_id=account.id,
+        profile_id=profile.id,
+        institution="MIT",
+        degree="B.S.",
+        field_of_study="Computer Systems",
+        start_date="2013",
+        end_date="2017",
+    )
+    db_session.add(edu)
+
+    skill = ProfileSkill(
+        account_id=account.id,
+        profile_id=profile.id,
+        name="Kubernetes",
+        category="Cloud & Infrastructure",
+    )
+    db_session.add(skill)
+    db_session.commit()
+
+    job = Job(
+        account_id=account.id,
+        company="Datadog",
+        role="Principal Infrastructure Engineer",
+        description="Scaling high-throughput distributed tracing clusters with Kubernetes.",
+        apply_link="https://datadog.com/careers/1",
+        source="greenhouse",
+    )
+    db_session.add(job)
+    db_session.commit()
+
+    drafter_resp = """---COVER_NOTE---
+Dear Datadog Team,
+
+I am excited to apply for the Principal Infrastructure Engineer role. At Cyberdyne Systems, I led the architecture of multi-region Kubernetes clusters with high availability.
+---GAPS---
+None
+---TAILORED_SUMMARY---
+\\resumeItem{Senior Systems \\& Distributed Architect specializing in \\textbf{Kubernetes} with track record of 99.999\\% uptime.}
+"""
+
+    reviewer_resp = """---FINAL_COVER---
+Dear Datadog Team,
+
+I am writing to apply for the Principal Infrastructure Engineer role at Datadog. Having architected multi-region Kubernetes clusters with 99.999% uptime at Cyberdyne Systems, I am eager to contribute to Datadog's distributed tracing infrastructure.
+---CONFIRMED_GAPS---
+None
+---FINAL_SUMMARY---
+\\resumeItem{Senior Systems \\& Distributed Architect specializing in \\textbf{Kubernetes} with track record of 99.999\\% uptime.}
+"""
+
+    mock_llm = MockLLMProvider(responses=[drafter_resp, reviewer_resp])
+    llm_service = LLMService(provider=mock_llm)
+
+    service = CVTailorService(llm_service=llm_service, db_session=db_session)
+    result = await service.tailor_for_job(
+        account_id=account.id,
+        job=job,
+        channel="email",
+    )
+
+    assert result.cv_version is not None
+    assert result.application is not None
+    assert "Sarah Connor" in result.cv_version.tailored_latex
+    assert "Cyberdyne Systems" in result.cv_version.tailored_latex
+    assert "Senior Systems" in result.cv_version.tailored_latex
+    assert "{{EXPERIENCE_SECTION}}" not in result.cv_version.tailored_latex
+    assert result.application.status == "draft"
+    assert result.application.sent_at is None
+    assert "Cyberdyne Systems" in result.application.draft_content

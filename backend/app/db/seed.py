@@ -1,8 +1,9 @@
 import logging
+from pathlib import Path
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.config import REPO_ROOT, settings
 from app.db.session import get_session_factory
 from app.models.account import Account
 from app.models.cv_template import CvTemplate
@@ -84,25 +85,36 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
 
 
 
-        # 2. Admin default template #1 (01_MASTER_CV)
-        master_cv_path = settings.resolve_cv_path()
-        cv_source = ""
-        if master_cv_path.exists():
-            cv_source = master_cv_path.read_text(encoding="utf-8")
-        else:
-            cv_source = "% Fallback 01_MASTER_CV template\n\\documentclass{article}\n\\begin{document}\nMaster CV\n\\end{document}"
+        # 2. Admin default templates
+        template_specs = [
+            ("01_MODERN_TECH", "cv_templates/01_MODERN_TECH.tex", "Modern clean tech resume with Source Sans Pro and compact headers", True),
+            ("02_CLASSIC_CORPORATE", "cv_templates/02_CLASSIC_CORPORATE.tex", "Traditional serif corporate CV with Times Roman formatting", True),
+            ("03_MINIMALIST_COMPACT", "cv_templates/03_MINIMALIST_COMPACT.tex", "High-density minimalist single-page layout using Helvetica", True),
+            ("01_MASTER_CV", "cv_templates/01_MASTER_CV.tex", "Admin-curated default LaTeX CV template with tagged control blocks", True),
+        ]
 
-        admin_template = session.query(CvTemplate).filter_by(name="01_MASTER_CV").first()
-        if not admin_template:
-            admin_template = CvTemplate(
-                account_id=None,  # Global platform template
-                name="01_MASTER_CV",
-                description="Admin-curated default LaTeX CV template with tagged control blocks",
-                latex_source=cv_source,
-                is_admin_default=True,
-            )
-            session.add(admin_template)
-            logger.info("Seeded default CV template: 01_MASTER_CV")
+        seeded_templates = {}
+        for t_name, rel_path, desc, is_def in template_specs:
+            t_path = (REPO_ROOT / rel_path) if (REPO_ROOT / rel_path).exists() else Path(rel_path)
+            t_source = t_path.read_text(encoding="utf-8") if t_path.exists() else f"% {t_name}\n\\documentclass{{article}}\n\\begin{{document}}\nCV\n\\end{{document}}"
+            tmpl = session.query(CvTemplate).filter_by(name=t_name).first()
+            if not tmpl:
+                tmpl = CvTemplate(
+                    account_id=None,
+                    name=t_name,
+                    description=desc,
+                    latex_source=t_source,
+                    is_admin_default=is_def,
+                )
+                session.add(tmpl)
+                session.flush()
+                logger.info(f"Seeded CV template: {t_name}")
+            else:
+                tmpl.description = desc
+                tmpl.latex_source = t_source
+                tmpl.is_admin_default = is_def
+                session.flush()
+            seeded_templates[t_name] = tmpl
 
         # 3. Default subscription plan (Free tier, all access)
         free_plan = session.query(SubscriptionPlan).filter_by(tier="free").first()
@@ -148,11 +160,19 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
             logger.info("Seeded default LLM provider: OpenAI (gpt-4o-mini, priority=1)")
 
         # 6. Niloy's user profile
+        master_tmpl = seeded_templates.get("01_MASTER_CV") or seeded_templates.get("01_MODERN_TECH")
+        cv_source = master_tmpl.latex_source if master_tmpl else ""
+
         profile = session.query(UserProfile).filter_by(account_id=account.id).first()
+        if profile and not profile.active_template_id and "01_MODERN_TECH" in seeded_templates:
+            profile.active_template_id = seeded_templates["01_MODERN_TECH"].id
+            session.flush()
         if not profile:
             profile = UserProfile(
                 account_id=account.id,
                 full_name="Niloy Sannyal",
+                headline="AI/ML Engineer | Production LLMs & Agentic Systems",
+                active_template_id=seeded_templates.get("01_MODERN_TECH").id if seeded_templates.get("01_MODERN_TECH") else None,
                 current_role="AI Engineer",
                 current_company="Betopia Limited",
                 education="B.Sc. in Information and Communication Engineering, University of Rajshahi",

@@ -117,6 +117,17 @@ class Job(Base):
         nullable=False,
         default="clean",
     )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+    posted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
     source: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
@@ -265,6 +276,8 @@ class JobBase(BaseModel):
     veto_reason: Optional[str] = None
     status: str = "new"
     integrity_status: str = "clean"
+    is_active: bool = True
+    posted_at: Optional[datetime] = None
     source: str
     source_job_id: Optional[str] = None
     apply_link: str
@@ -298,6 +311,8 @@ class JobUpdate(BaseModel):
     veto_reason: Optional[str] = None
     status: Optional[str] = None
     integrity_status: Optional[str] = None
+    is_active: Optional[bool] = None
+    posted_at: Optional[datetime] = None
     source: Optional[str] = None
     source_job_id: Optional[str] = None
     apply_link: Optional[str] = None

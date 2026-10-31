@@ -5,7 +5,7 @@ import httpx
 
 from app.core.config import settings
 from app.models.job import JobPosting, JobSearchQuery
-from app.services.job_sources.base import JobSource
+from app.services.job_sources.base import JobSource, classify_location_type
 from app.services.job_sources.exceptions import (
     JobSourceConfigError,
     JobSourceHTTPError,
@@ -76,13 +76,12 @@ def _detect_location_type(
     description: str,
     location_name: Optional[str],
 ) -> str:
-    """Infer location type (remote, hybrid, on-site) from job fields."""
-    combined = f"{title} {description} {location_name or ''}".lower()
-    if "remote" in combined or "work from home" in combined or "wfh" in combined:
-        return "remote"
-    if "hybrid" in combined:
-        return "hybrid"
-    return "on-site"
+    """Infer location type (remote, hybrid, on-site) using centralized classifier."""
+    return classify_location_type(
+        location_name=location_name,
+        title=title,
+        description=description,
+    )
 
 
 class AdzunaJobSource(JobSource):

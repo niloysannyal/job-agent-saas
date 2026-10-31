@@ -1,0 +1,78 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{verbatim}
+\usepackage{titlesec}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage[empty]{fullpage}
+\usepackage[hidelinks]{hyperref}
+\usepackage[english]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0in}
+\renewcommand{\footrulewidth}{0in}
+\setlength{\tabcolsep}{0in}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\topmargin}{-0.6in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\textheight}{1.2in}
+
+\raggedbottom{}
+\raggedright{}
+
+\titleformat{\section}
+  {\bfseries\normalsize}{}
+    {0em}{\color{black}}[\color{black}\titlerule\vspace{1pt}]
+
+\newcommand{\resumeItem}[1]{
+  \item\footnotesize{#1}
+}
+
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=0.12in, itemsep=1pt, parsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+
+\newcommand{\resumeHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeHeadingListEnd}{\end{itemize}}
+
+\newcommand{\resumeSectionType}[3]{
+  \item\footnotesize{
+    \textbf{#1} #2 \hspace{0.5em} #3
+  }\vspace{-3pt}
+}
+
+\newcommand{\resumeQuadHeading}[4]{
+  \item
+  \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{\small #1} & \footnotesize #2 \\
+    \textit{\footnotesize #3} & \textit{\footnotesize #4} \\
+  \end{tabular*}\vspace{-3pt}
+}
+
+\begin{document}
+
+\begin{center}
+    {\Large \textbf{{{FULL_NAME}}}} \hspace{1em} \textbar \hspace{1em} \normalsize {{HEADLINE}} \\ \vspace{2pt}
+    \footnotesize {{CONTACT_LINE}}
+\end{center}
+\vspace{-10pt}
+
+{{SUMMARY_SECTION}}
+
+{{EXPERIENCE_SECTION}}
+
+{{EDUCATION_SECTION}}
+
+{{SKILLS_SECTION}}
+
+{{PROJECTS_SECTION}}
+
+{{CERTIFICATIONS_SECTION}}
+
+\end{document}
+

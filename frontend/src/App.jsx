@@ -16,6 +16,7 @@ import AdminView from './components/AdminView';
 import JobDetailModal from './components/JobDetailModal';
 import FollowUpModal from './components/FollowUpModal';
 import MaterialsModal from './components/MaterialsModal';
+import OnboardingModal from './components/OnboardingModal';
 import CommandPalette from './components/CommandPalette';
 import Toast from './components/Toast';
 
@@ -65,6 +66,7 @@ function CareerAppInner() {
 
   const [viewMode, setViewMode] = useState(() => (localStorage.getItem('jobeazy_jwt_token') ? 'app' : 'landing'));
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -805,6 +807,9 @@ function CareerAppInner() {
             masterCvLatex={profile?.master_cv_latex || ''}
             onSaveMasterCv={handleSaveMasterCv}
             showToast={showToast}
+            accountId={accountId}
+            authHeaders={authHeaders}
+            onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
           />
         )}
 
@@ -818,6 +823,8 @@ function CareerAppInner() {
             onInspectJob={(job) => setInspectingJob(job)}
             onSelectJobForStudio={handleSelectJobForStudio}
             targetDesignations={profile?.target_designations || []}
+            authHeaders={authHeaders}
+            showToast={showToast}
           />
         )}
 
@@ -924,6 +931,15 @@ function CareerAppInner() {
             showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
           }
         }}
+      />
+
+      <OnboardingModal
+        isOpen={isOnboardingModalOpen}
+        onClose={() => setIsOnboardingModalOpen(false)}
+        accountId={accountId}
+        authHeaders={authHeaders}
+        onComplete={() => fetchProfile()}
+        showToast={showToast}
       />
 
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />

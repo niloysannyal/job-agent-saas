@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 import httpx
 
 from app.models.job import JobPosting, JobSearchQuery
-from app.services.job_sources.base import JobSource
+from app.services.job_sources.base import JobSource, classify_location_type
 from app.services.job_sources.exceptions import JobSourceHTTPError
 
 # Greenhouse public Job Board API — no API key required.
@@ -58,13 +58,8 @@ def _parse_iso_date(date_str: Optional[str]) -> Optional[datetime]:
 
 
 def _detect_location_type(location_name: Optional[str], title: str) -> str:
-    """Infer location type from the location string and title."""
-    combined = f"{title} {location_name or ''}".lower()
-    if "remote" in combined or "work from home" in combined:
-        return "remote"
-    if "hybrid" in combined:
-        return "hybrid"
-    return "on-site"
+    """Infer location type from the location string and title using centralized classifier."""
+    return classify_location_type(location_name=location_name, title=title)
 
 
 class GreenhouseJobSource(JobSource):

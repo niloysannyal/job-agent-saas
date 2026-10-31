@@ -204,8 +204,20 @@ class CVTailorService:
         self.llm_service = llm_service or LLMService()
         self.db_session = db_session
 
-    def select_summary_variant(self, job_title: str, job_description: str) -> str:
-        """Selects the best fact-verified Summary variant based on role keywords."""
+    def select_summary_variant(
+        self,
+        job_title: str,
+        job_description: str,
+        headline: Optional[str] = None,
+        top_skills: Optional[list] = None,
+        is_niloy: bool = False,
+    ) -> str:
+        """Selects the best fact-verified Summary variant based on role keywords or candidate headline."""
+        if not is_niloy and (headline or top_skills):
+            skills_str = ", ".join(top_skills[:5]) if top_skills else "modern best practices"
+            head_str = headline or job_title
+            return f"\\resumeItem{{{head_str} with demonstrated track record in \\textbf{{{skills_str}}} and delivering measurable production impact.}}"
+
         text = f"{job_title} {job_description}".lower()
         if any(k in text for k in ["agent", "llm", "rag", "langchain", "reasoning", "prompt"]):
             return SUMMARY_VARIANTS["agentic_llm"]
@@ -225,23 +237,163 @@ class CVTailorService:
         Executes the full Drafter -> Reviewer -> Fact Audit -> Persistence pipeline
         acting as a Senior Executive Tech Recruiter with 20 years of experience.
         """
-        # Step 1: Load master CV template source (from DB profile if available, else disk)
-        master_source = None
-        candidate_name = "Niloy Sannyal"
+        # Step 1: Resolve candidate career data and template
+        user_prof = None
+        experiences = []
+        educations = []
+        skills = []
+        projects = []
+        certifications = []
+        active_template = None
+        candidate_name = "Candidate"
+
         if self.db_session:
-            from app.models.profile import UserProfile
+            from app.models.profile import (
+                UserProfile,
+                WorkExperience,
+                Education,
+                ProfileSkill,
+                Project,
+                Certification,
+            )
             user_prof = self.db_session.query(UserProfile).filter_by(account_id=account_id).first()
-            if user_prof and user_prof.full_name and user_prof.full_name.strip():
-                candidate_name = user_prof.full_name
-            if user_prof and user_prof.master_cv_latex and user_prof.master_cv_latex.strip():
-                master_source = user_prof.master_cv_latex
+            if user_prof:
+                if user_prof.full_name and user_prof.full_name.strip():
+                    candidate_name = user_prof.full_name
+                experiences = (
+                    self.db_session.query(WorkExperience)
+                    .filter_by(profile_id=user_prof.id)
+                    .order_by(WorkExperience.order_index, WorkExperience.start_date.desc())
+                    .all()
+                )
+                educations = (
+                    self.db_session.query(Education)
+                    .filter_by(profile_id=user_prof.id)
+                    .order_by(Education.order_index)
+                    .all()
+                )
+                skills = (
+                    self.db_session.query(ProfileSkill)
+                    .filter_by(profile_id=user_prof.id)
+                    .order_by(ProfileSkill.order_index)
+                    .all()
+                )
+                projects = (
+                    self.db_session.query(Project)
+                    .filter_by(profile_id=user_prof.id)
+                    .order_by(Project.order_index)
+                    .all()
+                )
+                certifications = (
+                    self.db_session.query(Certification)
+                    .filter_by(profile_id=user_prof.id)
+                    .order_by(Certification.order_index)
+                    .all()
+                )
+                if user_prof.active_template_id:
+                    active_template = self.db_session.query(CvTemplate).filter_by(id=user_prof.active_template_id).first()
+
+        # Step 1b: Build or load template source
+        master_source = None
+        has_structured_data = bool(experiences or educations or skills)
+
+        if has_structured_data:
+            from app.services.cv_tailor.template_compiler import CVTemplateCompiler
+
+            tmpl_source = None
+            if active_template and active_template.latex_source:
+                tmpl_source = active_template.latex_source
+            elif self.db_session:
+                default_tmpl = self.db_session.query(CvTemplate).filter_by(name="01_MODERN_TECH").first()
+                if default_tmpl and default_tmpl.latex_source:
+                    tmpl_source = default_tmpl.latex_source
+
+            if not tmpl_source:
+                disk_path = settings.BASE_DIR / "cv_templates" / "01_MODERN_TECH.tex"
+                if disk_path.exists():
+                    tmpl_source = disk_path.read_text(encoding="utf-8")
+
+            if tmpl_source and ("{{" in tmpl_source):
+                email_val = ""
+                if self.db_session:
+                    acc = self.db_session.query(Account).filter_by(id=account_id).first()
+                    if acc and acc.email:
+                        email_val = acc.email
+
+                p_dict = {
+                    "full_name": candidate_name,
+                    "headline": user_prof.headline if user_prof else "",
+                    "phone": user_prof.phone if user_prof else "",
+                    "email": email_val,
+                    "location_city": user_prof.location_city if user_prof else "",
+                    "location_country": user_prof.location_country if user_prof else "",
+                    "linkedin_url": user_prof.linkedin_url if user_prof else "",
+                    "github_url": user_prof.github_url if user_prof else "",
+                    "portfolio_url": user_prof.portfolio_url if user_prof else "",
+                    "summary": user_prof.summary if (user_prof and user_prof.summary) else (user_prof.core_narrative if user_prof else ""),
+                }
+                exp_list = [
+                    {
+                        "company": e.company,
+                        "title": e.title,
+                        "location": e.location,
+                        "start_date": e.start_date,
+                        "end_date": e.end_date,
+                        "is_current": e.is_current,
+                        "highlights": e.highlights,
+                    }
+                    for e in experiences
+                ]
+                edu_list = [
+                    {
+                        "institution": ed.institution,
+                        "degree": ed.degree,
+                        "field_of_study": ed.field_of_study,
+                        "start_date": ed.start_date,
+                        "end_date": ed.end_date,
+                        "grade": ed.grade,
+                    }
+                    for ed in educations
+                ]
+                skill_list = [
+                    {"name": s.name, "category": s.category, "proficiency": s.proficiency}
+                    for s in skills
+                ]
+                proj_list = [
+                    {
+                        "title": p.title,
+                        "role": p.role,
+                        "technologies": p.technologies,
+                        "start_date": p.start_date,
+                        "end_date": p.end_date,
+                        "highlights": p.highlights,
+                    }
+                    for p in projects
+                ]
+                cert_list = [
+                    {"name": c.name, "issuing_organization": c.issuing_organization, "issue_date": c.issue_date}
+                    for c in certifications
+                ]
+
+                master_source = CVTemplateCompiler.compile_cv(
+                    template_source=tmpl_source,
+                    profile=p_dict,
+                    experiences=exp_list,
+                    educations=edu_list,
+                    skills=skill_list,
+                    projects=proj_list,
+                    certifications=cert_list,
+                )
 
         if not master_source:
-            master_cv_path = settings.resolve_cv_path()
-            if master_cv_path.exists():
-                master_source = master_cv_path.read_text(encoding="utf-8")
+            if user_prof and user_prof.master_cv_latex and user_prof.master_cv_latex.strip():
+                master_source = user_prof.master_cv_latex
             else:
-                raise FileNotFoundError(f"Master CV source not found at {master_cv_path}")
+                master_cv_path = settings.resolve_cv_path()
+                if master_cv_path.exists():
+                    master_source = master_cv_path.read_text(encoding="utf-8")
+                else:
+                    raise FileNotFoundError(f"Master CV source not found at {master_cv_path}")
 
         # Step 2: Split and preserve preamble (starts cleanly from \documentclass, no %% comments)
         preamble, body = extract_preamble_and_body(master_source)
@@ -251,7 +403,39 @@ class CVTailorService:
         role_clean = html.unescape(job.role or "")
 
         # Step 3: Select base summary variant
-        summary_bullet = self.select_summary_variant(role_clean, job.description or "")
+        top_skill_names = [s.name for s in skills] if skills else []
+        headline_val = user_prof.headline if user_prof else ""
+        is_niloy = "niloy" in candidate_name.lower() or not has_structured_data
+        summary_bullet = self.select_summary_variant(
+            role_clean,
+            job.description or "",
+            headline=headline_val,
+            top_skills=top_skill_names,
+            is_niloy=is_niloy,
+        )
+
+        if is_niloy:
+            verified_facts_str = (
+                "- 600+ salespersons (Betopia Sales Agent in Odoo CRM)\n"
+                "- 10,000+ fights, 80+ features, sub-100ms (UFC model)\n"
+                "- 530+ algorithmic problems (LeetCode/Codeforces)\n"
+                "- sub-100ms inference latency for production FastAPI APIs\n"
+                "- 28,000+ listings, 95%+ accuracy"
+            )
+        else:
+            facts_lines = []
+            if experiences:
+                for exp in experiences[:3]:
+                    facts_lines.append(f"- {exp.title} at {exp.company} ({exp.start_date} - {'Present' if exp.is_current else exp.end_date})")
+            if skills:
+                facts_lines.append(f"- Key Skills: {', '.join(s.name for s in skills[:10])}")
+            if projects:
+                for p in projects[:3]:
+                    facts_lines.append(f"- Project: {p.title} ({p.technologies})")
+            if educations:
+                for ed in educations[:2]:
+                    facts_lines.append(f"- Education: {ed.degree} in {ed.field_of_study} from {ed.institution}")
+            verified_facts_str = "\n".join(facts_lines) if facts_lines else "Strictly adhere to candidate's verified background."
 
         # Step 4: Senior Recruiter Drafter Pass (Pass 1)
         recruiter_context = (
@@ -276,12 +460,8 @@ CANDIDATE BASE SUMMARY TEMPLATE:
 
 NON-NEGOTIABLE INTEGRITY RULES:
 1. STRICT FACT PRESERVATION: NEVER invent or inflate facts.
-   Verified numbers must remain exact:
-   - 600+ salespersons (Betopia Sales Agent in Odoo CRM)
-   - 10,000+ fights, 80+ features, sub-100ms (UFC model)
-   - 530+ algorithmic problems (LeetCode/Codeforces)
-   - sub-100ms inference latency for production FastAPI APIs
-   - 28,000+ listings, 95%+ accuracy
+   Verified candidate facts:
+{verified_facts_str}
 2. RELEVANCE & ATS IMPACT:
    - Craft a high-impact tailored Executive Summary bullet specifically positioning {candidate_name} for {company_clean}'s {role_clean}.
    - Identify skills demanded by the job to highlight.
@@ -292,7 +472,7 @@ NON-NEGOTIABLE INTEGRITY RULES:
 
 Provide your response in this exact format:
 ---TAILORED_SUMMARY---
-\\resumeItem{{[Your tailored executive summary highlighting Niloy's verified experience matching {company_clean}'s {role_clean}]}}
+\\resumeItem{{[Your tailored executive summary highlighting {candidate_name}'s verified experience matching {company_clean}'s {role_clean}]}}
 ---COVER_NOTE---
 [Your 2-3 paragraph cover letter draft]
 ---GAPS---
@@ -310,7 +490,8 @@ Review the following Drafter output for:
 1. Any generic buzzwords, weak framing, or grammatical errors.
 2. Any hallucinations (ensure NO fake credentials, degrees, or companies).
 3. Keyword alignment with role: {role_clean} at {company_clean}.
-4. Strict fact ledger preservation (600+ salespersons, 10,000+ fights, 80+ features, sub-100ms, 530+ problems).
+4. Strict fact ledger preservation against candidate background:
+{verified_facts_str}
 
 Drafter Output:
 {drafter_response}
@@ -361,12 +542,15 @@ Output your finalized version:
         # Step 6: Assemble tailored LaTeX budgeted strictly for 1-2 pages
         budgeted_body = prune_and_budget_latex(cleaned_body, job_role=job.role, job_description=job.description or "")
         pattern = r"(\\section\{Summary\}[\s\S]*?\\resumeItemListStart\{?\}?\s*)[\s\S]*?(\s*\\resumeItemListEnd)"
-        tailored_body = re.sub(
-            pattern,
-            r"\g<1>\n  " + chosen_summary.replace("\\", "\\\\") + r"\g<2>",
-            budgeted_body,
-            count=1,
-        )
+        if re.search(pattern, budgeted_body):
+            tailored_body = re.sub(
+                pattern,
+                r"\g<1>\n  " + chosen_summary.replace("\\", "\\\\") + r"\g<2>",
+                budgeted_body,
+                count=1,
+            )
+        else:
+            tailored_body = budgeted_body
 
         tailored_latex = f"{preamble}\n\n{tailored_body}\n\n\\end{{document}}"
         tailored_latex = re.sub(r"(\\end\{document\}\s*)+$", r"\\end{document}", tailored_latex.strip())

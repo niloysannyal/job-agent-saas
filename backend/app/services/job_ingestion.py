@@ -251,6 +251,8 @@ class JobIngestionService:
                 salary_max=cleaned.salary_max,
                 currency=cleaned.currency,
                 deadline=cleaned.deadline,
+                posted_at=cleaned.posted_at,
+                is_active=True,
                 location_type=cleaned.location_type,
                 country=cleaned.country,
                 city=cleaned.city,

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 import httpx
 
 from app.models.job import JobPosting, JobSearchQuery
-from app.services.job_sources.base import JobSource
+from app.services.job_sources.base import JobSource, classify_location_type
 from app.services.job_sources.exceptions import JobSourceHTTPError
 
 # freehire.me public REST API — keyless for personal/non-commercial use.
@@ -38,20 +38,12 @@ def _detect_location_type(
     location_name: Optional[str],
     title: str,
 ) -> str:
-    """Determine location type from work_mode or heuristics."""
-    if work_mode:
-        normalized = work_mode.strip().lower()
-        if normalized in ("remote", "hybrid", "on-site"):
-            return normalized
-        if normalized == "onsite":
-            return "on-site"
-
-    combined = f"{title} {location_name or ''}".lower()
-    if "remote" in combined or "work from home" in combined:
-        return "remote"
-    if "hybrid" in combined:
-        return "hybrid"
-    return "on-site"
+    """Determine location type using centralized classifier."""
+    return classify_location_type(
+        explicit_mode=work_mode,
+        location_name=location_name,
+        title=title,
+    )
 
 
 class FreehireJobSource(JobSource):
