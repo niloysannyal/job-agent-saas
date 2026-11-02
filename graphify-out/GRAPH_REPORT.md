@@ -1,7 +1,7 @@
 # Graph Report - job-agent-saas  (2026-11-02)
 
 ## Corpus Check
-- 186 files · ~128,293 words
+- 186 files · ~129,472 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3745db52`
+- Built from commit: `b4e826e8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

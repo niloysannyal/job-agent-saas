@@ -9830,7 +9830,7 @@
       "file_type": "code",
       "norm_label": "landingpageview()",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L23"
+      "source_location": "L34"
     },
     {
       "id": "frontend_src_utils_theme_applytheme",
@@ -21382,6 +21382,30 @@
       "type": "external"
     },
     {
+      "id": "secrets",
+      "label": "secrets",
+      "_origin": "semantic",
+      "community": 102,
+      "community_name": "test_auth.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "secrets",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "smtplib",
+      "label": "smtplib",
+      "_origin": "semantic",
+      "community": 102,
+      "community_name": "test_auth.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "smtplib",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "arq",
       "label": "arq",
       "_origin": "semantic",
@@ -21966,28 +21990,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "urllib_parse",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "secrets",
-      "label": "secrets",
-      "community": 102,
-      "community_name": "test_auth.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "secrets",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "smtplib",
-      "label": "smtplib",
-      "community": 102,
-      "community_name": "test_auth.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "smtplib",
       "source_file": "",
       "type": "external"
     }
@@ -27378,7 +27380,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L24",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -27390,7 +27392,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L29",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -41766,7 +41768,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L21",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -41778,7 +41780,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L21",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -49398,7 +49400,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L21",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -62855,7 +62857,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/LandingPageView.jsx",
-      "source_location": "L23",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -78347,5 +78349,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3745db523afa64f3f0f49775a33c52ab04f10e4c"
+  "built_at_commit": "b4e826e8720fc2cd703b0c0ea60950206c34f5b2"
 }
