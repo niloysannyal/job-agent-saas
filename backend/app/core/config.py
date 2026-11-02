@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    # SMTP & Email Dispatch Configuration
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: str = "noreply@jobeazy.ai"
+    SMTP_FROM_NAME: str = "JobEazy Authentication"
+    SMTP_TLS: bool = True
+    OTP_EXPIRE_MINUTES: int = 10
+
     # Google OAuth 2.0 Credentials (for Gmail Draft composition)
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None

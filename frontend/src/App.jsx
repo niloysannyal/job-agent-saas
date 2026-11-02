@@ -66,6 +66,7 @@ function CareerAppInner() {
 
   const [viewMode, setViewMode] = useState(() => (localStorage.getItem('jobeazy_jwt_token') ? 'app' : 'landing'));
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState('login');
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const { theme, setTheme, toggleTheme } = useTheme();
@@ -656,11 +657,15 @@ function CareerAppInner() {
     return (
       <div className="landing-wrapper">
         <LandingPageView
-          onOpenLogin={() => setIsLoginModalOpen(true)}
+          onOpenLogin={(mode = 'login') => {
+            setLoginModalMode(mode);
+            setIsLoginModalOpen(true);
+          }}
           onEnterApp={() => {
             if (token) {
               setViewMode('app');
             } else {
+              setLoginModalMode('login');
               setIsLoginModalOpen(true);
             }
           }}
@@ -669,6 +674,7 @@ function CareerAppInner() {
         />
         <LoginModal
           isOpen={isLoginModalOpen}
+          defaultMode={loginModalMode}
           onClose={() => setIsLoginModalOpen(false)}
           onSuccess={(authData) => {
             setViewMode('app');
@@ -677,7 +683,12 @@ function CareerAppInner() {
               showToast('Signed in as Superadmin. Switched to Superadmin Control Center.');
             } else {
               setActiveSection('dashboard');
-              showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+              if (authData?.is_new_user) {
+                showToast(`Welcome to JobEazy, ${authData?.email || 'Candidate'}! Let's set up your profile.`);
+                setIsOnboardingModalOpen(true);
+              } else {
+                showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+              }
             }
           }}
         />
@@ -921,6 +932,7 @@ function CareerAppInner() {
 
       <LoginModal
         isOpen={isLoginModalOpen}
+        defaultMode={loginModalMode}
         onClose={() => setIsLoginModalOpen(false)}
         onSuccess={(authData) => {
           setViewMode('app');
@@ -929,7 +941,12 @@ function CareerAppInner() {
             showToast('Signed in as Superadmin. Switched to Superadmin Control Center.');
           } else {
             setActiveSection('dashboard');
-            showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+            if (authData?.is_new_user) {
+              showToast(`Welcome to JobEazy, ${authData?.email || 'Candidate'}! Let's set up your profile.`);
+              setIsOnboardingModalOpen(true);
+            } else {
+              showToast(`Welcome back, ${authData?.email || 'Candidate'}!`);
+            }
           }
         }}
       />

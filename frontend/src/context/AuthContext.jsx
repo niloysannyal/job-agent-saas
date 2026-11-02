@@ -132,6 +132,53 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const sendSignupOtp = async (email) => {
+    const res = await fetch(`${API_BASE}/auth/signup/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Failed to send verification code.');
+    }
+
+    return await res.json();
+  };
+
+  const verifySignupOtp = async ({ email, otpCode, password, fullName, headline }) => {
+    const res = await fetch(`${API_BASE}/auth/signup/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        otp_code: otpCode,
+        password,
+        full_name: fullName,
+        headline: headline || null,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Verification failed. Please check your code.');
+    }
+
+    const data = await res.json();
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    setToken(data.access_token);
+    setUser({
+      id: data.account_id,
+      email: data.email,
+      role: data.role,
+      plan_tier: data.plan_tier,
+      status: 'active',
+    });
+    setImpersonatedTenant(null);
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(SUPERADMIN_BACKUP_KEY);
@@ -179,6 +226,8 @@ export const AuthProvider = ({ children }) => {
         authHeaders,
         login,
         register,
+        sendSignupOtp,
+        verifySignupOtp,
         logout,
         impersonateTenant,
         exitImpersonation,

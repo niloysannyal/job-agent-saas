@@ -3,7 +3,7 @@ import bcrypt
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -146,6 +146,48 @@ class Account(Base):
             return False
 
 
+class EmailVerification(Base):
+    """
+    Stores 6-digit OTP verification codes for user registration and email validation.
+    Codes expire after OTP_EXPIRE_MINUTES (default 10) and allow max 5 attempts.
+    """
+    __tablename__ = "email_verifications"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    email: Mapped[str] = mapped_column(
+        String(255),
+        index=True,
+        nullable=False,
+    )
+    otp_code: Mapped[str] = mapped_column(
+        String(6),
+        nullable=False,
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+    attempts: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
 # --- Pydantic Schemas ---
 
 class AccountBase(BaseModel):
@@ -158,6 +200,7 @@ class AccountBase(BaseModel):
 
 class AccountCreate(AccountBase):
     password: Optional[str] = None
+    full_name: Optional[str] = None
 
 
 class AccountUpdate(BaseModel):
@@ -181,6 +224,25 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class SendOtpRequest(BaseModel):
+    email: str
+
+
+class SendOtpResponse(BaseModel):
+    status: str
+    email: str
+    message: str
+    dev_otp: Optional[str] = None
+
+
+class VerifyOtpSignupRequest(BaseModel):
+    email: str
+    otp_code: str
+    password: str
+    full_name: str
+    headline: Optional[str] = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -188,6 +250,7 @@ class TokenResponse(BaseModel):
     email: str
     role: str
     plan_tier: str
+    is_new_user: bool = False
 
 
 class AuthMeResponse(BaseModel):

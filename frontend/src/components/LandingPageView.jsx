@@ -106,7 +106,7 @@ export default function LandingPageView({ onOpenLogin, onEnterApp, isAuthenticat
                   onClick={() => onOpenLogin('register')}
                   className="action-btn-primary landing-cta-btn"
                 >
-                  <span>Get Started Free</span>
+                  <span>Signup</span>
                   <ArrowRight size={15} />
                 </button>
               </>
@@ -424,7 +424,7 @@ export default function LandingPageView({ onOpenLogin, onEnterApp, isAuthenticat
                 onClick={() => onOpenLogin('register')}
                 className="action-btn-primary pricing-btn"
               >
-                Get Started Free
+                Signup
               </button>
             </div>
 
@@ -523,7 +523,7 @@ export default function LandingPageView({ onOpenLogin, onEnterApp, isAuthenticat
               onClick={() => (isAuthenticated ? onEnterApp() : onOpenLogin('register'))}
               className="action-btn-primary final-cta-btn"
             >
-              <span>Get Started Free on JobEazy</span>
+              <span>Signup for JobEazy</span>
               <ArrowRight size={18} />
             </button>
           </div>

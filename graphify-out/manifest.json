@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1793444203.9866402,
-    "seen": 1793444436.8095634,
+    "mtime": 1793445925.2316575,
+    "seen": 1793597679.1092687,
     "ast_hash": "6e0677d2806ce293cca2f8f2d46d9c76",
     "semantic_hash": ""
   },
@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "backend/app/core/config.py": {
-    "mtime": 1793274763.0240061,
-    "seen": 1793276171.726298,
-    "ast_hash": "90caf373f7623ed85470cec7e74ad24c",
+    "mtime": 1793597081.7829,
+    "seen": 1793597679.109275,
+    "ast_hash": "b1ec7db29c44961ac7f941d2185af02c",
     "semantic_hash": ""
   },
   "backend/app/db/__init__.py": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
-    "mtime": 1793274500.5684936,
-    "seen": 1793276171.726327,
-    "ast_hash": "2182ba40e33e85b91ca9f3c0dd98388f",
+    "mtime": 1793597049.5613499,
+    "seen": 1793597679.1093073,
+    "ast_hash": "13225448aacdc7793659cc772f48568f",
     "semantic_hash": ""
   },
   "backend/app/models/application.py": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793444082.817937,
-    "seen": 1793444436.8096595,
-    "ast_hash": "f75853f7d4cbcac208295e016817b0dc",
+    "mtime": 1793597592.743045,
+    "seen": 1793597679.1095238,
+    "ast_hash": "575a7f06439feb233612d07d7770d689",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1793444267.5811515,
-    "seen": 1793444436.8096719,
+    "mtime": 1793445926.0921772,
+    "seen": 1793597679.1095502,
     "ast_hash": "82b09fda7b91390af758cf3101e1ddd0",
     "semantic_hash": ""
   },
@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/auth.py": {
-    "mtime": 1793181488.3364134,
-    "seen": 1793183185.0145533,
-    "ast_hash": "3f7e50f4e8357c3ba4dcd8f47cec4c28",
+    "mtime": 1793597195.9039881,
+    "seen": 1793597679.109258,
+    "ast_hash": "0699d833e93b7a492464d3f4df4676d1",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/e57e51d71b2e_add_hashed_password_to_accounts.py": {
@@ -816,27 +816,27 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_auth.py": {
-    "mtime": 1793181489.5200107,
-    "seen": 1793183185.014677,
-    "ast_hash": "53158a37490331c2895828b81d496fb3",
+    "mtime": 1793597260.9343257,
+    "seen": 1793597679.109468,
+    "ast_hash": "9fbde6fdb21af73e1fac567d005c6887",
     "semantic_hash": ""
   },
   "frontend/src/components/LandingPageView.jsx": {
-    "mtime": 1793185662.2926018,
-    "seen": 1793185928.566987,
-    "ast_hash": "2add9d92685f00dc28a469a196370aeb",
+    "mtime": 1793596759.506159,
+    "seen": 1793597679.109542,
+    "ast_hash": "7f4bbef2c39a141874e5f86bc51e1463",
     "semantic_hash": ""
   },
   "frontend/src/components/LoginModal.jsx": {
-    "mtime": 1793184671.5470579,
-    "seen": 1793185098.6246629,
-    "ast_hash": "4a9d95d7d43ca7bdc12ba13bf42d0026",
+    "mtime": 1793597521.2373614,
+    "seen": 1793597679.109543,
+    "ast_hash": "f308e379eb70cdbc7de67eedba36a990",
     "semantic_hash": ""
   },
   "frontend/src/context/AuthContext.jsx": {
-    "mtime": 1793185663.0817935,
-    "seen": 1793185928.5670106,
-    "ast_hash": "ee6db09ad87eacda5c27bc73589e774f",
+    "mtime": 1793597354.508422,
+    "seen": 1793597679.1095557,
+    "ast_hash": "784cbbfce0402febd8a95c107e78402b",
     "semantic_hash": ""
   },
   "scripts/dev.ps1": {
@@ -1152,9 +1152,27 @@
     "semantic_hash": ""
   },
   "frontend/src/components/OnboardingModal.jsx": {
-    "mtime": 1793444252.180251,
-    "seen": 1793444436.8096704,
+    "mtime": 1793445925.5278645,
+    "seen": 1793597679.109547,
     "ast_hash": "1f45eceb0f784ec7055e3cb425f4014b",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/a81f3d820c74_add_email_verifications_table.py": {
+    "mtime": 1793597132.4990275,
+    "seen": 1793597679.1092901,
+    "ast_hash": "8897bed0822d46113ec3822d5206618b",
+    "semantic_hash": ""
+  },
+  "backend/app/services/email/__init__.py": {
+    "mtime": 1793597095.2129016,
+    "seen": 1793597679.1093364,
+    "ast_hash": "ce61563bcabeef071e3f0a0c995aa069",
+    "semantic_hash": ""
+  },
+  "backend/app/services/email/email_service.py": {
+    "mtime": 1793597109.8651025,
+    "seen": 1793597679.1093383,
+    "ast_hash": "9295a2e9d7b3a75233470e83d6ed1f78",
     "semantic_hash": ""
   }
 }

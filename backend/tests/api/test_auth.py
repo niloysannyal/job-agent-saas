@@ -188,3 +188,142 @@ def test_jwt_bearer_token_enforces_superadmin_guard(
     )
     assert resp_admin.status_code == 200
 
+
+def test_send_otp_success(auth_client: TestClient):
+    resp = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": "newcandidate@example.com"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    assert data["email"] == "newcandidate@example.com"
+    assert "dev_otp" in data
+    assert len(data["dev_otp"]) == 6
+
+
+def test_send_otp_invalid_email(auth_client: TestClient):
+    resp = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": "not-an-email"},
+    )
+    assert resp.status_code == 422
+
+
+def test_send_otp_duplicate_email(auth_client: TestClient, seeded_user: Account):
+    resp = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": seeded_user.email},
+    )
+    assert resp.status_code == 409
+    assert "already exists" in resp.json()["detail"]
+
+
+def test_send_otp_rate_limiting(auth_client: TestClient):
+    email = "ratelimit@example.com"
+    resp1 = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": email},
+    )
+    assert resp1.status_code == 200
+
+    # Second immediate attempt must trigger 429 cooldown
+    resp2 = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": email},
+    )
+    assert resp2.status_code == 429
+    assert "wait 60 seconds" in resp2.json()["detail"]
+
+
+def test_verify_otp_success_creates_account_and_profile(auth_client: TestClient, auth_test_db: Session):
+    email = "verifiedcandidate@example.com"
+    otp_resp = auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": email},
+    )
+    assert otp_resp.status_code == 200
+    code = otp_resp.json()["dev_otp"]
+
+    verify_resp = auth_client.post(
+        "/api/v1/auth/signup/verify-otp",
+        json={
+            "email": email,
+            "otp_code": code,
+            "password": "SecurePassword123!",
+            "full_name": "Verified Candidate",
+            "headline": "Lead Systems Architect",
+        },
+    )
+    assert verify_resp.status_code == 201
+    auth_data = verify_resp.json()
+    assert auth_data["email"] == email
+    assert auth_data["is_new_user"] is True
+    assert "access_token" in auth_data
+
+    # Verify database state
+    from app.models.profile import UserProfile
+    from app.models.subscription import Entitlement
+
+    acc = auth_test_db.query(Account).filter_by(email=email).first()
+    assert acc is not None
+    assert acc.verify_password("SecurePassword123!") is True
+
+    prof = auth_test_db.query(UserProfile).filter_by(account_id=acc.id).first()
+    assert prof is not None
+    assert prof.full_name == "Verified Candidate"
+    assert prof.headline == "Lead Systems Architect"
+
+    ent = auth_test_db.query(Entitlement).filter_by(account_id=acc.id).first()
+    assert ent is not None
+    assert ent.all_access is True
+
+
+def test_verify_otp_wrong_code(auth_client: TestClient):
+    email = "wrongcode@example.com"
+    auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": email},
+    )
+
+    verify_resp = auth_client.post(
+        "/api/v1/auth/signup/verify-otp",
+        json={
+            "email": email,
+            "otp_code": "000000",
+            "password": "SecurePassword123!",
+            "full_name": "Test Candidate",
+        },
+    )
+    assert verify_resp.status_code == 400
+    assert "Invalid verification code" in verify_resp.json()["detail"]
+
+
+def test_verify_otp_expired_code(auth_client: TestClient, auth_test_db: Session):
+    from datetime import datetime, timedelta, timezone
+    from app.models.account import EmailVerification
+
+    email = "expired@example.com"
+    auth_client.post(
+        "/api/v1/auth/signup/send-otp",
+        json={"email": email},
+    )
+
+    # Force expiration in DB
+    ver = auth_test_db.query(EmailVerification).filter_by(email=email).first()
+    ver.expires_at = datetime.now(timezone.utc) - timedelta(minutes=15)
+    auth_test_db.commit()
+
+    verify_resp = auth_client.post(
+        "/api/v1/auth/signup/verify-otp",
+        json={
+            "email": email,
+            "otp_code": ver.otp_code,
+            "password": "SecurePassword123!",
+            "full_name": "Expired Candidate",
+        },
+    )
+    assert verify_resp.status_code == 400
+    assert "expired" in verify_resp.json()["detail"]
+
+
