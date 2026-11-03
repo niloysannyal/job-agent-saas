@@ -15,9 +15,12 @@ export default function FollowUpModal({
   isSending = false,
   showToast,
 }) {
+  const companyName = app?.job?.company || app?.job_company || app?.company || 'Team';
+  const roleTitle = app?.job?.title || app?.job?.role || app?.job_role || app?.role || app?.title || 'open role';
+
   const [draftContent, setDraftContent] = useState(
     followUpData?.draft_content ||
-      `Hi ${app?.job?.company || 'Team'},\n\nI wanted to follow up on my application for the ${app?.job?.title || 'open role'} sent on ${app?.sent_at ? new Date(app.sent_at).toLocaleDateString() : 'earlier'}. I remain very interested in contributing my hands-on production AI systems experience to your team.\n\nBest regards,\nNiloy Sannyal`
+      `Hi ${companyName},\n\nI wanted to follow up on my application for the ${roleTitle} sent on ${app?.sent_at ? new Date(app.sent_at).toLocaleDateString() : 'earlier'}. I remain very interested in contributing my hands-on production AI systems experience to your team.\n\nBest regards,\nNiloy Sannyal`
   );
 
   if (!app) return null;
@@ -42,7 +45,7 @@ export default function FollowUpModal({
 
         <div className="modal-meta-bar">
           <div>
-            <strong>{app.job?.title}</strong> @ {app.job?.company}
+            <strong>{roleTitle}</strong> @ {companyName}
           </div>
           <span className="badge-counter">
             Follow-Up #{(app.follow_up_count || 0) + 1} of 2

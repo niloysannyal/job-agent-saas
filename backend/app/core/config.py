@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # OpenAI & LLM Settings
     OPENAI_API_KEY: Optional[str] = None
+    OPENAI_MODEL: str = "gpt-6-luna"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
 
     # Vector Database

@@ -148,16 +148,17 @@ def seed_initial_data(session: Optional[Session] = None) -> None:
         # 5. LLM Provider table configuration (OpenAI primary)
         openai_provider = session.query(LLMProviderConfig).filter_by(provider="openai", account_id=None).first()
         if not openai_provider:
+            default_model = getattr(settings, "OPENAI_MODEL", "gpt-6-luna")
             openai_provider = LLMProviderConfig(
                 account_id=None,  # Platform default
                 provider="openai",
-                model_name="gpt-4o-mini",
+                model_name=default_model,
                 is_active=True,
                 priority=1,
-                config={"temperature": 0.2, "max_tokens": 4096},
+                config={"max_tokens": 4096},
             )
             session.add(openai_provider)
-            logger.info("Seeded default LLM provider: OpenAI (gpt-4o-mini, priority=1)")
+            logger.info(f"Seeded default LLM provider: OpenAI ({default_model}, priority=1)")
 
         # 6. Niloy's user profile
         master_tmpl = seeded_templates.get("01_MASTER_CV") or seeded_templates.get("01_MODERN_TECH")

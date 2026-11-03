@@ -71,7 +71,7 @@ export default function AdminView({
   const [showAddProviderModal, setShowAddProviderModal] = useState(false);
   const [newProviderForm, setNewProviderForm] = useState({
     provider: 'openai',
-    model_name: 'gpt-6.1-luna',
+    model_name: 'gpt-6-luna',
     api_key: '',
     priority: 1,
   });
@@ -393,52 +393,134 @@ export default function AdminView({
   };
 
   const handleToggleProviderActive = async (p) => {
+    const previousProviders = [...providers];
+    const newActive = !p.is_active;
+
+    // Optimistic Update (0ms visual latency)
+    setProviders((prev) =>
+      prev.map((item) => (item.id === p.id ? { ...item, is_active: newActive } : item))
+    );
+    showToast?.(`Provider ${p.provider} ${newActive ? 'enabled' : 'paused'}`);
+
     try {
       const res = await fetch(`${API_BASE}/admin/llm-providers/${p.id}`, {
         method: 'PATCH',
         headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !p.is_active }),
+        body: JSON.stringify({ is_active: newActive }),
       });
       if (res.ok) {
-        showToast?.(`Provider ${p.provider} ${!p.is_active ? 'enabled' : 'disabled'}`);
-        fetchProviders();
+        const updated = await res.json();
+        setProviders((prev) =>
+          prev.map((item) => (item.id === p.id ? { ...item, ...updated } : item))
+        );
         fetchMetrics();
+      } else {
+        setProviders(previousProviders);
+        showToast?.('Failed to toggle provider status on server.');
       }
     } catch (err) {
-      showToast?.('Failed to toggle provider');
+      setProviders(previousProviders);
+      showToast?.('Network error toggling provider.');
     }
   };
 
   const handleChangeProviderPriority = async (p, delta) => {
-    const nextPriority = Math.max(1, (p.priority || 1) + delta);
+    const sorted = [...providers].sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    const currentIndex = sorted.findIndex((item) => item.id === p.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = currentIndex + delta;
+    if (targetIndex < 0) return;
+
+    const previousProviders = [...providers];
+    let updatedList;
+
+    if (sorted.length > 1 && targetIndex < sorted.length) {
+      // Reorder by swapping with target neighbor
+      const newSorted = [...sorted];
+      const targetItem = newSorted[targetIndex];
+      newSorted[currentIndex] = targetItem;
+      newSorted[targetIndex] = p;
+
+      // Ensure strictly sequential 1-based priorities: 1, 2, 3...
+      updatedList = newSorted.map((item, idx) => ({
+        ...item,
+        priority: idx + 1,
+      }));
+    } else {
+      // Single provider: increment or decrement priority directly
+      const nextPriority = Math.max(1, (p.priority || 1) + delta);
+      if (nextPriority === p.priority) return;
+      updatedList = sorted.map((item) =>
+        item.id === p.id ? { ...item, priority: nextPriority } : item
+      );
+    }
+
+    // 1. Optimistic UI update (0ms visual latency)
+    setProviders(updatedList);
+    const updatedTarget = updatedList.find((item) => item.id === p.id);
+    showToast?.(`Priority rank set to #${updatedTarget?.priority}`);
+
+    // 2. Persist in background (fast single network call, no second fetch)
     try {
-      const res = await fetch(`${API_BASE}/admin/llm-providers/${p.id}`, {
-        method: 'PATCH',
-        headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priority: nextPriority }),
-      });
-      if (res.ok) {
-        fetchProviders();
+      if (updatedList.length > 1) {
+        const res = await fetch(`${API_BASE}/admin/llm-providers/reorder`, {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider_ids: updatedList.map((item) => item.id) }),
+        });
+        if (res.ok) {
+          const confirmed = await res.json();
+          setProviders(confirmed);
+        } else {
+          setProviders(previousProviders);
+          showToast?.('Failed to reorder providers on server. Reverted.');
+        }
+      } else {
+        const nextPriority = updatedTarget?.priority || 1;
+        const res = await fetch(`${API_BASE}/admin/llm-providers/${p.id}`, {
+          method: 'PATCH',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ priority: nextPriority }),
+        });
+        if (res.ok) {
+          const confirmed = await res.json();
+          setProviders((prev) =>
+            prev.map((item) => (item.id === p.id ? { ...item, ...confirmed } : item))
+          );
+        } else {
+          setProviders(previousProviders);
+          showToast?.('Failed to update priority on server. Reverted.');
+        }
       }
     } catch (err) {
-      showToast?.('Failed to update priority');
+      setProviders(previousProviders);
+      showToast?.('Network error updating priority. Reverted.');
     }
   };
 
   const handleDeleteProvider = async (p) => {
     if (!window.confirm(`Delete LLM provider ${p.provider} (${p.model_name})?`)) return;
+    const previousProviders = [...providers];
+
+    // Optimistic Update
+    setProviders((prev) => prev.filter((item) => item.id !== p.id));
+    showToast?.(`Deleted provider config for ${p.provider}`);
+
     try {
       const res = await fetch(`${API_BASE}/admin/llm-providers/${p.id}`, {
         method: 'DELETE',
         headers: { ...authHeaders },
       });
       if (res.ok) {
-        showToast?.(`Deleted provider config for ${p.provider}`);
-        fetchProviders();
         fetchMetrics();
+      } else {
+        setProviders(previousProviders);
+        showToast?.('Failed to delete provider on server. Reverted.');
       }
     } catch (err) {
-      showToast?.('Error deleting provider');
+      setProviders(previousProviders);
+      showToast?.('Network error deleting provider.');
     }
   };
 
@@ -1012,7 +1094,7 @@ export default function AdminView({
           </div>
 
           <div className="providers-grid">
-            {providers.map((p) => {
+            {[...providers].sort((a, b) => (a.priority || 0) - (b.priority || 0)).map((p, idx, arr) => {
               const isPrimary = p.priority === 1;
               const hasEnvFallback = p.key_source === 'env_fallback' || (!p.has_api_key && p.provider.toLowerCase() === 'openai');
               const hasDbKey = p.key_source === 'db_encrypted';
@@ -1046,7 +1128,7 @@ export default function AdminView({
                         type="button"
                         className="btn-stepper-up"
                         onClick={() => handleChangeProviderPriority(p, -1)}
-                        disabled={p.priority <= 1}
+                        disabled={idx === 0 && p.priority <= 1}
                         title="Promote priority"
                       >
                         <ChevronUp size={13} />
@@ -1056,6 +1138,7 @@ export default function AdminView({
                         type="button"
                         className="btn-stepper-down"
                         onClick={() => handleChangeProviderPriority(p, 1)}
+                        disabled={arr.length > 1 && idx === arr.length - 1}
                         title="Demote priority"
                       >
                         <ChevronDown size={13} />
@@ -1672,7 +1755,7 @@ export default function AdminView({
                   value={newProviderForm.provider}
                   onChange={(e) => {
                     const prov = e.target.value;
-                    let defaultModel = 'gpt-6.1-luna';
+                    let defaultModel = 'gpt-6-luna';
                     if (prov === 'anthropic') defaultModel = 'claude-3-5-sonnet';
                     if (prov === 'groq') defaultModel = 'llama-3.3-70b-versatile';
                     if (prov === 'ollama') defaultModel = 'llama3.2';
@@ -1696,7 +1779,7 @@ export default function AdminView({
                     value={newProviderForm.model_name}
                     onChange={(e) => setNewProviderForm({ ...newProviderForm, model_name: e.target.value })}
                   >
-                    <option value="gpt-6.1-luna">GPT 6.1 Luna (Default Engine)</option>
+                    <option value="gpt-6-luna">GPT 6 Luna (Default Engine)</option>
                     <option value="gpt-4o">GPT-4o (Omnimodal Flagship)</option>
                     <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>
                     <option value="o3-mini">OpenAI o3-mini (Reasoning Engine)</option>

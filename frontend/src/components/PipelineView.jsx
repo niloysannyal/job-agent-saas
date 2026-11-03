@@ -61,8 +61,8 @@ export default function PipelineView({
       // Text search filter
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
-        const role = app.job?.title?.toLowerCase() || '';
-        const comp = app.job?.company?.toLowerCase() || '';
+        const role = (app.job?.title || app.job?.role || app.job_role || app.role || app.title || '').toLowerCase();
+        const comp = (app.job?.company || app.job_company || app.company || '').toLowerCase();
         if (!role.includes(q) && !comp.includes(q)) return;
       }
 
@@ -145,20 +145,21 @@ export default function PipelineView({
 
               <div className="column-cards-scroll">
                 {appsInStage.map((app) => {
-                  const job = app.job || {};
+                  const companyName = app.job?.company || app.job_company || app.company || 'Direct Opportunity';
+                  const roleTitle = app.job?.title || app.job?.role || app.job_role || app.role || app.title || 'Untitled Role';
                   const isDue = isFollowUpDue(app);
 
                   return (
                     <div key={app.id} className="kanban-card">
                       <div className="card-top-meta">
-                        <span className="card-company">
+                        <span className="card-company" title={companyName}>
                           <Building2 className="icon-xxs" />
-                          <span>{job.company || 'Direct Opportunity'}</span>
+                          <span>{companyName}</span>
                         </span>
                         <span className="card-channel-pill">{app.channel || 'Email'}</span>
                       </div>
 
-                      <h5 className="card-title">{job.title || job.role || 'Untitled Role'}</h5>
+                      <h5 className="card-title" title={roleTitle}>{roleTitle}</h5>
 
                       <div className="card-timestamps">
                         {app.sent_at ? (

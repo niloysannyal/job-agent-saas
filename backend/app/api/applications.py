@@ -654,6 +654,7 @@ def mark_application_sent(
     """
     application = (
         db.query(Application)
+        .options(joinedload(Application.job))
         .filter(Application.id == application_id, Application.account_id == account_id)
         .first()
     )
@@ -682,46 +683,6 @@ def mark_application_sent(
     return application
 
 
-@router.patch("/{application_id}/status", response_model=ApplicationRead)
-def update_application_status(
-    application_id: str,
-    body: StatusUpdateRequest,
-    account_id: str = Query(..., description="Account ID for multi-tenant isolation"),
-    db: Session = Depends(get_db),
-):
-    """
-    Update application status in the pipeline (e.g. responded, interview, offer, rejected).
-    """
-    application = (
-        db.query(Application)
-        .filter(Application.id == application_id, Application.account_id == account_id)
-        .first()
-    )
-    if not application:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Application '{application_id}' not found.",
-        )
-
-    application.status = body.status
-    if body.notes:
-        application.notes = body.notes
-
-    # Sync Job status
-    job = db.query(Job).filter_by(id=application.job_id, account_id=account_id).first()
-    if job:
-        if body.status == "interview":
-            job.status = "interviewing"
-        elif body.status == "offer":
-            job.status = "offered"
-        elif body.status == "rejected":
-            job.status = "rejected"
-
-    db.commit()
-    db.refresh(application)
-    return application
-
-
 @router.post("/{application_id}/follow-up/draft", response_model=FollowUpDraftResponse)
 async def draft_follow_up(
     application_id: str,
@@ -736,6 +697,7 @@ async def draft_follow_up(
     """
     application = (
         db.query(Application)
+        .options(joinedload(Application.job))
         .filter(Application.id == application_id, Application.account_id == account_id)
         .first()
     )
@@ -799,6 +761,7 @@ def mark_follow_up_sent(
     """
     application = (
         db.query(Application)
+        .options(joinedload(Application.job))
         .filter(Application.id == application_id, Application.account_id == account_id)
         .first()
     )
@@ -824,7 +787,6 @@ def mark_follow_up_sent(
         application.follow_up_due = None
 
     db.commit()
-    db.refresh(application)
     return application
 
 
@@ -862,11 +824,17 @@ def update_application_status(
         application.notes = req.notes
 
     if application.job:
-        application.job.status = req.status
+        job_status = req.status
+        if req.status == "interview":
+            job_status = "interviewing"
+        elif req.status == "offer":
+            job_status = "offered"
+        elif req.status == "rejected":
+            job_status = "rejected"
+        application.job.status = job_status
         if req.notes:
             application.job.notes = req.notes
 
     db.commit()
-    db.refresh(application)
     return application
 

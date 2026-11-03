@@ -8,7 +8,6 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/job_agent}
-      - QDRANT_URL=http://qdrant:6333
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jobeazy-saas-production-jwt-key-2026}
@@ -17,7 +16,6 @@ services:
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost/auth/google/callback}
     depends_on:
       - redis
-      - qdrant
     volumes:
       - cv_templates_vol:/app/cv_templates
     networks:
@@ -33,14 +31,12 @@ services:
       disable: true
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/job_agent}
-      - QDRANT_URL=http://qdrant:6333
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jobeazy-saas-production-jwt-key-2026}
     depends_on:
       - backend
       - redis
-      - qdrant
     volumes:
       - cv_templates_vol:/app/cv_templates
     networks:
@@ -68,19 +64,8 @@ services:
     networks:
       - job_agent_net
 
-  qdrant:
-    image: qdrant/qdrant:v1.9.0
-    restart: unless-stopped
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    networks:
-      - job_agent_net
-
 volumes:
   redis_data:
-  qdrant_data:
   cv_templates_vol:
 
 networks:

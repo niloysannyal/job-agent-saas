@@ -13,6 +13,9 @@ export default function MaterialsModal({
 
   if (!app) return null;
 
+  const companyName = app.job?.company || app.job_company || app.company || 'Direct Opportunity';
+  const roleTitle = app.job?.title || app.job?.role || app.job_role || app.role || app.title || 'Untitled Role';
+
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);
     showToast(`${label} copied to clipboard!`);
@@ -27,7 +30,7 @@ export default function MaterialsModal({
             <div>
               <h3>Submitted Application Materials</h3>
               <p className="modal-sub">
-                {app.job?.title} @ {app.job?.company}
+                {roleTitle} @ {companyName}
               </p>
             </div>
           </div>

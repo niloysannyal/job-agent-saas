@@ -109,3 +109,5 @@ Goal: other people can use it and pay for it.
 | 2026-10-04 | 0 | Build as multi-tenant SaaS from day one, not personal-tool-first | Avoid future rearchitecting; see ARCHITECTURE.md §0 |
 | 2026-10-04 | 0 | Build order locked: Find → Apply → Monitor, validate each before the next | Bad matches poison everything downstream |
 | 2026-10-04 | 0 | 1-month MVP target using Google Antigravity | Self-imposed deadline, no external pressure |
+| 2026-11-03 | 0/1 | Upgrade default LLM engine to GPT-6 Luna (`gpt-6-luna`) with token parameter translation | Enhanced intelligence and strict zero-fabrication compliance |
+| 2026-11-03 | 0/1 | Implement 0ms optimistic UI and bulk provider reorder endpoint | Instant UI responsiveness across LLM failover engine and application pipeline |

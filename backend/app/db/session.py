@@ -30,6 +30,8 @@ def get_engine():
                 db_url,
                 pool_pre_ping=True,
                 pool_recycle=300,
+                pool_size=10,
+                max_overflow=20,
             )
     return _engine
 
@@ -37,7 +39,12 @@ def get_engine():
 def get_session_factory():
     global _SessionFactory
     if _SessionFactory is None:
-        _SessionFactory = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+        _SessionFactory = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
+            bind=get_engine(),
+        )
     return _SessionFactory
 
 

@@ -17,12 +17,12 @@ class OpenAIProvider(LLMProvider):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "gpt-4o-mini",
+        model_name: Optional[str] = None,
         default_config: Optional[Dict[str, Any]] = None,
     ):
         self.api_key = api_key if api_key is not None else settings.OPENAI_API_KEY
-        self.model_name = model_name
-        self.default_config = default_config or {"temperature": 0.2, "max_tokens": 4096}
+        self.model_name = model_name or getattr(settings, "OPENAI_MODEL", "gpt-6-luna")
+        self.default_config = default_config or {"max_tokens": 4096}
         self.base_url = "https://api.openai.com/v1/chat/completions"
 
     async def generate(
@@ -41,16 +41,32 @@ class OpenAIProvider(LLMProvider):
             messages.append({"role": "system", "content": context})
         messages.append({"role": "user", "content": prompt})
 
-        # Merge defaults with call-specific kwargs
-        temperature = kwargs.get("temperature", self.default_config.get("temperature", 0.2))
-        max_tokens = kwargs.get("max_tokens", self.default_config.get("max_tokens", 4096))
+        model = kwargs.get("model", self.model_name)
 
-        payload = {
-            "model": kwargs.get("model", self.model_name),
+        # Merge defaults with call-specific kwargs
+        temperature = kwargs.get("temperature", self.default_config.get("temperature"))
+        max_tokens = kwargs.get(
+            "max_completion_tokens",
+            kwargs.get("max_tokens", self.default_config.get("max_tokens", 4096)),
+        )
+
+        payload: Dict[str, Any] = {
+            "model": model,
             "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
         }
+
+        # Newer OpenAI models (GPT-6 series, o-series reasoning models) require max_completion_tokens
+        # rather than max_tokens, and reject non-default temperature values.
+        is_reasoning_or_gpt6 = any(
+            prefix in model.lower() for prefix in ["gpt-6", "o1", "o3", "o4"]
+        )
+
+        if is_reasoning_or_gpt6:
+            payload["max_completion_tokens"] = max_tokens
+        else:
+            payload["max_tokens"] = max_tokens
+            if temperature is not None:
+                payload["temperature"] = temperature
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

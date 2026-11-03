@@ -21,21 +21,39 @@ import {
 } from 'lucide-react';
 
 export function formatSalary(job) {
-  if (job.salary && job.salary.trim() && job.salary.trim().toLowerCase() !== 'null') {
-    return { text: job.salary.trim(), isDefined: true };
+  const undisclosedKeywords = [
+    'undisclosed',
+    'negotiable',
+    'competitive',
+    'not specified',
+    'unspecified',
+    'null',
+    'n/a',
+    'none',
+  ];
+
+  if (job.salary && job.salary.trim()) {
+    const cleaned = job.salary.trim();
+    const lower = cleaned.toLowerCase();
+    const isUndisclosed = undisclosedKeywords.some(
+      (kw) => lower === kw || lower.includes('negotiable / undisclosed') || lower.includes('undisclosed') || lower.includes('negotiable')
+    );
+    if (!isUndisclosed && lower !== 'null') {
+      return { text: cleaned, isDefined: true };
+    }
   }
-  if (job.salary_min != null && job.salary_max != null) {
+  if (job.salary_min != null && job.salary_max != null && (job.salary_min > 0 || job.salary_max > 0)) {
     const curr = job.currency || '$';
     return {
       text: `${curr}${Number(job.salary_min).toLocaleString()} - ${curr}${Number(job.salary_max).toLocaleString()}`,
       isDefined: true,
     };
   }
-  if (job.salary_min != null) {
+  if (job.salary_min != null && job.salary_min > 0) {
     const curr = job.currency || '$';
     return { text: `From ${curr}${Number(job.salary_min).toLocaleString()}`, isDefined: true };
   }
-  if (job.salary_max != null) {
+  if (job.salary_max != null && job.salary_max > 0) {
     const curr = job.currency || '$';
     return { text: `Up to ${curr}${Number(job.salary_max).toLocaleString()}`, isDefined: true };
   }
@@ -51,6 +69,18 @@ export function formatPostingDate(dateStr) {
   if (diffDays === 1) return 'Posted yesterday';
   if (diffDays < 30) return `Posted ${diffDays}d ago`;
   return `Posted ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+}
+
+export function decodeHtmlEntities(str) {
+  if (!str) return '';
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ');
 }
 
 export default function JobsView({
@@ -278,7 +308,8 @@ export default function JobsView({
             </select>
           </div>
 
-          <div className="input-group-action">
+          <div className="input-group input-group-action">
+            <label className="action-spacer-label">&nbsp;</label>
             <button
               className="action-btn-primary full-width"
               disabled={isIngesting || !ingestQuery.trim()}
@@ -297,38 +328,9 @@ export default function JobsView({
       </div>
 
       {/* FILTER & CONTROL TOOLBAR */}
-      <div className="panel-card toolbar-panel">
-        {/* Workplace Mode Pills */}
-        <div className="workplace-pills-row">
-          <span className="pills-label">Workplace Mode:</span>
-          <button
-            className={`pill-btn ${workplaceFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setWorkplaceFilter('all')}
-          >
-            All Workplaces
-          </button>
-          <button
-            className={`pill-btn ${workplaceFilter === 'remote' ? 'active' : ''}`}
-            onClick={() => setWorkplaceFilter('remote')}
-          >
-            <Wifi size={14} /> Full Remote
-          </button>
-          <button
-            className={`pill-btn ${workplaceFilter === 'hybrid' ? 'active' : ''}`}
-            onClick={() => setWorkplaceFilter('hybrid')}
-          >
-            Hybrid
-          </button>
-          <button
-            className={`pill-btn ${workplaceFilter === 'onsite' ? 'active' : ''}`}
-            onClick={() => setWorkplaceFilter('onsite')}
-          >
-            On-site
-          </button>
-        </div>
-
-        {/* Search & Advanced Filters */}
-        <div className="filters-grid">
+      <div className="panel-card jobs-filter-toolbar">
+        {/* Top Header Row: Search Input + Workplace Mode Segmented Pills */}
+        <div className="toolbar-top-row">
           <div className="search-box">
             <Search className="search-icon" />
             <input
@@ -337,76 +339,125 @@ export default function JobsView({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="clear-search-btn"
+                onClick={() => setSearchQuery('')}
+                title="Clear search"
+              >
+                ×
+              </button>
+            )}
           </div>
 
-          <div className="filter-item">
-            <label>Recency:</label>
-            <select
-              value={recencyFilter}
-              onChange={(e) => setRecencyFilter(e.target.value)}
-            >
-              <option value="all">Anytime</option>
-              <option value="1">Past 24 Hours</option>
-              <option value="7">Past 7 Days</option>
-              <option value="14">Past 14 Days</option>
-              <option value="30">Past 30 Days</option>
-            </select>
-          </div>
-
-          <div className="filter-item">
-            <label>Fit Score:</label>
-            <select
-              value={scoreFilter}
-              onChange={(e) => setScoreFilter(e.target.value)}
-            >
-              <option value="all">All Scores</option>
-              <option value="high">High Fit (&gt;80%)</option>
-              <option value="moderate">Moderate Fit (&gt;60%)</option>
-            </select>
-          </div>
-
-          <div className="filter-item">
-            <label>Source:</label>
-            <select
-              value={selectedSource}
-              onChange={(e) => setSelectedSource(e.target.value)}
-            >
-              <option value="all">All Sources</option>
-              {uniqueSources.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-item">
-            <label>Sort By:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="score">Match Score (High → Low)</option>
-              <option value="posted_at">Posting Date (Newest)</option>
-              <option value="date">Date Ingested (Newest)</option>
-              <option value="company">Company (A → Z)</option>
-            </select>
-          </div>
-
-          <div className="filter-item filter-toggle">
-            <label className="checkbox-toggle">
-              <input
-                type="checkbox"
-                checked={hideExpired}
-                onChange={(e) => setHideExpired(e.target.checked)}
-              />
-              <span>Hide Expired / Dead Links</span>
-            </label>
+          <div className="workplace-pills-row">
+            <span className="pills-label">Workplace:</span>
+            <div className="pills-segmented-group">
+              <button
+                type="button"
+                className={`pill-btn ${workplaceFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setWorkplaceFilter('all')}
+              >
+                All Workplaces
+              </button>
+              <button
+                type="button"
+                className={`pill-btn ${workplaceFilter === 'remote' ? 'active' : ''}`}
+                onClick={() => setWorkplaceFilter('remote')}
+              >
+                <Wifi size={13} /> Full Remote
+              </button>
+              <button
+                type="button"
+                className={`pill-btn ${workplaceFilter === 'hybrid' ? 'active' : ''}`}
+                onClick={() => setWorkplaceFilter('hybrid')}
+              >
+                <Building2 size={13} /> Hybrid
+              </button>
+              <button
+                type="button"
+                className={`pill-btn ${workplaceFilter === 'onsite' ? 'active' : ''}`}
+                onClick={() => setWorkplaceFilter('onsite')}
+              >
+                <MapPin size={13} /> On-site
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="results-counter">
-          <span>Showing <strong>{filteredJobs.length}</strong> of {jobs.length} opportunities</span>
+        {/* Bottom Horizontal Filters & Sort Row */}
+        <div className="toolbar-bottom-row">
+          <div className="horizontal-filters-group">
+            <div className="filter-item">
+              <label>Recency:</label>
+              <select
+                value={recencyFilter}
+                onChange={(e) => setRecencyFilter(e.target.value)}
+              >
+                <option value="all">Anytime</option>
+                <option value="1">Past 24 Hours</option>
+                <option value="7">Past 7 Days</option>
+                <option value="14">Past 14 Days</option>
+                <option value="30">Past 30 Days</option>
+              </select>
+            </div>
+
+            <div className="filter-item">
+              <label>Fit Score:</label>
+              <select
+                value={scoreFilter}
+                onChange={(e) => setScoreFilter(e.target.value)}
+              >
+                <option value="all">All Scores</option>
+                <option value="high">High Fit (&gt;80%)</option>
+                <option value="moderate">Moderate Fit (&gt;60%)</option>
+              </select>
+            </div>
+
+            <div className="filter-item">
+              <label>Source:</label>
+              <select
+                value={selectedSource}
+                onChange={(e) => setSelectedSource(e.target.value)}
+              >
+                <option value="all">All Sources</option>
+                {uniqueSources.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-item">
+              <label>Sort By:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="score">Match Score (High → Low)</option>
+                <option value="posted_at">Posting Date (Newest)</option>
+                <option value="date">Date Ingested (Newest)</option>
+                <option value="company">Company (A → Z)</option>
+              </select>
+            </div>
+
+            <div className="filter-item filter-toggle">
+              <label className="checkbox-toggle">
+                <input
+                  type="checkbox"
+                  checked={hideExpired}
+                  onChange={(e) => setHideExpired(e.target.checked)}
+                />
+                <span>Hide Expired / Dead Links</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="results-counter">
+            <span>Showing <strong>{filteredJobs.length}</strong> of {jobs.length} opportunities</span>
+          </div>
         </div>
       </div>
 
@@ -448,12 +499,18 @@ export default function JobsView({
                   <div className="opp-meta">
                     <div className="company-badge">
                       <Building2 className="icon-xs" />
-                      <span>{job.company || 'Unknown Company'}</span>
+                      <span title={job.company}>{decodeHtmlEntities(job.company) || 'Unknown Company'}</span>
                     </div>
-                    {/* Prominent Workplace Badge */}
+                    {/* Uniform Workplace Pill */}
                     <span className={`workplace-badge ${workplaceBadgeClass}`}>
-                      {locType === 'remote' && <Wifi size={12} />}
-                      {workplaceLabel}
+                      {locType === 'remote' ? (
+                        <Wifi size={11} />
+                      ) : locType === 'hybrid' ? (
+                        <Building2 size={11} />
+                      ) : (
+                        <MapPin size={11} />
+                      )}
+                      <span>{workplaceLabel}</span>
                     </span>
                   </div>
 
@@ -465,7 +522,7 @@ export default function JobsView({
                   </div>
                 </div>
 
-                <h4 className="opp-title">{job.title || job.role}</h4>
+                <h4 className="opp-title">{decodeHtmlEntities(job.title || job.role)}</h4>
 
                 {/* Location & Dates Meta Row */}
                 <div className="opp-location-date-row">
@@ -496,7 +553,7 @@ export default function JobsView({
                 </div>
 
                 <p className="opp-description">
-                  {job.description?.replace(/<[^>]*>/g, '').slice(0, 160) || 'No job summary provided.'}...
+                  {decodeHtmlEntities(job.description?.replace(/<[^>]*>/g, '')).slice(0, 160) || 'No job summary provided.'}...
                 </p>
 
                 {/* Attribution and Guard Status */}

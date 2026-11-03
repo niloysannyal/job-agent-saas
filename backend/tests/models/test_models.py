@@ -404,7 +404,7 @@ def test_seed_initial_data(db_session: Session):
     provider = db_session.query(LLMProviderConfig).filter_by(provider="openai").first()
     assert provider is not None
     assert provider.priority == 1
-    assert provider.model_name == "gpt-4o-mini"
+    assert provider.model_name == "gpt-6-luna"
 
     # 6. User Profile
     profile = db_session.query(UserProfile).filter_by(account_id=account.id).first()

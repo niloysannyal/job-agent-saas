@@ -201,6 +201,7 @@ class MatchingService:
             if desc.strip() or (job.role and job.role.strip()):
                 embed_text = f"Role: {job.role}\nCompany: {job.company}\nDescription:\n{desc}"
                 job_vec = await self.embedder.embed(embed_text)
+                job.embedding = job_vec
                 similarity = compute_cosine_similarity(vec, job_vec)
                 
                 # Calibrate cosine similarity to realistic 0-100 percentage
@@ -233,3 +234,39 @@ class MatchingService:
             self.db.commit()
 
         return result
+
+
+    def search_similar_jobs(
+        self,
+        account_id: str,
+        query_vector: Sequence[float],
+        limit: int = 50,
+    ) -> Sequence[Job]:
+        """
+        Search for top jobs matching a vector embedding using Supabase pgvector cosine distance.
+        Falls back to match_score ordering for SQLite test suites.
+        """
+        bind = self.db.get_bind()
+        if bind and bind.dialect.name == "postgresql" and hasattr(Job, "embedding"):
+            stmt = (
+                select(Job)
+                .where(
+                    Job.account_id == account_id,
+                    Job.integrity_status == "clean",
+                    Job.embedding.isnot(None),
+                )
+                .order_by(Job.embedding.cosine_distance(query_vector))
+                .limit(limit)
+            )
+            return self.db.scalars(stmt).all()
+
+        stmt_fallback = (
+            select(Job)
+            .where(
+                Job.account_id == account_id,
+                Job.integrity_status == "clean",
+            )
+            .order_by(Job.match_score.desc().nullslast())
+            .limit(limit)
+        )
+        return self.db.scalars(stmt_fallback).all()

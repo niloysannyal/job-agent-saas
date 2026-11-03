@@ -119,6 +119,18 @@ class Application(Base):
     def job_role(self) -> Optional[str]:
         return self.job.role if self.job else None
 
+    @property
+    def company(self) -> Optional[str]:
+        return self.job.company if self.job else None
+
+    @property
+    def role(self) -> Optional[str]:
+        return self.job.role if self.job else None
+
+    @property
+    def title(self) -> Optional[str]:
+        return self.job.role if self.job else None
+
 
 class ApplicationFormAnswer(Base):
     """
@@ -258,10 +270,31 @@ class ApplicationCvVersionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ApplicationJobRead(BaseModel):
+    id: str
+    company: str
+    role: str
+    title: Optional[str] = None
+    description: Optional[str] = None
+    location_type: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    salary: Optional[str] = None
+    apply_link: Optional[str] = None
+    source: Optional[str] = None
+    match_score: Optional[float] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ApplicationRead(ApplicationBase):
     id: str
     job_company: Optional[str] = None
     job_role: Optional[str] = None
+    company: Optional[str] = None
+    role: Optional[str] = None
+    title: Optional[str] = None
+    job: Optional[ApplicationJobRead] = None
     created_at: datetime
     updated_at: datetime
     form_answers: List[ApplicationFormAnswerRead] = []

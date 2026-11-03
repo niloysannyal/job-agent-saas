@@ -185,6 +185,14 @@ def test_llm_providers_lifecycle(admin_client: TestClient):
     assert patch_resp.json()["priority"] == 1
     assert patch_resp.json()["is_active"] is False
 
+    # 3.5. Reorder providers
+    reorder_resp = admin_client.post(
+        "/api/v1/admin/llm-providers/reorder",
+        json={"provider_ids": [provider_id]},
+    )
+    assert reorder_resp.status_code == 200
+    assert isinstance(reorder_resp.json(), list)
+
     # 4. Delete provider
     del_resp = admin_client.delete(f"/api/v1/admin/llm-providers/{provider_id}")
     assert del_resp.status_code == 200

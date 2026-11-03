@@ -6,6 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+try:
+    from pgvector.sqlalchemy import Vector
+except ImportError:
+    Vector = None
+
 from app.db.base import Base
 
 if TYPE_CHECKING:
@@ -93,6 +98,11 @@ class Job(Base):
     )
     match_score: Mapped[Optional[float]] = mapped_column(
         Float,
+        nullable=True,
+    )
+    # Native pgvector embedding for semantic search & Qdrant replacement
+    embedding: Mapped[Optional[Any]] = mapped_column(
+        Vector(1536) if Vector is not None else JSON,
         nullable=True,
     )
     # Deal-breaker / language gate veto outcome

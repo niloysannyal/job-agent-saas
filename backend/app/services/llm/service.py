@@ -77,7 +77,7 @@ class LLMService:
         # exists at the end of the chain so that if configured models fail,
         # the request automatically falls back to this reliable safety net.
         if settings.OPENAI_API_KEY:
-            fallback_model = "gpt-4o-mini"
+            fallback_model = getattr(settings, "OPENAI_MODEL", "gpt-6-luna")
             if not providers:
                 providers.append(
                     OpenAIProvider(

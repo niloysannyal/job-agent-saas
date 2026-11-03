@@ -75,6 +75,10 @@ class LLMProviderUpdateInput(BaseModel):
     config: Optional[Dict[str, Any]] = None
 
 
+class LLMProviderReorderInput(BaseModel):
+    provider_ids: List[str]
+
+
 class JobSourceInfo(BaseModel):
     name: str
     display_name: str
@@ -370,6 +374,21 @@ def create_llm_provider(
     return _build_provider_read(new_provider)
 
 
+@router.post("/llm-providers/reorder", response_model=List[LLMProviderRead], summary="Reorder LLM providers in bulk")
+def reorder_llm_providers(
+    data: LLMProviderReorderInput,
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+) -> List[LLMProviderRead]:
+    for idx, provider_id in enumerate(data.provider_ids, start=1):
+        db.query(LLMProviderConfig).filter_by(id=provider_id).update(
+            {"priority": idx, "updated_at": datetime.now(timezone.utc)}
+        )
+    db.commit()
+    providers = db.query(LLMProviderConfig).order_by(LLMProviderConfig.priority.asc()).all()
+    return [_build_provider_read(p) for p in providers]
+
+
 @router.patch("/llm-providers/{provider_id}", response_model=LLMProviderRead, summary="Update provider priority or active status")
 def update_llm_provider(
     provider_id: str,
@@ -394,7 +413,6 @@ def update_llm_provider(
 
     p.updated_at = datetime.now(timezone.utc)
     db.commit()
-    db.refresh(p)
 
     return _build_provider_read(p)
 

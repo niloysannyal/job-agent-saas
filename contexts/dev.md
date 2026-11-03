@@ -10,12 +10,13 @@ Focus: High-reliability, test-driven product development for Job Application Age
    - 2. Get it right (multi-tenant boundary, type-hinted, security-audited)
    - 3. Get it clean (refactor, eliminate technical debt, optimize performance)
 3. **Commit Discipline**: Atomic, single-responsibility changes with imperative commit messages.
-4. **Zero Regression**: Every new feature or fix must preserve existing 151+ tests.
+4. **Zero Regression**: Every new feature or fix must preserve all existing test suites.
+5. **Optimistic UI Standard**: State changes (application status moves, provider reorders/toggles) must reflect immediately (0ms visual latency) with asynchronous background persistence and automatic rollback on failure.
 
 ## Non-Negotiables & System Boundaries
 - **Human-in-the-Loop on Send**: Never implement an auto-send bypass.
 - **Tenancy Isolation**: Every model and query includes `account_id`.
-- **LLM Provider Abstraction**: LLM calls go through `LLMService.generate()`, never raw provider SDKs.
+- **LLM Provider Abstraction**: LLM calls go through `LLMService.generate()`, never raw provider SDKs. Default platform model is `gpt-6-luna`.
 - **Master CV Integrity**: Source of truth is `cv_templates/01_MASTER_CV.tex`; never fabricate facts.
 
 ## Standard Verification Step
@@ -24,4 +25,3 @@ After modifying code, run:
 python scripts/verify.py
 ```
 This runs the 5-phase verification loop (backend pytest, frontend build, tenant audit, security check, graphify update).
-

@@ -26,6 +26,8 @@ Focus: Enterprise security, multi-tenant isolation, async correctness, and anti-
 - [ ] Route handlers using `async def` only call non-blocking async clients.
 - [ ] No synchronous blocking operations (e.g. `requests`, sync DB sessions) inside async routes.
 - [ ] Database sessions injected via FastAPI `Depends(get_db)`.
+- [ ] Avoid redundant `db.refresh()` round trips across remote database connections.
+- [ ] Optimistic state updates (0ms perceived latency) for interactive reordering and drag-and-drop state transitions.
 
 ### 4. Human-in-the-Loop & Business Rules (Critical)
 - [ ] Application pipeline ends strictly at Draft; human reviews and confirms Send.
@@ -36,4 +38,3 @@ Focus: Enterprise security, multi-tenant isolation, async correctness, and anti-
 - [ ] Conforms to Obsidian & Cyber Emerald dual theme (`[data-theme="dark"]` and Light mode).
 - [ ] Frosted glassmorphism modal backdrops (`--modal-backdrop-bg`, blur filter) with intact sidebar.
 - [ ] No generic template look; intentional hierarchy, crisp contrast, accessible interactive states.
-

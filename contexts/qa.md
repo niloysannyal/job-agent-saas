@@ -12,15 +12,20 @@ Focus: Personal validation (Niloy's real job search) and multi-tenant QA simulat
 
 ### 2. Job Radar Ingestion & Integrity Shield
 - **Multi-Source Fetching**: Fetch jobs via official adapters (Adzuna, Remotive, RemoteOK, Freehire, Greenhouse, Lever).
+- **Horizontal Sorting & Filter Standardization**: Clean horizontal sorting controls with unified badge tags (`Remote`, `Hybrid`, `On-site`).
 - **Prompt Injection Defense**: Ingested descriptions pass through `PostingIntegrityGate`. Flagged postings show in Incident Room.
 
-### 3. Dynamic LLM Failover Engine
-- **Priority Cascade**: Active models route requests according to priority rank.
-- **Bedrock Backup**: If database models rate-limit or fail, the system automatically falls back to `.env` fallback key (`gpt-4o-mini`).
+### 3. Dynamic LLM Failover Engine & Priority Ordering
+- **Primary Model**: Default platform engine is `gpt-6-luna` with automated parameter adaptation (`max_completion_tokens`).
+- **Zero-Latency Reordering (0ms)**: Promote (`^`) and demote (`v`) steppers reorder priority ranks instantly with neighbor swapping and atomic bulk persistence via `POST /api/v1/admin/llm-providers/reorder`.
+- **Bedrock Backup**: If database models rate-limit or fail, the system automatically falls back to `.env` fallback model chain.
 - **Ping Testing**: Live "Test Ping" button pings providers and reports live model latency.
 
-### 4. CV Tailoring & Application Studio
+### 4. Application Pipeline & Lifecycle Tracker
+- **Kanban Progress & Zero-Latency Moves**: Status updates move cards across stages instantly with 0ms visual feedback and background API synchronization.
+- **Job Card Integrity**: Role title and company name resolve cleanly across direct jobs and aggregated postings without placeholders.
+
+### 5. CV Tailoring & Application Studio
 - **Master CV Fact Consistency**: Tailored LaTeX CV output matches source truth.
 - **Overleaf Editor & PDF Preview**: In-browser compiler generates valid PDF download.
 - **Human-in-the-Loop Send Gate**: Final outreach email/DM draft requires explicit human review and click to Send.
-

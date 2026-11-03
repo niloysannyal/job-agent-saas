@@ -564,10 +564,24 @@ function CareerAppInner() {
         headers: { ...authHeaders },
       });
       if (res.ok) {
+        const sentApp = await res.json();
+        setApplications((prev) => {
+          const exists = prev.some((a) => a.id === applicationId);
+          if (exists) {
+            return prev.map((a) => (a.id === applicationId ? { ...a, ...sentApp } : a));
+          }
+          return [sentApp, ...prev];
+        });
         showToast('Application approved & confirmed! 10-day follow-up scheduled.');
-        fetchMonitorData();
-        fetchJobs();
         setActiveSection('pipeline');
+        fetchJobs();
+        // Quietly sync summary count in background
+        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        })
+          .then((r) => r.ok && r.json())
+          .then((sum) => sum && setMonitorSummary(sum))
+          .catch(() => {});
       } else {
         showToast('Failed to record send confirmation.', 4000);
       }
@@ -578,8 +592,32 @@ function CareerAppInner() {
     }
   };
 
-  // Pipeline: Update Status
+  // Pipeline: Update Status (Optimistic UI with 0ms visual latency)
   const handleUpdateAppStatus = async (appId, newStatus) => {
+    const targetApp = applications.find((a) => a.id === appId);
+    const oldStatus = targetApp?.status;
+    if (!targetApp || oldStatus === newStatus) return;
+
+    // 1. Optimistic Update: move card and update counters immediately (0ms)
+    setApplications((prev) =>
+      prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
+    );
+
+    setMonitorSummary((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev };
+      if (oldStatus && updated[oldStatus] !== undefined) {
+        updated[oldStatus] = Math.max(0, updated[oldStatus] - 1);
+      }
+      if (newStatus && updated[newStatus] !== undefined) {
+        updated[newStatus] = (updated[newStatus] || 0) + 1;
+      }
+      return updated;
+    });
+
+    showToast(`Application moved to ${newStatus}`);
+
+    // 2. Persist in background without freezing UI or full reload
     try {
       const res = await fetch(`${API_BASE}/applications/${appId}/status?account_id=${accountId}`, {
         method: 'PATCH',
@@ -590,11 +628,53 @@ function CareerAppInner() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        showToast(`Application moved to ${newStatus}`);
-        fetchMonitorData();
+        const serverApp = await res.json();
+        // Silently merge server response fields (e.g. updated_at, synced job status)
+        setApplications((prev) =>
+          prev.map((a) => (a.id === appId ? { ...a, ...serverApp } : a))
+        );
+        // Quietly sync summary count in background
+        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        })
+          .then((r) => r.ok && r.json())
+          .then((sum) => sum && setMonitorSummary(sum))
+          .catch(() => {});
+      } else {
+        // Rollback on server error
+        setApplications((prev) =>
+          prev.map((a) => (a.id === appId ? { ...a, status: oldStatus } : a))
+        );
+        setMonitorSummary((prev) => {
+          if (!prev) return prev;
+          const reverted = { ...prev };
+          if (newStatus && reverted[newStatus] !== undefined) {
+            reverted[newStatus] = Math.max(0, reverted[newStatus] - 1);
+          }
+          if (oldStatus && reverted[oldStatus] !== undefined) {
+            reverted[oldStatus] = (reverted[oldStatus] || 0) + 1;
+          }
+          return reverted;
+        });
+        showToast('Failed to update status on server. Reverted.', 4000);
       }
     } catch (err) {
-      showToast('Failed to update status.', 4000);
+      // Rollback on network failure
+      setApplications((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, status: oldStatus } : a))
+      );
+      setMonitorSummary((prev) => {
+        if (!prev) return prev;
+        const reverted = { ...prev };
+        if (newStatus && reverted[newStatus] !== undefined) {
+          reverted[newStatus] = Math.max(0, reverted[newStatus] - 1);
+        }
+        if (oldStatus && reverted[oldStatus] !== undefined) {
+          reverted[oldStatus] = (reverted[oldStatus] || 0) + 1;
+        }
+        return reverted;
+      });
+      showToast('Network error updating status. Reverted.', 4000);
     }
   };
 
@@ -628,9 +708,18 @@ function CareerAppInner() {
         headers: { ...authHeaders },
       });
       if (res.ok) {
+        const updatedApp = await res.json();
+        setApplications((prev) =>
+          prev.map((a) => (a.id === appId ? { ...a, ...updatedApp } : a))
+        );
         showToast('Follow-up recorded! Next review scheduled.');
         setFollowUpModalApp(null);
-        fetchMonitorData();
+        fetch(`${API_BASE}/applications/monitor/summary?account_id=${accountId}`, {
+          headers: { ...authHeaders },
+        })
+          .then((r) => r.ok && r.json())
+          .then((sum) => sum && setMonitorSummary(sum))
+          .catch(() => {});
       } else {
         showToast('Failed to send follow-up.', 4000);
       }
