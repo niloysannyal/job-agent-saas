@@ -201,24 +201,6 @@ export default function Sidebar({
           <kbd className="quick-search-kbd">⌘K</kbd>
         </button>
 
-        {/* Autonomous Career Copilot Quick Launcher Button */}
-        <button
-          className={`sidebar-copilot-btn ${activeSection === 'copilot' ? 'active' : ''}`}
-          onClick={() => setActiveSection('copilot')}
-          title="Open Autonomous Career Copilot (⌘J)"
-          aria-label="Open Career Copilot"
-        >
-          <div className="copilot-btn-left">
-            <Bot size={15} className="copilot-icon text-emerald" />
-            <span className="copilot-btn-label">Career Copilot</span>
-            <span className="pulse-emitter-mini" />
-          </div>
-          {proposalsCount > 0 ? (
-            <span className="copilot-proposals-pill">{proposalsCount}</span>
-          ) : (
-            <kbd className="quick-search-kbd">⌘J</kbd>
-          )}
-        </button>
       </div>
 
       {/* Nav Menu */}

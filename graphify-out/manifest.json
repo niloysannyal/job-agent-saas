@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793788062.4405634,
-    "seen": 1793788486.3022954,
-    "ast_hash": "dd9fdd6ef64ad317e0aedb9a4beeb42e",
+    "mtime": 1793789516.2222905,
+    "seen": 1793790652.2480023,
+    "ast_hash": "0c68aa233ad00143141b87d40ddb859c",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1793787958.0393043,
-    "seen": 1793788486.3023355,
-    "ast_hash": "662c23876f39a0ebab4c6d331fb0b4e5",
+    "mtime": 1793789449.5601077,
+    "seen": 1793790652.248031,
+    "ast_hash": "cca15c0ad84ed9812afd10c2ae6459dc",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -1428,9 +1428,27 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/CareerCopilotView.jsx": {
-    "mtime": 1793788281.357885,
-    "seen": 1793788486.3023396,
-    "ast_hash": "f134096c6c6eb495ac6154f5522c31f2",
+    "mtime": 1793790198.0878482,
+    "seen": 1793790652.2480347,
+    "ast_hash": "110c45540a3448f791c1a5b9b2ee2ada",
+    "semantic_hash": ""
+  },
+  "scratch/apply_copilot_css.py": {
+    "mtime": 1793790472.3064132,
+    "seen": 1793790652.2480886,
+    "ast_hash": "391b4d0e24e9af1fd77e06a847d1f88b",
+    "semantic_hash": ""
+  },
+  "scratch/fix_card_icon.py": {
+    "mtime": 1793790472.849979,
+    "seen": 1793790652.2480905,
+    "ast_hash": "ac43d69088a2c0c5e625091ecf49e372",
+    "semantic_hash": ""
+  },
+  "scratch/fix_hero_padding.py": {
+    "mtime": 1793790473.1357977,
+    "seen": 1793790652.2480924,
+    "ast_hash": "d3e2ac9b57f940ed4b669109b268c5d1",
     "semantic_hash": ""
   }
 }

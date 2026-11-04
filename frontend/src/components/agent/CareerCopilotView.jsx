@@ -75,12 +75,12 @@ export default function CareerCopilotView({ activeContext = {} }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages when actively chatting
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (!isStarterState && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isStreaming, activeThought]);
+  }, [messages, isStreaming, activeThought, isStarterState]);
 
   // Focus input on mount
   useEffect(() => {
@@ -197,7 +197,7 @@ export default function CareerCopilotView({ activeContext = {} }) {
 
           {/* Render Messages */}
           <div className="copilot-messages-list">
-            {messages.map((msg) => {
+            {(isStarterState ? messages.filter((m) => m.id !== 'welcome-1') : messages).map((msg) => {
               const isUser = msg.role === 'user';
               const hasThought = Boolean(msg.thought);
               const isThoughtOpen = expandedThoughts[msg.id];

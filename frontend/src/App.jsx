@@ -842,7 +842,7 @@ function CareerAppInner() {
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="career-os-main">
+      <main className={`career-os-main ${effectiveSection === "copilot" ? "copilot-main-no-pad" : ""}`}>
         {/* QA DOGFOODING IMPERSONATION BANNER */}
         {isImpersonating && impersonatedTenant && (
           <div className="impersonation-qa-banner">
