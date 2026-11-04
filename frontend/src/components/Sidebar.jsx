@@ -104,6 +104,13 @@ export default function Sidebar({
   } else {
     navItems.push(
       {
+        id: 'copilot',
+        label: 'Career Copilot',
+        icon: Bot,
+        shortcut: '⌘J',
+        badge: proposalsCount > 0 ? `${proposalsCount}` : null,
+      },
+      {
         id: 'dashboard',
         label: 'Dashboard',
         icon: LayoutDashboard,
@@ -196,8 +203,8 @@ export default function Sidebar({
 
         {/* Autonomous Career Copilot Quick Launcher Button */}
         <button
-          className="sidebar-copilot-btn"
-          onClick={openDock}
+          className={`sidebar-copilot-btn ${activeSection === 'copilot' ? 'active' : ''}`}
+          onClick={() => setActiveSection('copilot')}
           title="Open Autonomous Career Copilot (⌘J)"
           aria-label="Open Career Copilot"
         >
@@ -238,6 +245,7 @@ export default function Sidebar({
               <div className="nav-item-left">
                 <Icon className="nav-icon" />
                 <span className="nav-label">{item.label}</span>
+                {item.badge && <span className="nav-badge-pill">{item.badge}</span>}
               </div>
               <span className="nav-shortcut-hint">{item.shortcut}</span>
             </button>

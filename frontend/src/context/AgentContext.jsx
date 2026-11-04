@@ -312,6 +312,19 @@ export const AgentProvider = ({ children }) => {
   const openDock = useCallback(() => setIsDockOpen(true), []);
   const closeDock = useCallback(() => setIsDockOpen(false), []);
 
+  const resetConversation = useCallback(() => {
+    setActiveConversationId(null);
+    setMessages([
+      {
+        id: 'welcome-' + Date.now(),
+        role: 'assistant',
+        content: 'Hello! I am your JobEazy Career Agent. I can continuously scan the radar for high-fit roles, tailor your LaTeX CV to match ATS requirements, verify every claim against your Fact Ledger, and stage outreach for your approval.',
+        thought: null,
+        ui_widget: null,
+        timestamp: new Date().toISOString(),
+      }
+    ]);
+  }, []);
   const value = {
     messages,
     isStreaming,
@@ -329,6 +342,7 @@ export const AgentProvider = ({ children }) => {
     openDock,
     closeDock,
     setDockWidth,
+    resetConversation,
   };
 
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>;
