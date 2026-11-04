@@ -9812,6 +9812,320 @@
   gap: 8px;
 }
 
+/* Card & Row Action Buttons */
+.btn-icon-subtle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-subtle:hover {
+  border-color: var(--emerald-400);
+  color: var(--emerald-400);
+  background: rgba(16, 185, 129, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-icon-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-sm);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ff6b6b;
+  transform: translateY(-1px);
+}
+
+/* Inline Add Subrecord Form (Skills, Target Roles, Locations) */
+.add-subrecord-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 18px 0;
+  flex-wrap: wrap;
+}
+
+.add-subrecord-form input,
+.add-subrecord-form select {
+  height: 38px;
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 0 14px;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.add-subrecord-form input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.add-subrecord-form select {
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.add-subrecord-form select option {
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+
+.add-subrecord-form input:focus,
+.add-subrecord-form select:focus {
+  border-color: var(--emerald-400);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Target Roles & Locations Subrecord Lists */
+.subrecord-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.subrecord-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.subrecord-item:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.subrecord-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.subrecord-left .item-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.subrecord-pin-icon {
+  color: var(--emerald-400);
+  flex-shrink: 0;
+}
+
+.subrecord-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--emerald-400);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.item-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.subrecord-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Projects List & Badges */
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.project-links-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.project-link-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--emerald-400);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.project-link-badge:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--emerald-400);
+  transform: translateY(-1px);
+}
+
+.tech-stack-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tech-stack-badge {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-input);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+}
+
+/* Side-by-Side Split CV Editor & Preview */
+.cv-preview-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+@media (max-width: 1024px) {
+  .cv-preview-split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cv-editor-col {
+  display: flex;
+  flex-direction: column;
+  background: #0d1117;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.split-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #161b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.split-editor-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-code-textarea {
+  width: 100%;
+  height: 600px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  padding: 14px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.cv-preview-col {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-ground);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: auto;
+  max-height: 654px;
+  padding: 16px;
+}
+
+.cv-full-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface-ground);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px 16px;
+  margin-top: 16px;
+  overflow: auto;
+}
+
 /* Skills Category Grid */
 .skills-categories-grid {
   display: grid;
@@ -9880,17 +10194,21 @@
 .workplace-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 9999px;
   line-height: 1;
-  width: fit-content;
-  align-self: flex-start;
+  height: 24px;
+  min-width: 80px;
+  padding: 0 10px;
+  border-radius: 9999px;
   white-space: nowrap;
   letter-spacing: 0.02em;
+  box-sizing: border-box;
+  text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
 }
 
 .badge-remote {
@@ -9909,6 +10227,12 @@
   background: rgba(168, 85, 247, 0.14);
   color: #c084fc;
   border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.badge-any {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
 .workplace-pills-row,

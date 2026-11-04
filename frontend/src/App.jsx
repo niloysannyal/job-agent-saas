@@ -19,6 +19,7 @@ import MaterialsModal from './components/MaterialsModal';
 import OnboardingModal from './components/OnboardingModal';
 import CommandPalette from './components/CommandPalette';
 import Toast from './components/Toast';
+import { Agentation } from 'agentation';
 
 const DEFAULT_ACCOUNT_ID = '6e488188-0015-4657-94c9-92d01413dcfb';
 const API_BASE = '/api/v1';
@@ -232,11 +233,15 @@ function CareerAppInner() {
         if (data) {
           setProfileForm({
             full_name: data.full_name || '',
+            headline: data.headline || '',
+            phone: data.phone || '',
+            summary: data.summary || '',
             current_role: data.current_role || '',
             current_company: data.current_company || '',
             education: data.education || '',
             location_city: data.location_city || '',
             location_country: data.location_country || '',
+            portfolio_url: data.portfolio_url || '',
             linkedin_url: data.linkedin_url || '',
             github_url: data.github_url || '',
             one_liner: data.one_liner || '',
@@ -248,6 +253,11 @@ function CareerAppInner() {
             tone_preferences: data.tone_preferences || '',
             avoid_phrases: data.avoid_phrases || '',
             dealbreakers: data.dealbreakers || '',
+            notice_period: data.notice_period || '',
+            visa_needs: data.visa_needs || '',
+            reason_for_leaving: data.reason_for_leaving || '',
+            active_template_id: data.active_template_id || '',
+            master_cv_latex: data.master_cv_latex || '',
           });
         }
       }
@@ -1058,6 +1068,7 @@ export default function App() {
   return (
     <AuthProvider>
       <CareerAppInner />
+      {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
     </AuthProvider>
   );
 }

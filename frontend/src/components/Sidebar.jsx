@@ -7,8 +7,6 @@ import {
   GraduationCap,
   Sparkles,
   User,
-  FileText,
-  Sliders,
   LogOut,
   ChevronUp,
   Users,
@@ -284,23 +282,7 @@ export default function Sidebar({
               onClick={() => handleSelectOption('profile')}
             >
               <User className="popover-icon" />
-              <span>Profile & Grounding</span>
-            </button>
-
-            <button
-              className="popover-item"
-              onClick={() => handleSelectOption('profile', 'Opened Master LaTeX CV')}
-            >
-              <FileText className="popover-icon" />
-              <span>Master CV & LaTeX</span>
-            </button>
-
-            <button
-              className="popover-item"
-              onClick={() => handleSelectOption('profile', 'Opened Career Preferences')}
-            >
-              <Sliders className="popover-icon" />
-              <span>Grounding & Tone</span>
+              <span>Profile</span>
             </button>
 
             <div className="popover-divider" />

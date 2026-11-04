@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   User,
   Briefcase,
@@ -15,11 +15,28 @@ import {
   Sparkles,
   Download,
   Copy,
+  Check,
   CheckCircle,
   Eye,
   X,
   ExternalLink,
+  GitBranch,
+  Code2,
+  Columns,
+  Layout,
+  MapPin,
+  Wifi,
+  Building2,
+  Globe,
 } from 'lucide-react';
+import { parseLatexDocument, paginateParsedDocument } from '../utils/latexCompiler';
+
+const WORKPLACE_LABELS = {
+  remote: 'Remote',
+  hybrid: 'Hybrid',
+  onsite: 'On-site',
+  any: 'Any Mode',
+};
 
 export default function ProfileView({
   profile,
@@ -82,6 +99,7 @@ export default function ProfileView({
     institution: '',
     degree: '',
     field_of_study: '',
+    location: '',
     start_date: '',
     end_date: '',
     grade: '',
@@ -92,10 +110,39 @@ export default function ProfileView({
   const [newSkillCategory, setNewSkillCategory] = useState('Languages');
   const [newSkillProficiency, setNewSkillProficiency] = useState('Advanced');
 
+  // Projects modal / state
+  const [isProjModalOpen, setIsProjModalOpen] = useState(false);
+  const [editingProj, setEditingProj] = useState(null);
+  const [projForm, setProjForm] = useState({
+    title: '',
+    role: '',
+    url: '',
+    github_url: '',
+    technologies: '',
+    start_date: '',
+    end_date: '',
+    is_current: false,
+    description: '',
+    highlights: '',
+  });
+
   // Preview CV state
   const [previewLatex, setPreviewLatex] = useState(null);
+  const [editedLatex, setEditedLatex] = useState('');
   const [previewTemplateName, setPreviewTemplateName] = useState('');
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState('preview'); // 'preview' (default) | 'split'
+  const [isCopied, setIsCopied] = useState(false);
+
+  // Compute parsed document and discrete A4 sheets for compiled preview
+  const parsedDoc = useMemo(() => {
+    const codeToParse = previewMode === 'split' ? (editedLatex || previewLatex) : previewLatex;
+    return parseLatexDocument(codeToParse || '');
+  }, [previewLatex, editedLatex, previewMode]);
+
+  const paginatedPages = useMemo(() => {
+    return paginateParsedDocument(parsedDoc, 770);
+  }, [parsedDoc]);
 
   // Field change for identity form
   const handleFieldChange = (e) => {
@@ -188,9 +235,24 @@ export default function ProfileView({
       institution: '',
       degree: '',
       field_of_study: '',
+      location: '',
       start_date: '',
       end_date: '',
       grade: '',
+    });
+    setIsEduModalOpen(true);
+  };
+
+  const handleOpenEditEdu = (edu) => {
+    setEditingEdu(edu);
+    setEduForm({
+      institution: edu.institution || '',
+      degree: edu.degree || '',
+      field_of_study: edu.field_of_study || '',
+      location: edu.location || '',
+      start_date: edu.start_date || '',
+      end_date: edu.end_date || '',
+      grade: edu.grade || '',
     });
     setIsEduModalOpen(true);
   };
@@ -270,6 +332,98 @@ export default function ProfileView({
     }
   };
 
+  // --- Projects Handlers ---
+  const handleOpenAddProj = () => {
+    setEditingProj(null);
+    setProjForm({
+      title: '',
+      role: '',
+      url: '',
+      github_url: '',
+      technologies: '',
+      start_date: '',
+      end_date: '',
+      is_current: false,
+      description: '',
+      highlights: '',
+    });
+    setIsProjModalOpen(true);
+  };
+
+  const handleOpenEditProj = (proj) => {
+    setEditingProj(proj);
+    let bullets = proj.highlights;
+    if (typeof bullets === 'string' && bullets.startsWith('[')) {
+      try {
+        const arr = JSON.parse(bullets);
+        bullets = arr.join('\n');
+      } catch {}
+    }
+    setProjForm({
+      title: proj.title || '',
+      role: proj.role || '',
+      url: proj.url || '',
+      github_url: proj.github_url || '',
+      technologies: proj.technologies || '',
+      start_date: proj.start_date || '',
+      end_date: proj.end_date || '',
+      is_current: proj.end_date === 'Present' || false,
+      description: proj.description || '',
+      highlights: bullets || '',
+    });
+    setIsProjModalOpen(true);
+  };
+
+  const handleSaveProj = async (e) => {
+    e.preventDefault();
+    try {
+      const url = editingProj
+        ? `/api/v1/profile/projects/${editingProj.id}?account_id=${accountId}`
+        : `/api/v1/profile/projects?account_id=${accountId}`;
+      const method = editingProj ? 'PATCH' : 'POST';
+
+      const payload = {
+        title: projForm.title,
+        role: projForm.role || null,
+        url: projForm.url || null,
+        github_url: projForm.github_url || null,
+        technologies: projForm.technologies || null,
+        start_date: projForm.start_date || null,
+        end_date: projForm.is_current ? 'Present' : (projForm.end_date || null),
+        description: projForm.description || null,
+        highlights: projForm.highlights || null,
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error('Failed to save project.');
+      showToast?.(editingProj ? 'Project updated.' : 'Project added.');
+      setIsProjModalOpen(false);
+      if (onRefreshProfile) await onRefreshProfile();
+    } catch (err) {
+      showToast?.(err.message || 'Error saving project.');
+    }
+  };
+
+  const handleDeleteProj = async (id) => {
+    if (!confirm('Are you sure you want to remove this project?')) return;
+    try {
+      const res = await fetch(`/api/v1/profile/projects/${id}?account_id=${accountId}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders },
+      });
+      if (!res.ok) throw new Error('Failed to delete project.');
+      showToast?.('Project removed.');
+      if (onRefreshProfile) await onRefreshProfile();
+    } catch (err) {
+      showToast?.(err.message || 'Error deleting project.');
+    }
+  };
+
   // --- Preview & Compile LaTeX ---
   const handleFetchPreview = async (templateId = null) => {
     try {
@@ -281,6 +435,7 @@ export default function ProfileView({
       if (!res.ok) throw new Error('Failed to generate CV preview.');
       const data = await res.json();
       setPreviewLatex(data.latex_source);
+      setEditedLatex(data.latex_source);
       setPreviewTemplateName(data.template_name);
       showToast?.('CV compiled successfully with active template!');
     } catch (err) {
@@ -290,9 +445,23 @@ export default function ProfileView({
     }
   };
 
+  const handleCopyLatex = async () => {
+    const codeToCopy = previewMode === 'split' ? (editedLatex || previewLatex) : previewLatex;
+    if (!codeToCopy) return;
+    try {
+      await navigator.clipboard.writeText(codeToCopy);
+      setIsCopied(true);
+      showToast?.('LaTeX code copied to clipboard!');
+      setTimeout(() => setIsCopied(false), 2500);
+    } catch {
+      showToast?.('Failed to copy to clipboard.');
+    }
+  };
+
   const handleDownloadLatex = () => {
-    if (!previewLatex) return;
-    const blob = new Blob([previewLatex], { type: 'text/x-tex;charset=utf-8' });
+    const codeToDownload = previewMode === 'split' ? (editedLatex || previewLatex) : previewLatex;
+    if (!codeToDownload) return;
+    const blob = new Blob([codeToDownload], { type: 'text/x-tex;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -300,6 +469,178 @@ export default function ProfileView({
     link.click();
     URL.revokeObjectURL(url);
     showToast?.('Downloaded LaTeX source file.');
+  };
+
+  // Helper to render authentic A4 compiled CV page cards
+  const renderA4Pages = () => {
+    if (isLoadingPreview) {
+      return (
+        <div className="loading-preview-state">
+          <Sparkles size={36} className="spin-icon text-emerald-400" />
+          <p style={{ marginTop: '12px', color: 'var(--text-secondary)' }}>
+            Compiling profile entities into pixel-perfect CV document...
+          </p>
+        </div>
+      );
+    }
+
+    if (!previewLatex && !editedLatex) {
+      return (
+        <div className="empty-panel-state">
+          <FileCode size={36} className="dim-icon" />
+          <h4>No Compiled Preview Available</h4>
+          <p>Click "Re-compile Preview" above to generate your compiled CV page.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="overleaf-multi-page-container">
+        {paginatedPages.map((page, pIdx) => (
+          <div key={pIdx} className="overleaf-a4-page-card" id={`profile-cv-page-${page.pageNumber}`}>
+            {/* Page number badge */}
+            <div className="a4-page-top-badge">Page {page.pageNumber} of {paginatedPages.length}</div>
+
+            {/* Document Header (Page 1) */}
+            {page.hasHeader && (
+              <div className="cv-header-container">
+                <div className="cv-header-top-row">
+                  <div className="cv-header-left">
+                    <h1 className="cv-name">{(parsedDoc.header.name || profileForm.full_name || 'CANDIDATE').toUpperCase()}</h1>
+                    <div className="cv-header-links-row">
+                      {parsedDoc.header.leftLinks.map((lk, lIdx) => (
+                        <React.Fragment key={lIdx}>
+                          <a
+                            href={lk.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cv-header-link"
+                            title={lk.url}
+                          >
+                            {lk.label}
+                          </a>
+                          {lIdx < parsedDoc.header.leftLinks.length - 1 && (
+                            <span className="cv-link-pipe">|</span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="cv-header-right">
+                    <div className="cv-location-line">
+                      Location: {parsedDoc.header.location || [profileForm.location_city, profileForm.location_country].filter(Boolean).join(', ') || 'Remote / Worldwide'}
+                    </div>
+                    <div className="cv-header-contact-row">
+                      {parsedDoc.header.rightLinks.map((rk, rIdx) => (
+                        <React.Fragment key={rIdx}>
+                          <span className="cv-contact-prefix">
+                            {rk.url.startsWith('mailto:') ? 'Email: ' : 'Mobile: '}
+                          </span>
+                          <a
+                            href={rk.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cv-header-link"
+                            title={rk.url}
+                          >
+                            {rk.label}
+                          </a>
+                          {rIdx < parsedDoc.header.rightLinks.length - 1 && (
+                            <span className="cv-link-pipe">|</span>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cv-header-divider" />
+              </div>
+            )}
+
+            {/* Sections on this page */}
+            {page.sections.map((sec, secIdx) => (
+              <div key={secIdx} className="cv-section-container">
+                <div className="cv-section-title-wrap">
+                  <h3 className="cv-section-heading">{sec.title}</h3>
+                  <div className="cv-section-rule" />
+                </div>
+
+                <div className="cv-section-items-body">
+                  {sec.items.map((item, itemIdx) => {
+                    if (item.type === 'skills_line') {
+                      return (
+                        <div key={itemIdx} className="cv-skills-row">
+                          <strong
+                            className="skills-category-col"
+                            dangerouslySetInnerHTML={{
+                              __html: item.categoryHtml ? `${item.categoryHtml}:` : `${item.category}:`,
+                            }}
+                          />
+                          <span
+                            className="skills-content-col"
+                            dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                          />
+                        </div>
+                      );
+                    }
+                    if (item.type === 'heading') {
+                      return (
+                        <div key={itemIdx} className="cv-quad-heading-block">
+                          <div className="quad-row quad-top">
+                            <span className="quad-role-title">{item.role}</span>
+                            <span className="quad-location-text">{item.locationOrDate}</span>
+                          </div>
+                          <div className="quad-row quad-bottom">
+                            <span className="quad-company-text"><em>{item.companyOrDegree}</em></span>
+                            {item.submeta && (
+                              <span className="quad-dates-text"><em>{item.submeta}</em></span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (item.type === 'trio_heading') {
+                      return (
+                        <div key={itemIdx} className="cv-trio-heading-block">
+                          <div
+                            className="trio-title-text"
+                            dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                          />
+                          {item.right && <span className="trio-right-text">{item.right}</span>}
+                        </div>
+                      );
+                    }
+                    if (item.type === 'bullet') {
+                      return (
+                        <div key={itemIdx} className="cv-bullet-item-row">
+                          <span className="cv-bullet-point">•</span>
+                          <div
+                            className="cv-bullet-text-wrap"
+                            dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        key={itemIdx}
+                        className="cv-prose-text-wrap"
+                        dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* A4 Page Number Footer */}
+            <div className="a4-page-number-footer">Page {page.pageNumber} of {paginatedPages.length}</div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -357,6 +698,14 @@ export default function ProfileView({
         >
           <Code className="tab-icon" />
           <span>Skills ({profile?.skills?.length || 0})</span>
+        </button>
+
+        <button
+          className={`sub-tab-btn ${activeTab === 'projects' ? 'active' : ''}`}
+          onClick={() => setActiveTab('projects')}
+        >
+          <FolderGit2 className="tab-icon" />
+          <span>Projects ({profile?.projects?.length || 0})</span>
         </button>
 
         <button
@@ -491,6 +840,7 @@ export default function ProfileView({
                 name="portfolio_url"
                 value={profileForm.portfolio_url || ''}
                 onChange={handleFieldChange}
+                placeholder="https://yourportfolio.com"
               />
             </div>
           </div>
@@ -500,7 +850,7 @@ export default function ProfileView({
             <textarea
               name="summary"
               rows={4}
-              value={profileForm.summary || profileForm.core_narrative || ''}
+              value={profileForm.summary || ''}
               onChange={handleFieldChange}
               placeholder="Concise 2-4 sentence executive narrative of your experience, ownership, and engineering impact..."
             />
@@ -545,11 +895,11 @@ export default function ProfileView({
                       </div>
                     </div>
                     <div className="card-actions">
-                      <button className="btn-icon-subtle" onClick={() => handleOpenEditExp(exp)}>
-                        <Edit2 size={16} />
+                      <button className="btn-icon-subtle" title="Edit Position" onClick={() => handleOpenEditExp(exp)}>
+                        <Edit2 size={15} />
                       </button>
-                      <button className="btn-icon-danger" onClick={() => handleDeleteExp(exp.id)}>
-                        <Trash2 size={16} />
+                      <button className="btn-icon-danger" title="Remove Position" onClick={() => handleDeleteExp(exp.id)}>
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
@@ -579,7 +929,7 @@ export default function ProfileView({
           <div className="panel-header">
             <div>
               <h3>Education & Credentials</h3>
-              <p className="subtext">Academic degrees, institutions, and honors.</p>
+              <p className="subtext">Academic degrees, institutions, locations, and honors.</p>
             </div>
             <button className="action-btn-primary" onClick={handleOpenAddEdu}>
               <Plus size={16} /> Add Education
@@ -602,12 +952,16 @@ export default function ProfileView({
                       <h5 className="card-company">{edu.institution}</h5>
                       <div className="card-meta">
                         <span>{edu.start_date} -- {edu.end_date}</span>
-                        {edu.grade && <span> &bull; {edu.grade}</span>}
+                        {edu.location && <span> &bull; {edu.location}</span>}
+                        {edu.grade && <span> &bull; Grade: {edu.grade}</span>}
                       </div>
                     </div>
                     <div className="card-actions">
-                      <button className="btn-icon-danger" onClick={() => handleDeleteEdu(edu.id)}>
-                        <Trash2 size={16} />
+                      <button className="btn-icon-subtle" title="Edit Education" onClick={() => handleOpenEditEdu(edu)}>
+                        <Edit2 size={15} />
+                      </button>
+                      <button className="btn-icon-danger" title="Remove Education" onClick={() => handleDeleteEdu(edu.id)}>
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
@@ -628,7 +982,7 @@ export default function ProfileView({
             </div>
           </div>
 
-          {/* Add skill form */}
+          {/* Add skill form with aligned height and tokens */}
           <form onSubmit={handleAddSkill} className="add-subrecord-form">
             <input
               type="text"
@@ -679,9 +1033,10 @@ export default function ProfileView({
                         <button
                           type="button"
                           className="chip-remove"
+                          title="Remove skill"
                           onClick={() => handleDeleteSkill(s.id)}
                         >
-                          &times;
+                          <X size={12} />
                         </button>
                       </span>
                     ))}
@@ -693,7 +1048,116 @@ export default function ProfileView({
         </div>
       )}
 
-      {/* TAB 5: TARGET ROLES & LOCATIONS */}
+      {/* TAB 5: PROJECTS */}
+      {activeTab === 'projects' && (
+        <div className="panel-card">
+          <div className="panel-header">
+            <div>
+              <h3>Featured Projects & Deliverables</h3>
+              <p className="subtext">Portfolio projects, open-source repositories, and key engineering systems.</p>
+            </div>
+            <button className="action-btn-primary" onClick={handleOpenAddProj}>
+              <Plus size={16} /> Add Project
+            </button>
+          </div>
+
+          <div className="projects-list">
+            {(!profile?.projects || profile.projects.length === 0) ? (
+              <div className="empty-panel-state">
+                <FolderGit2 size={36} className="dim-icon" />
+                <h4>No projects recorded yet</h4>
+                <p>Click "Add Project" above to highlight open-source repositories, client deliverables, or portfolio systems.</p>
+              </div>
+            ) : (
+              profile.projects.map((proj) => (
+                <div key={proj.id} className="career-card">
+                  <div className="career-card-header">
+                    <div>
+                      <div className="role-company-line">
+                        <h4 className="card-title">{proj.title}</h4>
+                        {proj.role && (
+                          <>
+                            <span className="card-at">as</span>
+                            <h4 className="card-company">{proj.role}</h4>
+                          </>
+                        )}
+                        {proj.end_date === 'Present' && <span className="badge-active">Ongoing</span>}
+                      </div>
+
+                      <div className="card-meta">
+                        <span>{proj.start_date || 'Project'} -- {proj.end_date || 'Completed'}</span>
+                      </div>
+
+                      {/* Project Links (Live Demo + GitHub) */}
+                      <div className="project-links-row">
+                        {proj.url && (
+                          <a
+                            href={proj.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="project-link-badge"
+                            title="Open live project"
+                          >
+                            <ExternalLink size={12} />
+                            <span>Live Demo</span>
+                          </a>
+                        )}
+                        {proj.github_url && (
+                          <a
+                            href={proj.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="project-link-badge"
+                            title="Open GitHub repository"
+                          >
+                            <GitBranch size={12} />
+                            <span>GitHub Repo</span>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Tech stack badges */}
+                      {proj.technologies && (
+                        <div className="tech-stack-row">
+                          {proj.technologies.split(',').map((tech, tIdx) => (
+                            <span key={tIdx} className="tech-stack-badge">
+                              {tech.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="card-actions">
+                      <button className="btn-icon-subtle" title="Edit Project" onClick={() => handleOpenEditProj(proj)}>
+                        <Edit2 size={15} />
+                      </button>
+                      <button className="btn-icon-danger" title="Remove Project" onClick={() => handleDeleteProj(proj.id)}>
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {proj.description && <p className="card-desc">{proj.description}</p>}
+
+                  {proj.highlights && (
+                    <ul className="card-highlights">
+                      {(typeof proj.highlights === 'string' && proj.highlights.startsWith('[')
+                        ? JSON.parse(proj.highlights)
+                        : proj.highlights.split('\n')
+                      ).map((bullet, idx) => (
+                        <li key={idx}>{bullet}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: TARGET ROLES & LOCATIONS */}
       {activeTab === 'targets' && (
         <div className="targets-section-grid">
           {/* Target Roles */}
@@ -725,18 +1189,27 @@ export default function ProfileView({
             </form>
 
             <div className="subrecord-list">
-              {targetDesignations.map((desig, idx) => (
-                <div key={desig.id || idx} className="subrecord-item">
-                  <span className="rank-badge">#{idx + 1}</span>
-                  <span className="item-title">{desig.title}</span>
-                  <button
-                    className="btn-icon-danger"
-                    onClick={() => onDeleteDesignation(desig.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+              {targetDesignations.length === 0 ? (
+                <div className="subrecord-empty-state">
+                  <span>No target roles added yet. Add your preferred job titles above.</span>
                 </div>
-              ))}
+              ) : (
+                targetDesignations.map((desig, idx) => (
+                  <div key={desig.id || idx} className="subrecord-item">
+                    <div className="subrecord-left">
+                      <span className="rank-badge">#{idx + 1}</span>
+                      <span className="item-title">{desig.title}</span>
+                    </div>
+                    <button
+                      className="btn-icon-danger"
+                      title="Remove Role"
+                      onClick={() => onDeleteDesignation(desig.id)}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -778,47 +1251,90 @@ export default function ProfileView({
             </form>
 
             <div className="subrecord-list">
-              {targetLocations.map((loc) => (
-                <div key={loc.id} className="subrecord-item">
-                  <span className="item-title">{loc.location_name}</span>
-                  <span className={`workplace-badge badge-${loc.location_type}`}>
-                    {loc.location_type}
-                  </span>
-                  <button
-                    className="btn-icon-danger"
-                    onClick={() => onDeleteLocation(loc.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+              {targetLocations.length === 0 ? (
+                <div className="subrecord-empty-state">
+                  <span>No target locations added yet. Add your target cities or remote preferences above.</span>
                 </div>
-              ))}
+              ) : (
+                targetLocations.map((loc) => (
+                  <div key={loc.id} className="subrecord-item">
+                    <div className="subrecord-left">
+                      <MapPin size={15} className="subrecord-pin-icon" />
+                      <span className="item-title">{loc.location_name}</span>
+                    </div>
+                    <div className="subrecord-actions">
+                      <span className={`workplace-badge badge-${loc.location_type}`}>
+                        {loc.location_type === 'remote' ? (
+                          <Wifi size={11} />
+                        ) : loc.location_type === 'hybrid' ? (
+                          <Building2 size={11} />
+                        ) : loc.location_type === 'onsite' ? (
+                          <MapPin size={11} />
+                        ) : (
+                          <Globe size={11} />
+                        )}
+                        <span>{WORKPLACE_LABELS[loc.location_type] || loc.location_type}</span>
+                      </span>
+                      <button
+                        className="btn-icon-danger"
+                        title="Remove Location"
+                        onClick={() => onDeleteLocation(loc.id)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 6: CV TEMPLATE & PREVIEW */}
+      {/* TAB 7: CV TEMPLATE & PREVIEW */}
       {activeTab === 'template' && (
         <div className="panel-card">
           <div className="panel-header">
             <div>
               <h3>Admin-Curated CV Template & Live Preview</h3>
               <p className="subtext">
-                Your profile data compiles into pixel-perfect LaTeX instantly without requiring manual LaTeX edits.
+                Your profile data compiles into pixel-perfect Overleaf LaTeX instantly with live side-by-side editing.
               </p>
             </div>
             <div className="header-actions">
+              {/* Copy LaTeX button */}
+              <button
+                className="action-btn-secondary"
+                onClick={handleCopyLatex}
+                disabled={!previewLatex && !editedLatex}
+                title="Copy full LaTeX source to clipboard"
+              >
+                {isCopied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                <span>{isCopied ? 'Copied!' : 'Copy LaTeX'}</span>
+              </button>
+
+              {/* Toggle Split Side-by-Side Mode */}
+              <button
+                className={previewMode === 'split' ? 'action-btn-primary' : 'action-btn-secondary'}
+                onClick={() => setPreviewMode((prev) => (prev === 'split' ? 'preview' : 'split'))}
+                title={previewMode === 'split' ? 'Switch to Full Page Preview' : 'Edit LaTeX & View Side-by-Side'}
+              >
+                {previewMode === 'split' ? <Layout size={16} /> : <Columns size={16} />}
+                <span>{previewMode === 'split' ? 'Full Preview' : 'Edit LaTeX & Split View'}</span>
+              </button>
+
               <button
                 className="action-btn-secondary"
                 onClick={() => handleFetchPreview()}
                 disabled={isLoadingPreview}
               >
-                <Sparkles size={16} /> Re-compile Preview
+                <Sparkles size={16} /> Re-compile
               </button>
+
               <button
                 className="action-btn-primary"
                 onClick={handleDownloadLatex}
-                disabled={!previewLatex}
+                disabled={!previewLatex && !editedLatex}
               >
                 <Download size={16} /> Download .tex
               </button>
@@ -848,19 +1364,57 @@ export default function ProfileView({
             </button>
           </div>
 
-          {/* Compiled LaTeX View Box */}
-          <div className="latex-preview-box">
-            {isLoadingPreview ? (
-              <div className="loading-preview-state">
-                <Sparkles size={32} className="spin-icon" />
-                <p>Compiling profile entities into LaTeX template...</p>
+          {/* DEFAULT MODE: Authentic Full-Page A4 Document Preview */}
+          {previewMode === 'preview' && (
+            <div className="cv-full-preview-container">
+              {renderA4Pages()}
+            </div>
+          )}
+
+          {/* SPLIT MODE: Side-by-Side Editor (Left) + Live Preview (Right) */}
+          {previewMode === 'split' && (
+            <div className="cv-preview-split-layout">
+              {/* Left Column: Code Editor */}
+              <div className="cv-editor-col">
+                <div className="split-editor-toolbar">
+                  <div className="split-editor-title">
+                    <Code2 size={14} className="text-emerald-400" />
+                    <span>LaTeX Source Editor</span>
+                  </div>
+                  <div className="card-actions">
+                    <button
+                      type="button"
+                      className="btn-liveness-check"
+                      onClick={() => setEditedLatex(previewLatex || '')}
+                      title="Reset edits to server compiled source"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-liveness-check"
+                      onClick={handleCopyLatex}
+                      title="Copy code"
+                    >
+                      <Copy size={11} /> Copy
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  className="split-code-textarea"
+                  value={editedLatex}
+                  onChange={(e) => setEditedLatex(e.target.value)}
+                  placeholder="% Enter or edit your LaTeX document source here..."
+                  spellCheck="false"
+                />
               </div>
-            ) : (
-              <pre className="code-viewer-block">
-                <code>{previewLatex || '% Click Re-compile Preview to generate LaTeX.'}</code>
-              </pre>
-            )}
-          </div>
+
+              {/* Right Column: Live Compiled A4 Preview */}
+              <div className="cv-preview-col">
+                {renderA4Pages()}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1006,7 +1560,7 @@ export default function ProfileView({
                 </div>
               </div>
 
-              <div className="form-grid-3">
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label>Field of Study</label>
                   <input
@@ -1016,6 +1570,18 @@ export default function ProfileView({
                     placeholder="e.g. Computer Science"
                   />
                 </div>
+                <div className="form-group">
+                  <label>Campus / City Location</label>
+                  <input
+                    type="text"
+                    value={eduForm.location}
+                    onChange={(e) => setEduForm({ ...eduForm, location: e.target.value })}
+                    placeholder="e.g. Stanford, CA or Cambridge, UK"
+                  />
+                </div>
+              </div>
+
+              <div className="form-grid-3">
                 <div className="form-group">
                   <label>Start Year</label>
                   <input
@@ -1034,6 +1600,15 @@ export default function ProfileView({
                     placeholder="2022"
                   />
                 </div>
+                <div className="form-group">
+                  <label>Grade / GPA / Honors</label>
+                  <input
+                    type="text"
+                    value={eduForm.grade}
+                    onChange={(e) => setEduForm({ ...eduForm, grade: e.target.value })}
+                    placeholder="e.g. 3.9 / 4.0 or First Class"
+                  />
+                </div>
               </div>
 
               <div className="modal-actions">
@@ -1042,6 +1617,133 @@ export default function ProfileView({
                 </button>
                 <button type="submit" className="action-btn-primary">
                   Save Education
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD / EDIT PROJECT */}
+      {isProjModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-content modal-medium">
+            <div className="modal-header">
+              <h3>{editingProj ? 'Edit Project' : 'Add Project'}</h3>
+              <button className="btn-icon-close" onClick={() => setIsProjModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveProj} className="modal-form">
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label>Project Name *</label>
+                  <input
+                    type="text"
+                    value={projForm.title}
+                    onChange={(e) => setProjForm({ ...projForm, title: e.target.value })}
+                    placeholder="e.g. Full Send Sports AI"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role / Ownership</label>
+                  <input
+                    type="text"
+                    value={projForm.role}
+                    onChange={(e) => setProjForm({ ...projForm, role: e.target.value })}
+                    placeholder="e.g. Creator & Lead Architect"
+                  />
+                </div>
+              </div>
+
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label>Live Link / Demo URL</label>
+                  <input
+                    type="url"
+                    value={projForm.url}
+                    onChange={(e) => setProjForm({ ...projForm, url: e.target.value })}
+                    placeholder="https://example.com/demo"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>GitHub Repository URL</label>
+                  <input
+                    type="url"
+                    value={projForm.github_url}
+                    onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })}
+                    placeholder="https://github.com/user/project"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Tech Stack (comma-separated)</label>
+                <input
+                  type="text"
+                  value={projForm.technologies}
+                  onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })}
+                  placeholder="e.g. Python, FastAPI, React 19, PostgreSQL, Docker, AWS"
+                />
+              </div>
+
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label>Start Date</label>
+                  <input
+                    type="text"
+                    value={projForm.start_date}
+                    onChange={(e) => setProjForm({ ...projForm, start_date: e.target.value })}
+                    placeholder="e.g. 2024-01 or Jan 2024"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>End Date</label>
+                  <input
+                    type="text"
+                    value={projForm.end_date}
+                    onChange={(e) => setProjForm({ ...projForm, end_date: e.target.value })}
+                    placeholder="e.g. 2024-06"
+                    disabled={projForm.is_current}
+                  />
+                  <label className="checkbox-inline">
+                    <input
+                      type="checkbox"
+                      checked={projForm.is_current}
+                      onChange={(e) => setProjForm({ ...projForm, is_current: e.target.checked })}
+                    />
+                    Ongoing project
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Project Description</label>
+                <textarea
+                  rows={2}
+                  value={projForm.description}
+                  onChange={(e) => setProjForm({ ...projForm, description: e.target.value })}
+                  placeholder="Summary of the project's purpose, architecture, and engineering scale..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Key Highlights & Accomplishments (one bullet per line)</label>
+                <textarea
+                  rows={3}
+                  value={projForm.highlights}
+                  onChange={(e) => setProjForm({ ...projForm, highlights: e.target.value })}
+                  placeholder="&bull; Trained ensemble XGBoost pipeline on 10k+ records with sub-100ms latency&#10;&bull; Deployed on AWS with high-availability autoscaling"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="action-btn-secondary" onClick={() => setIsProjModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="action-btn-primary">
+                  Save Project
                 </button>
               </div>
             </form>
