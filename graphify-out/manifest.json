@@ -1428,27 +1428,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/CareerCopilotView.jsx": {
-    "mtime": 1793790198.0878482,
-    "seen": 1793790652.2480347,
-    "ast_hash": "110c45540a3448f791c1a5b9b2ee2ada",
-    "semantic_hash": ""
-  },
-  "scratch/apply_copilot_css.py": {
-    "mtime": 1793790472.3064132,
-    "seen": 1793790652.2480886,
-    "ast_hash": "391b4d0e24e9af1fd77e06a847d1f88b",
-    "semantic_hash": ""
-  },
-  "scratch/fix_card_icon.py": {
-    "mtime": 1793790472.849979,
-    "seen": 1793790652.2480905,
-    "ast_hash": "ac43d69088a2c0c5e625091ecf49e372",
-    "semantic_hash": ""
-  },
-  "scratch/fix_hero_padding.py": {
-    "mtime": 1793790473.1357977,
-    "seen": 1793790652.2480924,
-    "ast_hash": "d3e2ac9b57f940ed4b669109b268c5d1",
+    "mtime": 1793790841.371235,
+    "seen": 1793790891.643994,
+    "ast_hash": "b46946557fe42f76107422eba35bb3f4",
     "semantic_hash": ""
   }
 }

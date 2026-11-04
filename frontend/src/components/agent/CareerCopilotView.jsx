@@ -75,6 +75,8 @@ export default function CareerCopilotView({ activeContext = {} }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
+  const isStarterState = messages.length <= 1;
+
   // Auto-scroll on new messages when actively chatting
   useEffect(() => {
     if (!isStarterState && messagesEndRef.current) {
@@ -109,8 +111,6 @@ export default function CareerCopilotView({ activeContext = {} }) {
       [msgId]: !prev[msgId],
     }));
   };
-
-  const isStarterState = messages.length <= 1;
 
   return (
     <div className="copilot-fullscreen-view" role="main" aria-label="Career Copilot Autonomous Operating System">
