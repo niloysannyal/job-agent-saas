@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import './App.css';
 import { useTheme } from './utils/theme';
 import { AuthProvider, useAuth, parseJwtPayload } from './context/AuthContext';
+import { AgentProvider } from './context/AgentContext';
+import CareerAgentDock from './components/agent/CareerAgentDock';
 
 import LandingPageView from './components/LandingPageView';
 import LoginModal from './components/LoginModal';
@@ -1059,6 +1061,14 @@ function CareerAppInner() {
         showToast={showToast}
       />
 
+      <CareerAgentDock
+        activeContext={{
+          screen: effectiveSection,
+          job_id: selectedJobForStudio?.id,
+          candidate_name: profileForm?.full_name,
+        }}
+      />
+
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
   );
@@ -1067,8 +1077,10 @@ function CareerAppInner() {
 export default function App() {
   return (
     <AuthProvider>
-      <CareerAppInner />
-      {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      <AgentProvider>
+        <CareerAppInner />
+        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      </AgentProvider>
     </AuthProvider>
   );
 }

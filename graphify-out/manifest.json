@@ -96,15 +96,15 @@
     "semantic_hash": ""
   },
   "backend/app/main.py": {
-    "mtime": 1793274831.1684332,
-    "seen": 1793276171.7263236,
-    "ast_hash": "459fe09019f58636678f8b22b35f4759",
+    "mtime": 1793775272.6014402,
+    "seen": 1793776916.6516082,
+    "ast_hash": "2e7069a0c035a78fedda93e53922f4c5",
     "semantic_hash": ""
   },
   "backend/app/models/__init__.py": {
-    "mtime": 1793442512.3482897,
-    "seen": 1793444436.8095818,
-    "ast_hash": "06577f60587c038409a19d848d006ed1",
+    "mtime": 1793774937.2133546,
+    "seen": 1793776916.6516101,
+    "ast_hash": "79a3aeefd1939e40dee653024d1cffbd",
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793771696.710185,
-    "seen": 1793771792.1499586,
-    "ast_hash": "865d83fe23337363ea72e231676c5a43",
+    "mtime": 1793775774.6754353,
+    "seen": 1793776916.651784,
+    "ast_hash": "4616521191543dcf152965b700071bce",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -522,15 +522,15 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1793771712.367068,
-    "seen": 1793771792.1499832,
+    "mtime": 1793772009.6171372,
+    "seen": 1793774789.867565,
     "ast_hash": "580b36977485b1b1d97713619bc7ed62",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1793765107.4613507,
-    "seen": 1793768162.9651253,
-    "ast_hash": "7e80457e14924d2ac56739f3f508907d",
+    "mtime": 1793775815.0136628,
+    "seen": 1793776916.6518092,
+    "ast_hash": "f774dffeafa0606ac104bd93e1472e4a",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -1191,6 +1191,150 @@
     "mtime": 1793763624.6173363,
     "seen": 1793768162.9651709,
     "ast_hash": "1259dc3268dd83dc508b00586d87949d",
+    "semantic_hash": ""
+  },
+  "backend/app/api/agent.py": {
+    "mtime": 1793775261.8255186,
+    "seen": 1793776916.6515524,
+    "ast_hash": "4d048c350a1390601c4427f6c57a2862",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/3257c49a645d_add_agent_action_proposals_.py": {
+    "mtime": 1793774965.2460723,
+    "seen": 1793776916.6515837,
+    "ast_hash": "aedbe83238bb94c91f12986d70bdcb4e",
+    "semantic_hash": ""
+  },
+  "backend/app/models/agent.py": {
+    "mtime": 1793774920.1842518,
+    "seen": 1793776916.6516137,
+    "ast_hash": "d06ec01042ca6b42a3f6801676a94902",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/base_tool.py": {
+    "mtime": 1793775378.005061,
+    "seen": 1793776916.6516306,
+    "ast_hash": "0e0222bdc0a92ad9769190ccf81ebf6a",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/engine.py": {
+    "mtime": 1793775227.0923765,
+    "seen": 1793776916.651632,
+    "ast_hash": "ffb1bbce732e508c1cfaa88abd149132",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/event_bus.py": {
+    "mtime": 1793775030.6470861,
+    "seen": 1793776916.6516335,
+    "ast_hash": "ad60d6119ad88a58d0eecbe6db3bd053",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/registry.py": {
+    "mtime": 1793775037.9939754,
+    "seen": 1793776916.6516347,
+    "ast_hash": "d6bb49d9179aee25a2217ad5cecd3941",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/__init__.py": {
+    "mtime": 1793775176.612582,
+    "seen": 1793776916.6516361,
+    "ast_hash": "a19f571d8a6b6d49df3b892283459229",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/experience_reflector_tool.py": {
+    "mtime": 1793775382.065344,
+    "seen": 1793776916.6516376,
+    "ast_hash": "82c99d4ee056d3fbab4fac26c3d458b3",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/search_jobs_tool.py": {
+    "mtime": 1793775054.2690346,
+    "seen": 1793776916.651639,
+    "ast_hash": "c1917fa90459f88d1b6f9c009629e2b6",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/stage_proposal_tool.py": {
+    "mtime": 1793776133.1998353,
+    "seen": 1793776916.6516404,
+    "ast_hash": "fdad189298404fb485af612c10969a16",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/star_coach_tool.py": {
+    "mtime": 1793775162.944683,
+    "seen": 1793776916.6516416,
+    "ast_hash": "4d06a5109f9d461623ff236d41d7dc28",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/tailor_cv_tool.py": {
+    "mtime": 1793776121.1386096,
+    "seen": 1793776916.6516428,
+    "ast_hash": "737ff8484834a0d198b38d3513a5add4",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/track_lifecycle_tool.py": {
+    "mtime": 1793775148.951279,
+    "seen": 1793776916.651644,
+    "ast_hash": "2ef3ff73e8f697e87d90aa2447d8cef3",
+    "semantic_hash": ""
+  },
+  "backend/tests/api/test_agent.py": {
+    "mtime": 1793775438.1419063,
+    "seen": 1793776916.6517298,
+    "ast_hash": "1591730a3a34d02264587094456ac6e6",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/CareerAgentDock.jsx": {
+    "mtime": 1793775647.9605825,
+    "seen": 1793776916.6518123,
+    "ast_hash": "7fbc1d60d0860becee71906fd3058968",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/FunnelInsight.jsx": {
+    "mtime": 1793775621.2456157,
+    "seen": 1793776916.651814,
+    "ast_hash": "e4a8b3e3b70e504023d0d93b86ec8b36",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/JobRadarCarousel.jsx": {
+    "mtime": 1793775559.9856093,
+    "seen": 1793776916.6518152,
+    "ast_hash": "eeaac04c48587f3263161533e7a434a4",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/STARStoryMatch.jsx": {
+    "mtime": 1793775613.055364,
+    "seen": 1793776916.6518166,
+    "ast_hash": "9235b1b960224532d8f76507f1573f85",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/SendApprovalGate.jsx": {
+    "mtime": 1793775598.2740636,
+    "seen": 1793776916.651818,
+    "ast_hash": "dfca3a8c7bb11d30d65d845b8d06adc7",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/TailorDiffReview.jsx": {
+    "mtime": 1793775573.4414206,
+    "seen": 1793776916.6518192,
+    "ast_hash": "dfea3259cf2a687fc32ca027389b096a",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/WidgetRegistry.jsx": {
+    "mtime": 1793775626.3404925,
+    "seen": 1793776916.6518207,
+    "ast_hash": "e991c29aab338c4b78767777da774872",
+    "semantic_hash": ""
+  },
+  "frontend/src/context/AgentContext.jsx": {
+    "mtime": 1793775534.6528492,
+    "seen": 1793776916.6518219,
+    "ast_hash": "8e88c952b2ea65ab245ce5e4d8decd9a",
+    "semantic_hash": ""
+  },
+  "frontend/src/hooks/useAgent.js": {
+    "mtime": 1793775539.6424272,
+    "seen": 1793776916.651825,
+    "ast_hash": "710e023022e01eb3458fb9a98e3d9538",
     "semantic_hash": ""
   }
 }

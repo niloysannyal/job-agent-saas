@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAgent } from '../hooks/useAgent';
 import {
+  Bot,
   LayoutDashboard,
   Briefcase,
   FileEdit,
@@ -37,6 +39,7 @@ export default function Sidebar({
   toggleTheme,
   onOpenCommandPalette,
 }) {
+  const { openDock, proposalsCount = 0 } = useAgent();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef(null);
 
@@ -189,6 +192,25 @@ export default function Sidebar({
           <Search className="quick-search-icon" />
           <span className="quick-search-label">Quick Search...</span>
           <kbd className="quick-search-kbd">⌘K</kbd>
+        </button>
+
+        {/* Autonomous Career Copilot Quick Launcher Button */}
+        <button
+          className="sidebar-copilot-btn"
+          onClick={openDock}
+          title="Open Autonomous Career Copilot (⌘J)"
+          aria-label="Open Career Copilot"
+        >
+          <div className="copilot-btn-left">
+            <Bot size={15} className="copilot-icon text-emerald" />
+            <span className="copilot-btn-label">Career Copilot</span>
+            <span className="pulse-emitter-mini" />
+          </div>
+          {proposalsCount > 0 ? (
+            <span className="copilot-proposals-pill">{proposalsCount}</span>
+          ) : (
+            <kbd className="quick-search-kbd">⌘J</kbd>
+          )}
         </button>
       </div>
 
