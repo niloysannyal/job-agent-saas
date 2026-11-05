@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -12,10 +12,12 @@ from app.models.agent import (
     AgentChatRequest,
     AgentConversation,
     AgentConversationRead,
+    AgentConversationUpdate,
     AgentMessage,
     AgentMessageRead,
     ProposalApprovalRequest,
 )
+from app.services.agent.file_extractor import extract_file_content
 from app.services.agent.engine import AgentEngine
 
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -45,6 +47,7 @@ async def chat_with_agent(
             user_text=payload.message,
             conversation_id=payload.conversation_id,
             context_filters=payload.context_filters,
+            attachments=payload.attachments,
         ):
             yield chunk
 
@@ -101,6 +104,63 @@ def get_conversation(
             detail="Conversation session not found.",
         )
     return convo
+
+
+@router.patch("/conversations/{conversation_id}", response_model=AgentConversationRead)
+def update_conversation(
+    conversation_id: str,
+    payload: AgentConversationUpdate,
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """Updates conversation metadata such as title or is_pinned state."""
+    tenant_id = resolve_tenant_id(current_account, account_id)
+    convo = (
+        db.query(AgentConversation)
+        .filter(
+            AgentConversation.id == conversation_id,
+            AgentConversation.account_id == tenant_id,
+        )
+        .first()
+    )
+    if not convo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation session not found.",
+        )
+    if payload.title is not None:
+        cleaned = payload.title.strip()
+        if cleaned:
+            convo.title = cleaned
+    if payload.is_pinned is not None:
+        convo.is_pinned = payload.is_pinned
+    db.commit()
+    db.refresh(convo)
+    return convo
+
+
+@router.post("/upload")
+async def upload_files_for_agent(
+    files: List[UploadFile] = File(...),
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+):
+    """
+    Accepts arbitrary user files (images, pdf, xlsx, txt, mp3, code, etc.),
+    extracts structured data and text content, and returns attachment metadata
+    ready to inject into chat context and memory.
+    """
+    extracted_results = []
+    for f in files:
+        file_bytes = await f.read()
+        extracted = extract_file_content(
+            filename=f.filename or "uploaded_file",
+            file_bytes=file_bytes,
+            content_type=f.content_type or "",
+        )
+        extracted_results.append(extracted)
+    return {"files": extracted_results}
 
 
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)

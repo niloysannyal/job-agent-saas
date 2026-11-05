@@ -219,6 +219,74 @@ export const AgentProvider = ({ children }) => {
     }
   }, [effectiveAccountId, getHeaders, activeConversationId, resetConversation]);
 
+  // Rename conversation title
+  const renameConversation = useCallback(async (conversationId, newTitle) => {
+    if (!conversationId || !newTitle || !newTitle.trim()) return;
+    const trimmed = newTitle.trim();
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, title: trimmed } : c))
+    );
+    try {
+      const url = effectiveAccountId
+        ? `/api/v1/agent/conversations/${conversationId}?account_id=${effectiveAccountId}`
+        : `/api/v1/agent/conversations/${conversationId}`;
+      await fetch(url, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ title: trimmed }),
+      });
+    } catch (err) {
+      console.warn('Failed to rename conversation:', err);
+    }
+  }, [effectiveAccountId, getHeaders]);
+
+  // Toggle pin conversation
+  const togglePinConversation = useCallback(async (conversationId, isPinned) => {
+    if (!conversationId) return;
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, is_pinned: isPinned } : c))
+    );
+    try {
+      const url = effectiveAccountId
+        ? `/api/v1/agent/conversations/${conversationId}?account_id=${effectiveAccountId}`
+        : `/api/v1/agent/conversations/${conversationId}`;
+      await fetch(url, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ is_pinned: isPinned }),
+      });
+    } catch (err) {
+      console.warn('Failed to toggle pin state:', err);
+    }
+  }, [effectiveAccountId, getHeaders]);
+
+  // Upload files and extract data/text
+  const uploadFiles = useCallback(async (fileList) => {
+    if (!fileList || fileList.length === 0) return [];
+    const formData = new FormData();
+    Array.from(fileList).forEach((f) => formData.append('files', f));
+
+    const url = effectiveAccountId
+      ? `/api/v1/agent/upload?account_id=${effectiveAccountId}`
+      : `/api/v1/agent/upload`;
+
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (effectiveAccountId) headers['X-Account-ID'] = effectiveAccountId;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.files || [];
+    } else {
+      throw new Error(`Upload failed with status ${res.status}`);
+    }
+  }, [effectiveAccountId, token]);
+
   // Initial Sync & Polling on Mount
   useEffect(() => {
     fetchProposals();
@@ -241,21 +309,26 @@ export const AgentProvider = ({ children }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Send message with SSE streaming
-  const sendMessage = useCallback(async (userPrompt, contextFilters = {}) => {
-    if (!userPrompt || !userPrompt.trim()) return;
+  // Send message with SSE streaming and optional file attachments
+  const sendMessage = useCallback(async (userPrompt, contextFilters = {}, attachments = []) => {
+    if ((!userPrompt || !userPrompt.trim()) && (!attachments || attachments.length === 0)) return;
 
-    const trimmedPrompt = userPrompt.trim();
+    const trimmedPrompt = (userPrompt || '').trim();
     const userMsgId = 'user-' + Date.now();
     const assistantMsgId = 'assistant-' + Date.now();
 
-    // 1. Optimistic user turn
+    // 1. Optimistic user turn with file attachments widget if any
+    const userWidget = attachments && attachments.length > 0
+      ? { type: 'AttachmentList', props: { files: attachments } }
+      : null;
+
     setMessages((prev) => [
       ...prev,
       {
         id: userMsgId,
         role: 'user',
         content: trimmedPrompt,
+        ui_widget: userWidget,
         timestamp: new Date().toISOString(),
       },
       {
@@ -300,6 +373,7 @@ export const AgentProvider = ({ children }) => {
           message: trimmedPrompt,
           conversation_id: activeConversationId,
           context_filters: contextFilters,
+          attachments: attachments,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -529,6 +603,9 @@ export const AgentProvider = ({ children }) => {
     sendMessage,
     selectConversation,
     deleteConversation,
+    renameConversation,
+    togglePinConversation,
+    uploadFiles,
     approveProposal,
     rejectProposal,
     fetchProposals,

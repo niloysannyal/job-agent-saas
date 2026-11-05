@@ -108,6 +108,7 @@ class AgentEngine:
         user_text: str,
         conversation_id: Optional[str] = None,
         context_filters: Optional[Dict[str, Any]] = None,
+        attachments: Optional[List[Dict[str, Any]]] = None,
     ) -> AsyncIterator[str]:
         """
         Processes candidate prompt and yields typed SSE frames in real time:
@@ -120,12 +121,32 @@ class AgentEngine:
         """
         convo = await self.get_or_create_conversation(conversation_id)
 
-        # 1. Persist User Message
+        # 1. Persist User Message with optional file attachments
+        attached_files = attachments or (context_filters or {}).get("attachments", [])
+        user_widget = None
+        if attached_files:
+            user_widget = {
+                "type": "AttachmentList",
+                "props": {
+                    "files": [
+                        {
+                            "filename": a.get("filename", "file"),
+                            "file_type": a.get("file_type", "document"),
+                            "size_formatted": a.get("size_formatted", ""),
+                            "summary": a.get("summary", ""),
+                            "preview_url": a.get("preview_url"),
+                        }
+                        for a in attached_files
+                    ]
+                }
+            }
+
         user_msg = AgentMessage(
             conversation_id=convo.id,
             account_id=self.account_id,
             role="user",
             content=user_text,
+            ui_widget=user_widget,
         )
         self.db.add(user_msg)
         self.db.commit()
@@ -162,9 +183,22 @@ class AgentEngine:
             )
             history_str = "\n".join([f"{m.role.upper()}: {m.content}" for m in reversed(recent_msgs)])
 
+            # Build attachments context block
+            attachments_block = ""
+            if attached_files:
+                att_lines = []
+                for att in attached_files:
+                    fn = att.get("filename", "file")
+                    ft = att.get("file_type", "document")
+                    fs = att.get("summary", "")
+                    content = att.get("extracted_text", "")
+                    att_lines.append(f"--- ATTACHED FILE: {fn} [{ft.upper()}: {fs}] ---\n{content}\n--- END ATTACHED FILE ---")
+                attachments_block = "\n\n" + "\n\n".join(att_lines)
+
             prompt = (
                 f"Conversation history:\n{history_str}\n\n"
-                f"Active UI Context: {json.dumps(context_filters or {})}\n\n"
+                f"Active UI Context: {json.dumps(context_filters or {})}\n"
+                f"{attachments_block}\n\n"
                 f"Candidate Query: {user_text}\n\n"
                 f"Respond with JSON (thought, tool_call, message):"
             )

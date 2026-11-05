@@ -16,7 +16,13 @@ import {
   ShieldCheck,
   Search,
   Compass,
-  PanelLeftOpen,
+  Plus,
+  Paperclip,
+  FileText,
+  Image,
+  FileSpreadsheet,
+  Music,
+  X,
 } from 'lucide-react';
 import { useAgent } from '../../hooks/useAgent';
 import RenderWidget from './widgets/WidgetRegistry';
@@ -73,12 +79,17 @@ export default function CareerCopilotView({
     proposalsCount = 0,
     sendMessage,
     resetConversation,
+    uploadFiles,
   } = useAgent();
 
   const [input, setInput] = useState('');
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [expandedThoughts, setExpandedThoughts] = useState({});
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const isStarterState = messages.length <= 1;
 
@@ -100,11 +111,35 @@ export default function CareerCopilotView({
     }
   }, [isStarterState]);
 
+  const handleFileSelect = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      setIsUploadingFiles(true);
+      if (uploadFiles) {
+        const extracted = await uploadFiles(files);
+        if (extracted && extracted.length > 0) {
+          setAttachedFiles((prev) => [...prev, ...extracted]);
+        }
+      }
+    } catch (err) {
+      console.error('File upload/extraction failed:', err);
+    } finally {
+      setIsUploadingFiles(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (indexToRemove) => {
+    setAttachedFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
   const handleSubmit = (e) => {
     e?.preventDefault();
-    if (!input.trim() || isStreaming) return;
-    sendMessage(input, activeContext);
+    if ((!input.trim() && attachedFiles.length === 0) || isStreaming || isUploadingFiles) return;
+    sendMessage(input, activeContext, attachedFiles);
     setInput('');
+    setAttachedFiles([]);
   };
 
   const handleKeyDown = (e) => {
@@ -121,22 +156,24 @@ export default function CareerCopilotView({
     }));
   };
 
+  const getFileIcon = (fileType) => {
+    switch (fileType) {
+      case 'image':
+        return <Image size={13} className="att-icon-img" />;
+      case 'spreadsheet':
+        return <FileSpreadsheet size={13} className="att-icon-sheet" />;
+      case 'audio':
+        return <Music size={13} className="att-icon-audio" />;
+      default:
+        return <FileText size={13} className="att-icon-doc" />;
+    }
+  };
+
   return (
     <div className="copilot-fullscreen-view" role="main" aria-label="Career Copilot Autonomous Operating System">
       {/* Top Header Bar (ChatGPT / Claude Style) */}
       <header className="copilot-topbar">
         <div className="copilot-topbar-left">
-          {isSidebarCollapsed && onExpandSidebar && (
-            <button
-              type="button"
-              className="copilot-expand-sidebar-btn"
-              onClick={onExpandSidebar}
-              title="Expand sidebar (⌘\)"
-              aria-label="Expand sidebar"
-            >
-              <PanelLeftOpen size={18} />
-            </button>
-          )}
           <div className="copilot-brand-icon">
             <Bot size={20} className="text-emerald" />
             <span className="copilot-status-dot" />
@@ -222,24 +259,48 @@ export default function CareerCopilotView({
               const hasThought = Boolean(msg.thought);
               const isThoughtOpen = expandedThoughts[msg.id];
 
+              if (isUser) {
+                // User Turn: Right-aligned, no "ME" avatar badge
+                return (
+                  <article key={msg.id} className="copilot-turn-container user-turn-container">
+                    <div className="user-turn-content-box">
+                      {/* Attached files chips on user message */}
+                      {msg.ui_widget?.type === 'AttachmentList' && Array.isArray(msg.ui_widget.props?.files) && (
+                        <div className="user-attached-chips-row">
+                          {msg.ui_widget.props.files.map((file, fIdx) => (
+                            <div key={fIdx} className="user-file-chip">
+                              {getFileIcon(file.file_type)}
+                              <span className="user-file-name" title={file.filename}>{file.filename}</span>
+                              {file.size_formatted && (
+                                <span className="user-file-size">({file.size_formatted})</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {msg.content && (
+                        <div className="user-message-bubble">
+                          <p>{msg.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              }
+
+              // Assistant Turn: Left-aligned with Bot avatar and minimal thinking accordion
               return (
-                <article
-                  key={msg.id}
-                  className={`copilot-turn-container ${isUser ? 'user-turn-container' : 'assistant-turn-container'}`}
-                >
+                <article key={msg.id} className="copilot-turn-container assistant-turn-container">
                   <div className="turn-avatar-badge">
-                    {isUser ? (
-                      <span className="user-initials-txt">ME</span>
-                    ) : (
-                      <div className="assistant-bot-avatar">
-                        <Bot size={16} className="text-emerald" />
-                      </div>
-                    )}
+                    <div className="assistant-bot-avatar">
+                      <Bot size={16} className="text-emerald" />
+                    </div>
                   </div>
 
                   <div className="turn-body-content">
-                    {/* Collapsible Chain-of-Thought Disclosure */}
-                    {hasThought && !isUser && (
+                    {/* Collapsible Chain-of-Thought Disclosure (Clean, lower contrast, no neon highlights) */}
+                    {hasThought && (
                       <div className="copilot-thought-accordion">
                         <button
                           type="button"
@@ -247,7 +308,7 @@ export default function CareerCopilotView({
                           onClick={() => toggleThought(msg.id)}
                           aria-expanded={isThoughtOpen}
                         >
-                          <Lightbulb size={13} className="text-amber" />
+                          <Lightbulb size={13} className="thought-icon" />
                           <span>{isThoughtOpen ? 'Hide Internal Planning & Reasoning' : 'Show Internal Planning & Reasoning'}</span>
                           {isThoughtOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
                         </button>
@@ -312,11 +373,58 @@ export default function CareerCopilotView({
             ))}
           </div>
 
+          {/* Staged Attached Files Preview Bar */}
+          {(attachedFiles.length > 0 || isUploadingFiles) && (
+            <div className="copilot-staged-attachments-row">
+              {attachedFiles.map((att, idx) => (
+                <div key={idx} className="staged-file-pill">
+                  {getFileIcon(att.file_type)}
+                  <span className="staged-file-title" title={att.filename}>{att.filename}</span>
+                  <span className="staged-file-size">{att.size_formatted}</span>
+                  <button
+                    type="button"
+                    className="staged-file-remove-btn"
+                    onClick={() => removeAttachment(idx)}
+                    title="Remove attachment"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+              {isUploadingFiles && (
+                <div className="staged-uploading-indicator">
+                  <Loader2 size={12} className="spin text-emerald" />
+                  <span>Processing file...</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Composer Form Input Box */}
           <form className="copilot-input-box" onSubmit={handleSubmit}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              accept="*/*"
+              style={{ display: 'none' }}
+            />
+
+            <button
+              type="button"
+              className="copilot-attach-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming || isUploadingFiles}
+              title="Attach files (Images, PDF, Excel, Code, Audio, etc.)"
+              aria-label="Attach files"
+            >
+              <Plus size={18} />
+            </button>
+
             <textarea
               ref={inputRef}
-              rows={2}
+              rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -325,21 +433,19 @@ export default function CareerCopilotView({
               className="copilot-prompt-textarea"
             />
 
-            <div className="copilot-input-actions">
-              <button
-                type="submit"
-                className="copilot-send-button"
-                disabled={!input.trim() || isStreaming}
-                title="Send message to Career Copilot (Enter)"
-                aria-label="Send message"
-              >
-                {isStreaming ? (
-                  <Loader2 size={16} className="spin" />
-                ) : (
-                  <Send size={15} />
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="copilot-send-button"
+              disabled={(!input.trim() && attachedFiles.length === 0) || isStreaming || isUploadingFiles}
+              title="Send message to Career Copilot (Enter)"
+              aria-label="Send message"
+            >
+              {isStreaming ? (
+                <Loader2 size={16} className="spin" />
+              ) : (
+                <Send size={15} />
+              )}
+            </button>
           </form>
 
           {/* Grounding & Safety Disclaimer */}
@@ -354,4 +460,3 @@ export default function CareerCopilotView({
     </div>
   );
 }
-

@@ -192,17 +192,17 @@
 }
 
 .nav-item-btn.active {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: var(--emerald-600);
+  background: var(--surface-hover);
+  border-color: transparent;
+  color: var(--text-primary);
   font-weight: 600;
-  box-shadow: 0 1px 6px -1px rgba(16, 185, 129, 0.15);
+  box-shadow: none;
 }
 
 [data-theme="dark"] .nav-item-btn.active {
-  color: var(--emerald-300);
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  border-color: transparent;
 }
 
 .nav-item-btn.active .nav-icon {
@@ -12444,4 +12444,616 @@
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 9999px;
+}
+
+
+/* ==========================================================================
+   ENHANCED SIDEBAR & COPILOT UI STYLES (Pinned, Recent, Attachments, Thinking)
+   ========================================================================== */
+
+/* 1. Logo Hover-Reveal Collapse Toggle */
+.brand-logo-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo-toggle-btn .brand-icon-box {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.brand-icon-normal {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.brand-icon-hover {
+  display: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sidebar-brand:hover .brand-icon-normal {
+  display: none;
+}
+
+.sidebar-brand:hover .brand-icon-hover {
+  display: block;
+}
+
+.sidebar-brand:hover .brand-icon-box {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+}
+
+/* 2. Top Group New Chat Button */
+.sidebar-new-chat-top-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.sidebar-new-chat-top-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+.sidebar-new-chat-top-btn:hover .new-chat-icon {
+  color: var(--emerald-500);
+}
+
+.sidebar-new-chat-top-btn.btn-collapsed {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.sidebar-new-chat-top-btn .new-chat-icon {
+  flex-shrink: 0;
+}
+
+/* 3. Pinned and Recent Accordion Sections */
+.sidebar-history-sections-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-accordion-section {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.accordion-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.15s ease;
+  width: 100%;
+}
+
+.accordion-section-header:hover {
+  color: var(--text-primary);
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.section-count-pill {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+}
+
+.accordion-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+/* 4. 3-Dot Dropdown Menu & Rename Form */
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.history-more-btn {
+  opacity: 0.4;
+  transition: all 0.15s ease;
+  border: none;
+  background: transparent;
+  padding: 3px;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-chat-item:hover .history-more-btn,
+.history-more-btn.active {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.convo-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 1300;
+  min-width: 120px;
+  background: var(--surface-modal);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.convo-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.12s ease;
+}
+
+.convo-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.convo-dropdown-item.text-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--crimson-500);
+}
+
+.history-inline-rename-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.history-inline-rename-input {
+  flex: 1;
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid var(--emerald-500);
+  border-radius: var(--radius-xs);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.rename-save-btn,
+.rename-cancel-btn {
+  padding: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+}
+
+.rename-save-btn:hover {
+  color: var(--emerald-500);
+}
+
+.rename-cancel-btn:hover {
+  color: var(--crimson-500);
+}
+
+/* 5. User Turn Right Alignment & Clean Bubble */
+.user-turn-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.user-turn-content-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 78%;
+  gap: 6px;
+}
+
+.user-message-bubble {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 18px;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: left;
+  word-break: break-word;
+}
+
+[data-theme="dark"] .user-message-bubble {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.32);
+  color: #f1f5f9;
+}
+
+.user-attached-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.user-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.user-file-name {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-file-size {
+  color: var(--text-muted);
+  font-size: 10.5px;
+}
+
+/* 6. Thinking Layer - Lower Contrast Subtle Design */
+.copilot-thought-accordion {
+  background: transparent !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: none !important;
+}
+
+.thought-accordion-trigger {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: color 0.15s ease;
+}
+
+.thought-accordion-trigger:hover {
+  color: var(--text-secondary) !important;
+}
+
+.thought-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.thought-accordion-drawer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .thought-accordion-drawer {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.thought-pre-code {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* 7. Composer Staged Files & Buttons */
+.copilot-staged-attachments-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.staged-file-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.staged-file-title {
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.staged-file-size {
+  color: var(--text-muted);
+  font-size: 10.5px;
+}
+
+.staged-file-remove-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 1px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.staged-file-remove-btn:hover {
+  color: var(--crimson-500);
+}
+
+.staged-uploading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.copilot-input-box {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  background: transparent !important;
+  position: relative;
+}
+
+.copilot-attach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.copilot-attach-btn:hover {
+  background: var(--surface-active);
+  color: var(--emerald-500);
+  border-color: var(--border-default);
+}
+
+.copilot-send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--emerald-500);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.copilot-send-button:hover:not(:disabled) {
+  background: var(--emerald-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.copilot-send-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Middle Scrollable Container holding Nav Items and History Right Below STAR Coach */
+.sidebar-middle-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.sidebar-middle-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-middle-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-middle-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+  overflow-y: visible !important;
+  flex: none !important;
+}
+
+.sidebar-history-sections-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* User Profile Overflow Fixes (Email clipping/boundary containment) */
+.profile-meta,
+.profile-meta-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+  display: block;
+}
+
+.profile-email {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+  display: block;
+}
+
+.sidebar-profile-card {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Popover Menu in Collapsed Sidebar State - Floating Out Wide */
+.app-sidebar.sidebar-collapsed .profile-popover-menu,
+.profile-popover-menu.popover-collapsed-pos {
+  position: fixed !important;
+  left: 76px !important;
+  bottom: 20px !important;
+  width: 270px !important;
+  min-width: 270px !important;
+  max-width: 320px !important;
+  z-index: 3000 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar-collapse-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-toggle-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: transparent;
+}
+
+.sidebar-collapse-toggle-btn.collapsed-toggle-btn {
+  width: 36px !important;
+  height: 36px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 auto;
 }

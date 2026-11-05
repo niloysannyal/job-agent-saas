@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -114,6 +114,11 @@ class AgentConversation(Base):
         String(255),
         nullable=False,
         default="Agent Session",
+    )
+    is_pinned: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -245,16 +250,23 @@ class AgentConversationRead(BaseModel):
     id: str
     account_id: str
     title: str
+    is_pinned: bool = False
     created_at: datetime
     updated_at: datetime
     messages: List[AgentMessageRead] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
 
 
+class AgentConversationUpdate(BaseModel):
+    title: Optional[str] = Field(None, max_length=255)
+    is_pinned: Optional[bool] = None
+
+
 class AgentChatRequest(BaseModel):
     message: str = Field(..., description="User query or command for the agent")
     conversation_id: Optional[str] = Field(None, description="Optional existing session ID")
     context_filters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Active UI context such as selected job_id or screen")
+    attachments: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="Uploaded file payloads/extracted content")
 
 
 class ProposalApprovalRequest(BaseModel):

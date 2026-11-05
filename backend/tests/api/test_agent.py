@@ -348,3 +348,65 @@ def test_agent_conversation_lifecycle_endpoints(api_test_db: Session, account_a:
         # Verify deleted
         res_verify = test_client.get(f"/api/v1/agent/conversations/{convo.id}")
         assert res_verify.status_code == 404
+
+
+def test_agent_conversation_patch_and_pin(api_test_db: Session, account_a: Account):
+    """Test renaming and pinning/unpinning a conversation."""
+    from app.core.auth import get_current_account
+    app = create_app()
+
+    def override_db():
+        yield api_test_db
+
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_account] = lambda: account_a
+
+    with TestClient(app) as test_client:
+        convo = AgentConversation(
+            account_id=account_a.id,
+            title="Initial Title",
+            is_pinned=False,
+        )
+        api_test_db.add(convo)
+        api_test_db.commit()
+
+        # Update title and pin
+        patch_res = test_client.patch(
+            f"/api/v1/agent/conversations/{convo.id}",
+            json={"title": "Renamed AI Search", "is_pinned": True},
+        )
+        assert patch_res.status_code == 200
+        data = patch_res.json()
+        assert data["title"] == "Renamed AI Search"
+        assert data["is_pinned"] is True
+
+        # Verify in DB
+        api_test_db.refresh(convo)
+        assert convo.title == "Renamed AI Search"
+        assert convo.is_pinned is True
+
+
+def test_agent_file_upload_endpoint(api_test_db: Session, account_a: Account):
+    """Test uploading files and extracting text/data for agent context."""
+    from app.core.auth import get_current_account
+    app = create_app()
+
+    def override_db():
+        yield api_test_db
+
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_account] = lambda: account_a
+
+    with TestClient(app) as test_client:
+        files = [
+            ("files", ("notes.txt", b"Skills: Python, FastAPI, Docker", "text/plain")),
+            ("files", ("data.csv", b"Skill,Years\nPython,5\nReact,3", "text/csv")),
+        ]
+        res = test_client.post("/api/v1/agent/upload", files=files)
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data["files"]) == 2
+        assert data["files"][0]["filename"] == "notes.txt"
+        assert "Python" in data["files"][0]["extracted_text"]
+        assert data["files"][1]["filename"] == "data.csv"
+        assert data["files"][1]["file_type"] == "spreadsheet"
