@@ -84,12 +84,16 @@ export default function CareerCopilotView({ activeContext = {} }) {
     }
   }, [messages, isStreaming, activeThought, isStarterState]);
 
-  // Focus input on mount
+  // Focus input on mount without forcing page scroll
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.focus();
+      inputRef.current.focus({ preventScroll: true });
     }
-  }, []);
+    if (isStarterState) {
+      const vp = document.querySelector('.copilot-scroll-viewport');
+      if (vp) vp.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [isStarterState]);
 
   const handleSubmit = (e) => {
     e?.preventDefault();

@@ -11224,17 +11224,25 @@
   background: rgba(22, 30, 48, 0.98);
 }
 
-.copilot-prompt-textarea {
+.copilot-prompt-textarea,
+.copilot-prompt-textarea:focus,
+.copilot-prompt-textarea:focus-visible,
+.copilot-prompt-textarea:hover,
+.copilot-prompt-textarea:active {
   flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
+  background: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
   color: var(--text-primary);
   font-size: 14.5px;
   line-height: 1.5;
   resize: none;
   max-height: 180px;
-  padding: 2px 0;
+  padding: 4px 0 !important;
+  margin: 0 !important;
   font-family: inherit;
 }
 
