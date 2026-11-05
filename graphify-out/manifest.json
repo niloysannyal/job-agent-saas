@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793789516.2222905,
-    "seen": 1793790652.2480023,
-    "ast_hash": "0c68aa233ad00143141b87d40ddb859c",
+    "mtime": 1793850343.8621185,
+    "seen": 1793851471.9083643,
+    "ast_hash": "cedbb21fc637712970bc7ad621a4bd95",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1793789449.5601077,
-    "seen": 1793790652.248031,
-    "ast_hash": "cca15c0ad84ed9812afd10c2ae6459dc",
+    "mtime": 1793850388.0868697,
+    "seen": 1793851471.908391,
+    "ast_hash": "167e899e5a244dec13d828a3cc72d6bc",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -1194,9 +1194,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/agent.py": {
-    "mtime": 1793778156.0094316,
-    "seen": 1793788486.302052,
-    "ast_hash": "c2ca3eafd5015bce47eff8ba0286916f",
+    "mtime": 1793849886.5317569,
+    "seen": 1793851471.908118,
+    "ast_hash": "0dde516d0ba70a95b27c965743386cf8",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/3257c49a645d_add_agent_action_proposals_.py": {
@@ -1278,9 +1278,9 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_agent.py": {
-    "mtime": 1793779201.5907812,
-    "seen": 1793788486.3022358,
-    "ast_hash": "1591730a3a34d02264587094456ac6e6",
+    "mtime": 1793850035.3124394,
+    "seen": 1793851471.9083095,
+    "ast_hash": "1bbc8e4f60a9b8e5a95f003babaa591d",
     "semantic_hash": ""
   },
   "frontend/src/components/agent/widgets/FunnelInsight.jsx": {
@@ -1320,9 +1320,9 @@
     "semantic_hash": ""
   },
   "frontend/src/context/AgentContext.jsx": {
-    "mtime": 1793787722.4363976,
-    "seen": 1793788486.3023765,
-    "ast_hash": "d57d5381597ec9057512e476ea6e4a72",
+    "mtime": 1793850798.8382652,
+    "seen": 1793851471.908435,
+    "ast_hash": "a72d9a56e9e9bba89b4593d3b6cd816e",
     "semantic_hash": ""
   },
   "frontend/src/hooks/useAgent.js": {
@@ -1428,9 +1428,15 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/CareerCopilotView.jsx": {
-    "mtime": 1793790841.371235,
-    "seen": 1793790891.643994,
-    "ast_hash": "b46946557fe42f76107422eba35bb3f4",
+    "mtime": 1793850633.567984,
+    "seen": 1793851471.9083946,
+    "ast_hash": "a3a6f1593a28fa6bd695dcc9d04f2684",
+    "semantic_hash": ""
+  },
+  "scratch/update_app_jsx.py": {
+    "mtime": 1793851133.3911002,
+    "seen": 1793851471.908448,
+    "ast_hash": "5516cce47aa18a267f7a53d235af8c04",
     "semantic_hash": ""
   }
 }

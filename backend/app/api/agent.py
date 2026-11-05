@@ -103,6 +103,33 @@ def get_conversation(
     return convo
 
 
+@router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_conversation(
+    conversation_id: str,
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """Deletes an agent conversation session and all its messages."""
+    tenant_id = resolve_tenant_id(current_account, account_id)
+    convo = (
+        db.query(AgentConversation)
+        .filter(
+            AgentConversation.id == conversation_id,
+            AgentConversation.account_id == tenant_id,
+        )
+        .first()
+    )
+    if not convo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation session not found.",
+        )
+    db.delete(convo)
+    db.commit()
+    return None
+
+
 @router.get("/proposals", response_model=List[AgentActionProposalRead])
 def list_action_proposals(
     account_id: Optional[str] = Query(None),

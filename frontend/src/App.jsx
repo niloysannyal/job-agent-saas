@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './App.css';
 import { useTheme } from './utils/theme';
 import { AuthProvider, useAuth, parseJwtPayload } from './context/AuthContext';
@@ -75,6 +75,36 @@ function CareerAppInner() {
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [adminTab, setAdminTab] = useState('overview');
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('jobeazy_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('jobeazy_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Global Keyboard Shortcut: Cmd+\ / Ctrl+\ for Sidebar Toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebar]);
 
   // Sync accountId with authenticated user or impersonated tenant
   useEffect(() => {
@@ -839,6 +869,8 @@ function CareerAppInner() {
           setViewMode('landing');
           showToast('Signed out of session.');
         }}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
 
       {/* MAIN CONTENT AREA */}
@@ -898,6 +930,8 @@ function CareerAppInner() {
               job_id: selectedJobForStudio?.id,
               candidate_name: profileForm?.full_name,
             }}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onExpandSidebar={() => setIsSidebarCollapsed(false)}
           />
         )}
 

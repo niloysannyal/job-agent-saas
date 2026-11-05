@@ -3,19 +3,57 @@ import { useAuth } from './AuthContext';
 
 const AgentContext = createContext(null);
 
+const CONVERSATIONS_STORAGE_KEY = 'jobeazy_agent_conversations';
+const ACTIVE_CONVO_STORAGE_KEY = 'jobeazy_active_conversation_id';
+const MESSAGES_PREFIX = 'jobeazy_messages_';
+
+const DEFAULT_WELCOME_MESSAGE = {
+  id: 'welcome-1',
+  role: 'assistant',
+  content: "Hello! I am your JobEazy Career Agent. I can continuously scan the radar for high-fit roles, tailor your LaTeX CV to match ATS requirements, verify every claim against your Fact Ledger, and stage outreach for your approval.",
+  thought: null,
+  ui_widget: null,
+  timestamp: new Date().toISOString(),
+};
+
 export const AgentProvider = ({ children }) => {
   const { token, user, effectiveAccountId } = useAuth() || {};
 
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome-1',
-      role: 'assistant',
-      content: "Hello! I am your JobEazy Career Agent. I can continuously scan the radar for high-fit roles, tailor your LaTeX CV to match ATS requirements, verify every claim against your Fact Ledger, and stage outreach for your approval.",
-      thought: null,
-      ui_widget: null,
-      timestamp: new Date().toISOString(),
+  // 1. Conversations list with localStorage persistence
+  const [conversations, setConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CONVERSATIONS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
-  ]);
+  });
+
+  // 2. Active conversation ID with localStorage persistence
+  const [activeConversationId, setActiveConversationId] = useState(() => {
+    try {
+      return localStorage.getItem(ACTIVE_CONVO_STORAGE_KEY) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  // 3. Messages state with instant cache hydration
+  const [messages, setMessages] = useState(() => {
+    try {
+      const savedConvoId = localStorage.getItem(ACTIVE_CONVO_STORAGE_KEY);
+      if (savedConvoId) {
+        const savedMsgs = localStorage.getItem(`${MESSAGES_PREFIX}${savedConvoId}`);
+        if (savedMsgs) {
+          const parsed = JSON.parse(savedMsgs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch {}
+    return [DEFAULT_WELCOME_MESSAGE];
+  });
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeThought, setActiveThought] = useState(null);
@@ -23,9 +61,9 @@ export const AgentProvider = ({ children }) => {
   const [isDockOpen, setIsDockOpen] = useState(false);
   const [dockWidth, setDockWidth] = useState(440);
   const [pendingProposals, setPendingProposals] = useState([]);
-  const [activeConversationId, setActiveConversationId] = useState(null);
 
   const abortControllerRef = useRef(null);
+  const initialSyncedRef = useRef(false);
 
   // Headers helper
   const getHeaders = useCallback(() => {
@@ -34,6 +72,26 @@ export const AgentProvider = ({ children }) => {
     if (effectiveAccountId) headers['X-Account-ID'] = effectiveAccountId;
     return headers;
   }, [token, effectiveAccountId]);
+
+  // Persist messages whenever they change for the active conversation
+  useEffect(() => {
+    if (activeConversationId && messages.length > 0) {
+      try {
+        localStorage.setItem(`${MESSAGES_PREFIX}${activeConversationId}`, JSON.stringify(messages));
+      } catch (e) {
+        console.warn('Failed to cache messages:', e);
+      }
+    }
+  }, [messages, activeConversationId]);
+
+  // Persist conversations list whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(CONVERSATIONS_STORAGE_KEY, JSON.stringify(conversations));
+    } catch (e) {
+      console.warn('Failed to cache conversations:', e);
+    }
+  }, [conversations]);
 
   // Fetch pending proposals
   const fetchProposals = useCallback(async () => {
@@ -51,9 +109,125 @@ export const AgentProvider = ({ children }) => {
     }
   }, [effectiveAccountId, getHeaders]);
 
+  // Fetch conversations from server
+  const fetchConversations = useCallback(async () => {
+    try {
+      const url = effectiveAccountId 
+        ? `/api/v1/agent/conversations?account_id=${effectiveAccountId}&limit=30`
+        : `/api/v1/agent/conversations?limit=30`;
+      const res = await fetch(url, { headers: getHeaders() });
+      if (res.ok) {
+        const serverConvos = await res.json();
+        if (Array.isArray(serverConvos)) {
+          setConversations((prev) => {
+            const mergedMap = new Map();
+            serverConvos.forEach((c) => mergedMap.set(c.id, c));
+            prev.forEach((c) => {
+              if (!mergedMap.has(c.id)) mergedMap.set(c.id, c);
+            });
+            return Array.from(mergedMap.values()).sort(
+              (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
+            );
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch conversations from server, using local cache:', err);
+    }
+  }, [effectiveAccountId, getHeaders]);
+
+
+  // Select a conversation from history
+  const selectConversation = useCallback(async (conversationId) => {
+    if (!conversationId) return;
+    setActiveConversationId(conversationId);
+    try {
+      localStorage.setItem(ACTIVE_CONVO_STORAGE_KEY, conversationId);
+      
+      // 1. Instant local cache hydration
+      const cached = localStorage.getItem(`${MESSAGES_PREFIX}${conversationId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+
+      // 2. Fetch full conversation from backend to ensure complete sync
+      const url = effectiveAccountId
+        ? `/api/v1/agent/conversations/${conversationId}?account_id=${effectiveAccountId}`
+        : `/api/v1/agent/conversations/${conversationId}`;
+      const res = await fetch(url, { headers: getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.messages && Array.isArray(data.messages)) {
+          const formatted = data.messages.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            thought: m.thought,
+            ui_widget: m.ui_widget,
+            tool_calls: m.tool_calls,
+            timestamp: m.created_at,
+          }));
+          if (formatted.length > 0) {
+            setMessages(formatted);
+            localStorage.setItem(`${MESSAGES_PREFIX}${conversationId}`, JSON.stringify(formatted));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to sync conversation:', err);
+    }
+  }, [effectiveAccountId, getHeaders]);
+
+  // Reset conversation to a new chat
+  const resetConversation = useCallback(() => {
+    setActiveConversationId(null);
+    try {
+      localStorage.removeItem(ACTIVE_CONVO_STORAGE_KEY);
+    } catch {}
+    setMessages([
+      {
+        ...DEFAULT_WELCOME_MESSAGE,
+        id: 'welcome-' + Date.now(),
+        timestamp: new Date().toISOString(),
+      }
+    ]);
+  }, []);
+
+  // Delete a conversation from history
+  const deleteConversation = useCallback(async (conversationId, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    try {
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+      localStorage.removeItem(`${MESSAGES_PREFIX}${conversationId}`);
+
+      const url = effectiveAccountId
+        ? `/api/v1/agent/conversations/${conversationId}?account_id=${effectiveAccountId}`
+        : `/api/v1/agent/conversations/${conversationId}`;
+      await fetch(url, { method: 'DELETE', headers: getHeaders() });
+
+      if (activeConversationId === conversationId) {
+        resetConversation();
+      }
+    } catch (err) {
+      console.warn('Failed to delete conversation:', err);
+    }
+  }, [effectiveAccountId, getHeaders, activeConversationId, resetConversation]);
+
+  // Initial Sync & Polling on Mount
   useEffect(() => {
     fetchProposals();
-  }, [fetchProposals]);
+    fetchConversations();
+    if (!initialSyncedRef.current && activeConversationId) {
+      initialSyncedRef.current = true;
+      selectConversation(activeConversationId);
+    }
+  }, [fetchProposals, fetchConversations, activeConversationId, selectConversation]);
 
   // Global Keyboard Shortcut: ⌘J / Ctrl+J
   useEffect(() => {
@@ -97,6 +271,21 @@ export const AgentProvider = ({ children }) => {
     setIsStreaming(true);
     setActiveThought('Connecting to Career Agent...');
     setActiveTool(null);
+
+    // If starting a fresh chat session without an ID yet, create optimistic entry
+    const isNewSession = !activeConversationId;
+    const tempSessionId = 'temp-' + Date.now();
+    const titleSnippet = trimmedPrompt.slice(0, 32) + (trimmedPrompt.length > 32 ? '...' : '');
+
+    if (isNewSession) {
+      const optimisticConvo = {
+        id: tempSessionId,
+        title: titleSnippet,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setConversations((prev) => [optimisticConvo, ...prev]);
+    }
 
     try {
       abortControllerRef.current = new AbortController();
@@ -186,7 +375,21 @@ export const AgentProvider = ({ children }) => {
                 );
               } else if (frame.type === 'done' || lines[i - 1]?.startsWith('event: done')) {
                 if (frame.conversation_id) {
-                  setActiveConversationId(frame.conversation_id);
+                  const realId = frame.conversation_id;
+                  setActiveConversationId(realId);
+                  localStorage.setItem(ACTIVE_CONVO_STORAGE_KEY, realId);
+                  setConversations((prev) => {
+                    const filtered = prev.filter((c) => c.id !== tempSessionId && c.id !== realId);
+                    return [
+                      {
+                        id: realId,
+                        title: titleSnippet,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                      },
+                      ...filtered,
+                    ];
+                  });
                 }
               }
             } catch (err) {
@@ -215,8 +418,9 @@ export const AgentProvider = ({ children }) => {
       setActiveThought(null);
       setActiveTool(null);
       fetchProposals();
+      fetchConversations();
     }
-  }, [effectiveAccountId, activeConversationId, getHeaders, fetchProposals]);
+  }, [effectiveAccountId, activeConversationId, getHeaders, fetchProposals, fetchConversations]);
 
   // Human-in-the-loop Approve
   const approveProposal = useCallback(async (proposalId, feedback = null) => {
@@ -238,7 +442,6 @@ export const AgentProvider = ({ children }) => {
 
       const result = await res.json();
 
-      // Optimistically update widget in messages
       setMessages((prev) =>
         prev.map((m) => {
           if (m.ui_widget?.type === 'SendApprovalGate' && m.ui_widget.props?.proposal_id === proposalId) {
@@ -312,19 +515,6 @@ export const AgentProvider = ({ children }) => {
   const openDock = useCallback(() => setIsDockOpen(true), []);
   const closeDock = useCallback(() => setIsDockOpen(false), []);
 
-  const resetConversation = useCallback(() => {
-    setActiveConversationId(null);
-    setMessages([
-      {
-        id: 'welcome-' + Date.now(),
-        role: 'assistant',
-        content: 'Hello! I am your JobEazy Career Agent. I can continuously scan the radar for high-fit roles, tailor your LaTeX CV to match ATS requirements, verify every claim against your Fact Ledger, and stage outreach for your approval.',
-        thought: null,
-        ui_widget: null,
-        timestamp: new Date().toISOString(),
-      }
-    ]);
-  }, []);
   const value = {
     messages,
     isStreaming,
@@ -334,10 +524,15 @@ export const AgentProvider = ({ children }) => {
     dockWidth,
     pendingProposals,
     proposalsCount: pendingProposals.length,
+    activeConversationId,
+    conversations,
     sendMessage,
+    selectConversation,
+    deleteConversation,
     approveProposal,
     rejectProposal,
     fetchProposals,
+    fetchConversations,
     toggleDock,
     openDock,
     closeDock,

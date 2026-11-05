@@ -295,3 +295,56 @@ def test_experience_reflector_tool(api_test_db: Session, account_a: Account):
     assert data["name"] == "Niloy Sannyal"
     assert "FastAPI" in data["skills"]
     assert data["projects"][0]["name"] == "Autonomous Job Application Agent"
+
+
+def test_agent_conversation_lifecycle_endpoints(api_test_db: Session, account_a: Account):
+    """Test listing, fetching, and deleting agent conversations with isolation."""
+    from app.core.auth import get_current_account
+    app = create_app()
+
+    def override_db():
+        yield api_test_db
+
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_account] = lambda: account_a
+
+    with TestClient(app) as test_client:
+        convo = AgentConversation(
+            account_id=account_a.id,
+            title="Test Conversation Session",
+        )
+        api_test_db.add(convo)
+        api_test_db.commit()
+
+        msg = AgentMessage(
+            conversation_id=convo.id,
+            account_id=account_a.id,
+            role="user",
+            content="Find AI jobs",
+        )
+        api_test_db.add(msg)
+        api_test_db.commit()
+
+        # List conversations
+        res = test_client.get("/api/v1/agent/conversations")
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data) >= 1
+        assert data[0]["id"] == convo.id
+        assert data[0]["title"] == "Test Conversation Session"
+
+        # Get single conversation
+        res_get = test_client.get(f"/api/v1/agent/conversations/{convo.id}")
+        assert res_get.status_code == 200
+        data_get = res_get.json()
+        assert data_get["id"] == convo.id
+        assert len(data_get["messages"]) == 1
+        assert data_get["messages"][0]["content"] == "Find AI jobs"
+
+        # Delete conversation
+        res_del = test_client.delete(f"/api/v1/agent/conversations/{convo.id}")
+        assert res_del.status_code == 204
+
+        # Verify deleted
+        res_verify = test_client.get(f"/api/v1/agent/conversations/{convo.id}")
+        assert res_verify.status_code == 404

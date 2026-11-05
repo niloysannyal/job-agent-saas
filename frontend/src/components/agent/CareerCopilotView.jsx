@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Search,
   Compass,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { useAgent } from '../../hooks/useAgent';
 import RenderWidget from './widgets/WidgetRegistry';
@@ -59,7 +60,11 @@ const FAST_CHIPS = [
   { label: '🔍 Reflect Profile', prompt: 'Reflect candidate profile and summarize verified accomplishments' },
 ];
 
-export default function CareerCopilotView({ activeContext = {} }) {
+export default function CareerCopilotView({
+  activeContext = {},
+  isSidebarCollapsed = false,
+  onExpandSidebar,
+}) {
   const {
     messages,
     isStreaming,
@@ -121,6 +126,17 @@ export default function CareerCopilotView({ activeContext = {} }) {
       {/* Top Header Bar (ChatGPT / Claude Style) */}
       <header className="copilot-topbar">
         <div className="copilot-topbar-left">
+          {isSidebarCollapsed && onExpandSidebar && (
+            <button
+              type="button"
+              className="copilot-expand-sidebar-btn"
+              onClick={onExpandSidebar}
+              title="Expand sidebar (⌘\)"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen size={18} />
+            </button>
+          )}
           <div className="copilot-brand-icon">
             <Bot size={20} className="text-emerald" />
             <span className="copilot-status-dot" />

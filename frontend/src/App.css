@@ -30,7 +30,7 @@
   padding: 18px 14px;
   position: relative;
   z-index: 1200;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: width 0.22s cubic-bezier(0.2, 0, 0, 1), min-width 0.22s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease, border-color 0.2s ease;
 }
 
 .sidebar-top-group {
@@ -208,6 +208,332 @@
 .nav-item-btn.active .nav-icon {
   color: var(--emerald-500);
 }
+
+
+/* Sidebar Brand Row & Collapse Toggle */
+.sidebar-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-collapse-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-toggle-btn:hover {
+  background: var(--surface-active);
+  color: var(--emerald-500);
+  border-color: var(--border-default);
+}
+
+/* Collapsed Sidebar State (Compact 68px Icon Rail) */
+.app-sidebar.sidebar-collapsed {
+  width: 68px !important;
+  min-width: 68px !important;
+  padding: 18px 8px;
+  align-items: center;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-top-group {
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-brand-row {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-brand {
+  padding: 0;
+  justify-content: center;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-collapse-toggle-btn {
+  width: 34px;
+  height: 34px;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-quick-search-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-quick-search-btn .quick-search-icon {
+  margin: 0;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-nav {
+  align-items: center;
+  width: 100%;
+}
+
+.app-sidebar.sidebar-collapsed .nav-item-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+  position: relative;
+}
+
+.app-sidebar.sidebar-collapsed .nav-item-left {
+  justify-content: center;
+  gap: 0;
+}
+
+.app-sidebar.sidebar-collapsed .nav-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-profile-card {
+  padding: 6px;
+  justify-content: center;
+}
+
+.app-sidebar.sidebar-collapsed .profile-meta,
+.app-sidebar.sidebar-collapsed .profile-chevron {
+  display: none !important;
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-profile-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Nav Badges */
+.nav-badge-pill {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--emerald-500);
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-left: auto;
+}
+
+.nav-badge-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--emerald-500);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+/* ==========================================================================
+   SIDEBAR RECENT CHATS / HISTORY
+   ========================================================================== */
+.sidebar-history-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 110px;
+  max-height: 260px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.history-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+
+.history-group-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.btn-new-chat-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-new-chat-mini:hover {
+  background: var(--emerald-500);
+  color: #ffffff;
+  border-color: var(--emerald-500);
+}
+
+.history-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  flex: 1;
+}
+
+.history-chat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.history-chat-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.history-chat-item.active {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--emerald-500);
+  font-weight: 600;
+}
+
+.history-chat-item.active .history-chat-icon {
+  color: var(--emerald-500);
+}
+
+.history-chat-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.history-chat-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  text-align: left;
+}
+
+.history-delete-btn {
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+  border: none;
+  background: transparent;
+  padding: 3px;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.history-chat-item:hover .history-delete-btn {
+  opacity: 0.7;
+}
+
+.history-delete-btn:hover {
+  opacity: 1 !important;
+  color: var(--crimson-500) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.history-empty-hint {
+  padding: 12px 6px;
+  font-size: 11px;
+  color: var(--text-subtle);
+  text-align: center;
+  font-style: italic;
+}
+
+.sidebar-collapsed-history-action {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0;
+}
+
+.collapsed-new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--emerald-500);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.collapsed-new-chat-btn:hover {
+  background: var(--emerald-500);
+  color: #ffffff;
+  border-color: var(--emerald-500);
+}
+
+.copilot-expand-sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.copilot-expand-sidebar-btn:hover {
+  background: var(--surface-active);
+  color: var(--emerald-500);
+  border-color: var(--border-default);
+}
+
 
 /* ==========================================================================
    BOTTOM LEFT PROFILE & ACCOUNT LOGIN SECTION
