@@ -36,8 +36,8 @@
 .sidebar-top-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .sidebar-brand {
@@ -81,25 +81,43 @@
 .sidebar-quick-search-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 7px 10px;
-  background: var(--surface-hover);
-  border: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
   font-family: var(--font-sans);
   cursor: pointer;
   transition: all 0.15s ease;
   outline: none;
+  text-align: left;
 }
 
 .sidebar-quick-search-btn:hover {
-  background: var(--surface-active);
-  border-color: var(--border-default);
+  background: var(--surface-hover);
+  border-color: transparent;
   color: var(--text-primary);
+}
+
+.sidebar-quick-search-btn .quick-search-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.sidebar-quick-search-btn:hover .quick-search-icon {
+  color: var(--text-primary);
+}
+
+.sidebar-quick-search-btn .quick-search-label {
+  flex: 1;
+  text-align: left;
 }
 
 .quick-search-icon {
@@ -251,7 +269,8 @@
 .app-sidebar.sidebar-collapsed .sidebar-top-group {
   align-items: center;
   width: 100%;
-  gap: 10px;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .app-sidebar.sidebar-collapsed .sidebar-brand-row {
@@ -13056,4 +13075,114 @@
   border: none !important;
   padding: 0 !important;
   margin: 0 auto;
+}
+
+/* Collapsed brand icon hover: reveal expand button icon */
+.collapsed-toggle-btn:hover .brand-icon-normal,
+.sidebar-collapse-toggle-btn.collapsed-toggle-btn:hover .brand-icon-normal {
+  display: none !important;
+}
+
+.collapsed-toggle-btn:hover .brand-icon-hover,
+.sidebar-collapse-toggle-btn.collapsed-toggle-btn:hover .brand-icon-hover {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapsed-toggle-btn:hover .brand-icon-box {
+  transform: scale(1.06);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.6);
+}
+
+/* Collapsed Quick Search Button - Transparent background, icon only */
+.sidebar-quick-search-btn.btn-collapsed,
+.app-sidebar.sidebar-collapsed .sidebar-quick-search-btn {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+}
+
+.sidebar-quick-search-btn.btn-collapsed:hover,
+.app-sidebar.sidebar-collapsed .sidebar-quick-search-btn:hover {
+  background: var(--surface-hover) !important;
+  border-color: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+/* Modern Segmented Theme Selector in Profile Popover */
+.popover-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  gap: 12px;
+}
+
+.popover-theme-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.theme-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px;
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 2px;
+}
+
+.theme-toggle-btn,
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.theme-toggle-btn:hover,
+.theme-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theme-toggle-btn.active,
+.theme-btn.active {
+  background: var(--surface-card);
+  color: var(--emerald-500);
+  border-color: rgba(16, 185, 129, 0.35);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .theme-toggle-btn.active,
+[data-theme="dark"] .theme-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--emerald-400);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="light"] .theme-toggle-btn.active,
+[data-theme="light"] .theme-btn.active {
+  background: #ffffff;
+  color: var(--emerald-600);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }

@@ -416,15 +416,15 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Global Command Palette Launcher Button (Linear / Raycast Style - without shortcut hints) */}
+        {/* Global Command Palette Launcher Button (Clean borderless/backgroundless with Search icon) */}
         <button
           className={`sidebar-quick-search-btn ${isCollapsed ? 'btn-collapsed' : ''}`}
           onClick={onOpenCommandPalette}
-          title={isCollapsed ? 'Quick Search' : 'Search views, opportunities and actions'}
+          title={isCollapsed ? 'Search (⌘K)' : 'Search views, opportunities and actions'}
           aria-label="Open command palette"
         >
-          <Search className="quick-search-icon" />
-          {!isCollapsed && <span className="quick-search-label">Quick Search...</span>}
+          <Search size={16} className="quick-search-icon" />
+          {!isCollapsed && <span className="quick-search-label">Search...</span>}
         </button>
 
         {/* New Chat Button just below Search (ChatGPT style SquarePen icon, clean transparent background) */}
@@ -586,25 +586,27 @@ export default function Sidebar({
 
             <div className="popover-divider" />
 
-            {/* Theme Toggle Inside Popover */}
+            {/* Theme Toggle Inside Popover - Modern Segmented Control */}
             <div className="popover-theme-row">
               <span className="popover-theme-label">Theme</span>
               <div className="theme-toggle-group">
                 <button
                   type="button"
-                  className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
+                  className={`theme-toggle-btn ${theme === 'dark' ? 'active' : ''}`}
                   onClick={() => setTheme('dark')}
                   title="Obsidian Dark theme"
                 >
-                  <Moon size={12} />
+                  <Moon size={13} className="theme-btn-icon" />
+                  <span>Dark</span>
                 </button>
                 <button
                   type="button"
-                  className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
+                  className={`theme-toggle-btn ${theme === 'light' ? 'active' : ''}`}
                   onClick={() => setTheme('light')}
                   title="Studio Light theme"
                 >
-                  <Sun size={12} />
+                  <Sun size={13} className="theme-btn-icon" />
+                  <span>Light</span>
                 </button>
               </div>
             </div>

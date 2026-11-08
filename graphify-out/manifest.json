@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1793857540.155814,
-    "seen": 1793857841.3580754,
-    "ast_hash": "f86dbaa22e62fae8b60fa95949a2fdbf",
+    "mtime": 1794106386.5292585,
+    "seen": 1794106539.1545985,
+    "ast_hash": "0a8b818915c3a14368f10602b13c1600",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
