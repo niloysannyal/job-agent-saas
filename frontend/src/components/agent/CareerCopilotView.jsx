@@ -289,15 +289,9 @@ export default function CareerCopilotView({
                 );
               }
 
-              // Assistant Turn: Left-aligned with Bot avatar and minimal thinking accordion
+              // Assistant Turn: Left-aligned directly without avatar icon
               return (
                 <article key={msg.id} className="copilot-turn-container assistant-turn-container">
-                  <div className="turn-avatar-badge">
-                    <div className="assistant-bot-avatar">
-                      <Bot size={16} className="text-emerald" />
-                    </div>
-                  </div>
-
                   <div className="turn-body-content">
                     {/* Collapsible Chain-of-Thought Disclosure (Clean, lower contrast, no neon highlights) */}
                     {hasThought && (

@@ -1428,9 +1428,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/CareerCopilotView.jsx": {
-    "mtime": 1793857505.3018572,
-    "seen": 1793857841.3580794,
-    "ast_hash": "4df75f983f31b40f5b990d0edf8994b7",
+    "mtime": 1794107724.9852285,
+    "seen": 1794107902.7789037,
+    "ast_hash": "64acf340d785552be5bf1e1ecea2b782",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/74cebd545352_add_is_pinned_to_agent_conversations.py": {

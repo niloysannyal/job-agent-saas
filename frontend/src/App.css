@@ -11302,44 +11302,9 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.user-turn-container {
-  flex-direction: row-reverse;
-}
-
-.turn-avatar-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-turn-container .turn-avatar-badge {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.15));
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-.user-initials-txt {
-  font-size: 11px;
-  font-weight: 700;
-  color: #2563eb;
-}
-
-[data-theme="dark"] .user-initials-txt {
-  color: #93c5fd;
-}
-
-.assistant-turn-container .turn-avatar-badge {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.1));
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
-}
-
 .turn-body-content {
   flex: 1;
-  max-width: calc(100% - 50px);
+  max-width: 100%;
 }
 
 .user-turn-container .turn-body-content {
@@ -12718,12 +12683,13 @@
   color: var(--crimson-500);
 }
 
-/* 5. User Turn Right Alignment & Clean Bubble */
+/* 5. Message Turns Layout - User Right-Aligned & Assistant Left-Aligned */
 .user-turn-container {
   display: flex;
+  flex-direction: row;
   justify-content: flex-end;
   width: 100%;
-  margin: 12px 0;
+  margin: 14px 0;
 }
 
 .user-turn-content-box {
@@ -12744,12 +12710,30 @@
   line-height: 1.55;
   text-align: left;
   word-break: break-word;
+  align-self: flex-end;
 }
 
 [data-theme="dark"] .user-message-bubble {
   background: rgba(16, 185, 129, 0.12);
   border-color: rgba(16, 185, 129, 0.32);
   color: #f1f5f9;
+}
+
+.assistant-turn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin: 14px 0;
+}
+
+.assistant-turn-container .turn-body-content {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .user-attached-chips-row {
