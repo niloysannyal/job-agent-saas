@@ -928,10 +928,13 @@ function CareerAppInner() {
             activeContext={{
               screen: effectiveSection,
               job_id: selectedJobForStudio?.id,
+              job: selectedJobForStudio,
               candidate_name: profileForm?.full_name,
+              applications: applications,
             }}
             isSidebarCollapsed={isSidebarCollapsed}
             onExpandSidebar={() => setIsSidebarCollapsed(false)}
+            onNavigate={(section) => setActiveSection(section)}
           />
         )}
 

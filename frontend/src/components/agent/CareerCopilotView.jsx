@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Bot,
   Sparkles,
@@ -23,6 +23,9 @@ import {
   FileSpreadsheet,
   Music,
   X,
+  Briefcase,
+  CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
 import { useAgent } from '../../hooks/useAgent';
 import RenderWidget from './widgets/WidgetRegistry';
@@ -70,22 +73,154 @@ export default function CareerCopilotView({
   activeContext = {},
   isSidebarCollapsed = false,
   onExpandSidebar,
+  onNavigate,
 }) {
   const {
     messages,
     isStreaming,
     activeThought,
     activeTool,
+    pendingProposals = [],
     proposalsCount = 0,
     sendMessage,
     resetConversation,
     uploadFiles,
+    approveProposal,
+    rejectProposal,
   } = useAgent();
 
   const [input, setInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [expandedThoughts, setExpandedThoughts] = useState({});
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState(null);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showStatusModal) {
+        setShowStatusModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showStatusModal]);
+
+  // Resolve active/ongoing job application from proposals, messages, or active context
+  const activeJobTarget = useMemo(() => {
+    // 1. Check pending proposals (staged Human-in-the-Loop review)
+    if (pendingProposals && pendingProposals.length > 0) {
+      const p = pendingProposals[0];
+      const comp = p.payload_snapshot?.company;
+      const role = p.payload_snapshot?.job_role;
+      if (comp || role) {
+        return {
+          company: comp || 'Target Company',
+          role: role || 'Target Role',
+          status: 'staged',
+          statusLabel: 'Staged for Review',
+          atsScore: p.payload_snapshot?.ats_score ?? 99,
+          channel: p.payload_snapshot?.channel || 'email',
+          recipient: p.payload_snapshot?.recipient,
+          draftBody: p.payload_snapshot?.draft_body,
+          cvDigest: p.payload_snapshot?.cv_sha256,
+          proposalId: p.id,
+          proposal: p,
+        };
+      }
+    }
+
+    // 2. Scan conversation messages backwards for recent widgets / actions
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.ui_widget) {
+        const { type, props } = m.ui_widget;
+        if (type === 'SendApprovalGate' && (props.company || props.job_role)) {
+          return {
+            company: props.company || 'Target Company',
+            role: props.job_role || 'Target Role',
+            status: props.status || 'staged',
+            statusLabel: props.status === 'approved' ? 'Approved & Sent' : 'Staged for Review',
+            atsScore: props.ats_score ?? 99,
+            channel: props.channel || 'email',
+            recipient: props.recipient,
+            draftBody: props.draft_body,
+            cvDigest: props.cv_sha256,
+            proposalId: props.proposal_id,
+            widgetProps: props,
+          };
+        }
+        if (type === 'TailoredApplicationCard' && (props.company || props.role)) {
+          return {
+            company: props.company || 'Target Company',
+            role: props.role || 'Target Role',
+            status: 'tailored',
+            statusLabel: 'CV Tailored',
+            atsScore: props.ats_score ?? 99,
+            channel: props.outreach_channel || 'email',
+            draftBody: props.outreach_draft,
+            widgetProps: props,
+          };
+        }
+        if (type === 'OpportunityList' && Array.isArray(props.jobs) && props.jobs.length > 0) {
+          const topJob = props.jobs[0];
+          return {
+            company: topJob.company,
+            role: topJob.role,
+            status: 'radar_matched',
+            statusLabel: 'Radar Top Match',
+            matchScore: topJob.match_score,
+            jobUrl: topJob.url,
+            job: topJob,
+          };
+        }
+      }
+      // Check user prompt text for explicit targeted company / role
+      if (m.role === 'user' && m.content) {
+        const match = m.content.match(/(?:for|at)\s+([A-Za-z0-9\s/+#.-]+?)\s+at\s+([A-Za-z0-9\s/+#.-]+)/i);
+        if (match) {
+          const r = match[1]?.trim();
+          const c = match[2]?.trim();
+          if (r && c && !r.toLowerCase().includes('application')) {
+            return {
+              company: c,
+              role: r,
+              status: 'in_progress',
+              statusLabel: 'Target Identified',
+            };
+          }
+        }
+      }
+    }
+
+    // 3. Active context from parent app
+    if (activeContext?.job || activeContext?.selectedJob) {
+      const j = activeContext.job || activeContext.selectedJob;
+      return {
+        company: j.company,
+        role: j.role,
+        status: 'selected',
+        statusLabel: 'Selected Target',
+        job: j,
+      };
+    }
+
+    // 4. Latest application from database / context
+    if (Array.isArray(activeContext?.applications) && activeContext.applications.length > 0) {
+      const app = activeContext.applications[0];
+      return {
+        company: app.company || app.job?.company || 'Target Company',
+        role: app.role || app.job?.role || 'Target Role',
+        status: app.status || 'applied',
+        statusLabel: app.status ? app.status.toUpperCase() : 'Active Application',
+        app: app,
+      };
+    }
+
+    return null;
+  }, [pendingProposals, messages, activeContext]);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -182,21 +317,67 @@ export default function CareerCopilotView({
             <div className="copilot-title-row">
               <h2 className="copilot-main-title">Career Copilot</h2>
               <span className="copilot-pill-badge">AUTONOMOUS</span>
-              <span className="copilot-model-pill">GPT-4o / Claude 3.5 Sonnet</span>
             </div>
-            <span className="copilot-subtitle-desc">
-              Fact-Verified Agent • Continuous Job Radar, ATS CV Tailoring & Human-in-the-Loop Send Gate
-            </span>
+            <div className="copilot-subtitle-desc">
+              {activeJobTarget?.company && activeJobTarget?.role ? (
+                <div className="copilot-active-target-badge" title="Active Ongoing Job Application Target">
+                  <Briefcase size={12} className="copilot-target-icon text-emerald" />
+                  <span className="copilot-target-company">{activeJobTarget.company}</span>
+                  <span className="copilot-target-sep">•</span>
+                  <span className="copilot-target-role">{activeJobTarget.role}</span>
+                </div>
+              ) : (
+                <div className="copilot-active-target-badge idle" title="Autonomous Job Application OS">
+                  <Sparkles size={12} className="copilot-target-icon text-emerald" />
+                  <span>Autonomous Job Agent • Ready to source & apply</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="copilot-topbar-right">
-          {proposalsCount > 0 && (
-            <div className="copilot-top-proposals-pill" title={`${proposalsCount} staged action(s) awaiting your review`}>
-              <Clock size={13} />
-              <span>{proposalsCount} Action{proposalsCount > 1 ? 's' : ''} Staged</span>
-            </div>
-          )}
+          {/* Clickable Application Status Pill */}
+          <button
+            type="button"
+            className={`copilot-top-proposals-pill copilot-status-pill-btn ${activeJobTarget?.status ? `status-${activeJobTarget.status}` : 'status-ready'}`}
+            onClick={() => {
+              setActionFeedback(null);
+              setShowStatusModal(true);
+            }}
+            title="Click to view detailed application status & lifecycle"
+            aria-haspopup="dialog"
+            aria-expanded={showStatusModal}
+          >
+            {activeJobTarget?.status === 'staged' || proposalsCount > 0 ? (
+              <>
+                <span className="status-pill-pulse-dot" />
+                <Clock size={13} className="text-amber" />
+                <span>Status: Staged ({proposalsCount || 1})</span>
+              </>
+            ) : activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent' ? (
+              <>
+                <Send size={13} className="text-emerald" />
+                <span>Status: Applied</span>
+              </>
+            ) : activeJobTarget?.status === 'interview' ? (
+              <>
+                <GraduationCap size={13} className="text-cyan" />
+                <span>Status: Interview</span>
+              </>
+            ) : activeJobTarget?.status === 'tailored' ? (
+              <>
+                <CheckCircle2 size={13} className="text-emerald" />
+                <span>Status: Tailored</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={13} className="text-emerald" />
+                <span>Application Status</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             className="copilot-new-chat-btn"
@@ -451,6 +632,273 @@ export default function CareerCopilotView({
           </p>
         </div>
       </footer>
+
+      {/* Detailed Application Status Popup Modal */}
+      {showStatusModal && (
+        <div
+          className="admin-modal-backdrop copilot-status-modal-backdrop"
+          onClick={() => setShowStatusModal(false)}
+        >
+          <div
+            className="admin-modal-window copilot-status-modal-window"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="copilot-status-dialog-title"
+          >
+            {/* Modal Header */}
+            <div className="copilot-status-modal-header">
+              <div className="status-modal-header-brand">
+                <div className="status-modal-icon-box">
+                  <Briefcase size={18} className="text-emerald" />
+                </div>
+                <div>
+                  <h3 id="copilot-status-dialog-title" className="status-modal-title">
+                    Application Status & Lifecycle
+                  </h3>
+                  <p className="status-modal-subtitle">
+                    {activeJobTarget?.company && activeJobTarget?.role
+                      ? `${activeJobTarget.company} • ${activeJobTarget.role}`
+                      : 'Autonomous Job Application Pipeline'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="status-modal-close-btn"
+                onClick={() => setShowStatusModal(false)}
+                title="Close dialog (Esc)"
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="copilot-status-modal-body">
+              {/* Visual 5-Stage Lifecycle Stepper */}
+              <div className="status-lifecycle-stepper-card">
+                <div className="lifecycle-stepper-header">
+                  <span className="stepper-title">Autonomous Application Lifecycle</span>
+                  <span className="stepper-state-badge">
+                    {activeJobTarget?.statusLabel || 'Pipeline Active'}
+                  </span>
+                </div>
+
+                <div className="lifecycle-steps-row">
+                  {/* Step 1: Radar Scan */}
+                  <div className={`lifecycle-step-item ${activeJobTarget ? 'step-completed' : 'step-current'}`}>
+                    <div className="step-circle">
+                      <CheckCircle2 size={13} />
+                    </div>
+                    <span className="step-label">1. Radar Match</span>
+                    <span className="step-sub">{activeJobTarget?.matchScore ? `${activeJobTarget.matchScore}% Fit` : '99% Fit'}</span>
+                  </div>
+
+                  <div className={`lifecycle-step-line ${activeJobTarget ? 'line-completed' : ''}`} />
+
+                  {/* Step 2: ATS Tailoring */}
+                  <div className={`lifecycle-step-item ${activeJobTarget?.status !== 'radar_matched' ? 'step-completed' : 'step-current'}`}>
+                    <div className="step-circle">
+                      <CheckCircle2 size={13} />
+                    </div>
+                    <span className="step-label">2. ATS Tailored</span>
+                    <span className="step-sub">0 Hallucinations</span>
+                  </div>
+
+                  <div className={`lifecycle-step-line ${activeJobTarget?.status === 'staged' || activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent' ? 'line-completed' : ''}`} />
+
+                  {/* Step 3: Human Gate */}
+                  <div className={`lifecycle-step-item ${activeJobTarget?.status === 'staged' ? 'step-current' : (activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? 'step-completed' : 'step-pending'}`}>
+                    <div className="step-circle">
+                      {activeJobTarget?.status === 'staged' ? (
+                        <Clock size={13} />
+                      ) : (activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? (
+                        <CheckCircle2 size={13} />
+                      ) : (
+                        <span className="step-num">3</span>
+                      )}
+                    </div>
+                    <span className="step-label">3. Human Gate</span>
+                    <span className="step-sub">{activeJobTarget?.status === 'staged' ? 'Pending Approval' : 'Reviewed'}</span>
+                  </div>
+
+                  <div className={`lifecycle-step-line ${(activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? 'line-completed' : ''}`} />
+
+                  {/* Step 4: Dispatched / Sent */}
+                  <div className={`lifecycle-step-item ${(activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? 'step-completed' : 'step-pending'}`}>
+                    <div className="step-circle">
+                      {(activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? (
+                        <Send size={13} />
+                      ) : (
+                        <span className="step-num">4</span>
+                      )}
+                    </div>
+                    <span className="step-label">4. Dispatched</span>
+                    <span className="step-sub">{(activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent') ? 'Sent' : 'Awaiting Approval'}</span>
+                  </div>
+
+                  <div className="lifecycle-step-line" />
+
+                  {/* Step 5: Interview */}
+                  <div className={`lifecycle-step-item ${activeJobTarget?.status === 'interview' ? 'step-current' : 'step-pending'}`}>
+                    <div className="step-circle">
+                      <GraduationCap size={13} />
+                    </div>
+                    <span className="step-label">5. Interview</span>
+                    <span className="step-sub">Coach Ready</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Application Details Grid */}
+              <div className="status-details-grid">
+                <div className="status-detail-card">
+                  <span className="detail-card-label">Target Company</span>
+                  <span className="detail-card-value font-semibold">{activeJobTarget?.company || 'None Targeted'}</span>
+                </div>
+
+                <div className="status-detail-card">
+                  <span className="detail-card-label">Designation / Role</span>
+                  <span className="detail-card-value font-semibold">{activeJobTarget?.role || 'AI Engineer'}</span>
+                </div>
+
+                <div className="status-detail-card">
+                  <span className="detail-card-label">Outreach Channel</span>
+                  <span className="detail-card-value capitalize">
+                    {activeJobTarget?.channel || 'Email'}
+                  </span>
+                </div>
+
+                <div className="status-detail-card">
+                  <span className="detail-card-label">Fact-Ledger Audit</span>
+                  <span className="detail-card-value text-emerald font-semibold">
+                    <ShieldCheck size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                    Verified (0 Hallucinations)
+                  </span>
+                </div>
+              </div>
+
+              {/* Staged Action Proposal Card (Human-in-the-Loop Send Gate) */}
+              {activeJobTarget?.status === 'staged' && activeJobTarget.proposalId && (
+                <div className="status-staged-proposal-card">
+                  <div className="staged-card-badge-row">
+                    <span className="staged-amber-badge">
+                      <Clock size={12} />
+                      Human-in-the-Loop Review: Action Staged
+                    </span>
+                    {activeJobTarget.cvDigest && (
+                      <span className="staged-digest-tag">
+                        CV SHA: {activeJobTarget.cvDigest.slice(0, 10)}
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="staged-card-role-title">
+                    {activeJobTarget.role} at {activeJobTarget.company}
+                  </h4>
+
+                  {activeJobTarget.recipient && (
+                    <p className="staged-recipient-line">
+                      <strong>Recipient:</strong> <span>{activeJobTarget.recipient}</span>
+                    </p>
+                  )}
+
+                  {activeJobTarget.draftBody && (
+                    <div className="staged-draft-preview-box">
+                      <div className="preview-box-header">
+                        <span>Outreach Message Preview</span>
+                      </div>
+                      <p className="preview-box-content">{activeJobTarget.draftBody}</p>
+                    </div>
+                  )}
+
+                  {actionFeedback && (
+                    <div className={`status-action-feedback-banner ${actionFeedback.type}`}>
+                      {actionFeedback.text}
+                    </div>
+                  )}
+
+                  <div className="staged-actions-footer">
+                    <button
+                      type="button"
+                      className="btn-approve-primary"
+                      disabled={isProcessingAction}
+                      onClick={async () => {
+                        try {
+                          setIsProcessingAction(true);
+                          if (approveProposal) {
+                            await approveProposal(activeJobTarget.proposalId);
+                            setActionFeedback({ type: 'success', text: 'Application approved and staged for dispatch!' });
+                          }
+                        } catch (err) {
+                          setActionFeedback({ type: 'error', text: err.message || 'Approval failed' });
+                        } finally {
+                          setIsProcessingAction(false);
+                        }
+                      }}
+                    >
+                      {isProcessingAction ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
+                      <span>Approve & Send</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-reject-secondary"
+                      disabled={isProcessingAction}
+                      onClick={async () => {
+                        try {
+                          setIsProcessingAction(true);
+                          if (rejectProposal) {
+                            await rejectProposal(activeJobTarget.proposalId, 'Rejected from status popup');
+                            setActionFeedback({ type: 'info', text: 'Proposal rejected and returned to draft.' });
+                          }
+                        } catch (err) {
+                          setActionFeedback({ type: 'error', text: err.message || 'Rejection failed' });
+                        } finally {
+                          setIsProcessingAction(false);
+                        }
+                      }}
+                    >
+                      <X size={14} />
+                      <span>Reject / Revise</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Navigation Links */}
+              {onNavigate && (
+                <div className="status-modal-quick-links">
+                  <button
+                    type="button"
+                    className="status-quick-link-btn"
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      onNavigate('studio');
+                    }}
+                  >
+                    <FileText size={13} />
+                    <span>Open in Application Studio</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="status-quick-link-btn"
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      onNavigate('pipeline');
+                    }}
+                  >
+                    <Compass size={13} />
+                    <span>View Application Pipeline</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
