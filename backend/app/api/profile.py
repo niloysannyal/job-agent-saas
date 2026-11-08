@@ -983,6 +983,10 @@ def delete_language(
     "/parse-cv",
     summary="Upload CV file (PDF, DOCX, TXT) and extract structured career data via LLM",
 )
+@router.post(
+    "/parse_cv",
+    include_in_schema=False,
+)
 async def parse_cv_file(
     file: UploadFile = File(...),
     account_id: Optional[str] = Query(None),
@@ -1178,6 +1182,10 @@ def apply_parsed_cv(
     "/preview-cv",
     summary="Generate compiled LaTeX CV preview from candidate's profile entities",
 )
+@router.get(
+    "/preview_cv",
+    include_in_schema=False,
+)
 def preview_cv(
     account_id: str = Query(...),
     template_id: Optional[str] = Query(None),
@@ -1199,6 +1207,13 @@ def preview_cv(
         )
     )
     profile = db.scalars(stmt).first()
+    if not profile:
+        # Check if account exists
+        account = db.scalars(select(Account).where(Account.id == account_id)).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found.")
+        _get_or_create_profile(db, account_id)
+        profile = db.scalars(stmt).first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found.")
 

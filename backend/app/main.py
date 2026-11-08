@@ -44,6 +44,10 @@ def create_app() -> FastAPI:
     def health_check():
         return {"status": "ok"}
 
+    @app.get("/openapi.json", include_in_schema=False)
+    def openapi_fallback():
+        return app.openapi()
+
     # Register API v1 prefix routes
     app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
     app.include_router(agent_router, prefix=settings.API_V1_PREFIX)

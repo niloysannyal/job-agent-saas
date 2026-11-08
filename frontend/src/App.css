@@ -11424,91 +11424,188 @@
   margin-bottom: 0;
 }
 
-/* Collapsible Thought Accordion (Claude/ChatGPT Thinking Process) */
+/* ==========================================================================
+   Unified Agent Action & Reasoning Section (Single Expandable Surface)
+   ========================================================================== */
+.copilot-action-trace,
 .copilot-thought-accordion {
-  margin-bottom: 12px;
-  border-radius: 10px;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  overflow: hidden;
+  width: 100%;
   max-width: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none;
 }
 
+[data-theme="dark"] .copilot-action-trace,
+[data-theme="dark"] .copilot-thought-accordion {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.copilot-action-trace.is-streaming {
+  background: rgba(16, 185, 129, 0.04);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.06);
+}
+
+[data-theme="dark"] .copilot-action-trace.is-streaming {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.38);
+}
+
+.action-trace-header,
 .thought-accordion-trigger {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 12px;
   background: transparent;
   border: none;
-  color: #d97706;
-  font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
+  font-family: inherit;
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
 }
 
-[data-theme="dark"] .thought-accordion-trigger {
-  color: #fbbf24;
-}
-
+.action-trace-header:hover,
 .thought-accordion-trigger:hover {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
 }
 
-.thought-accordion-trigger span {
+[data-theme="dark"] .action-trace-header:hover,
+[data-theme="dark"] .thought-accordion-trigger:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+}
+
+.action-trace-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   flex: 1;
+  min-width: 0;
 }
 
+.action-live-spinner {
+  flex-shrink: 0;
+  color: #10b981;
+}
+
+[data-theme="dark"] .action-live-spinner {
+  color: #34d399;
+}
+
+.thought-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.action-trace-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copilot-action-trace.is-streaming .action-trace-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.action-trace-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.action-trace-toggle-hint {
+  font-size: 11px;
+}
+
+.action-trace-header:hover .action-trace-right {
+  color: var(--text-secondary);
+}
+
+.action-trace-drawer,
 .thought-accordion-drawer {
-  padding: 10px 14px;
-  border-top: 1px solid rgba(245, 158, 11, 0.2);
-  background: var(--surface-card);
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
+[data-theme="dark"] .action-trace-drawer,
 [data-theme="dark"] .thought-accordion-drawer {
-  background: rgba(5, 8, 14, 0.6);
-  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.action-steps-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.action-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.action-step-bullet {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.45;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .action-step-bullet {
+  color: #34d399;
+}
+
+.action-step-text {
+  word-break: break-word;
 }
 
 .thought-pre-code {
   margin: 0;
   font-family: 'JetBrains Mono', Consolas, monospace;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.55;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   white-space: pre-wrap;
   word-break: break-word;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 /* Embedded Generative UI Widget */
 .turn-embedded-widget-wrapper {
-  margin-top: 14px;
+  margin-top: 10px;
   width: 100%;
-}
-
-/* Streaming Progress Bar */
-.copilot-streaming-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px dashed rgba(16, 185, 129, 0.35);
-  border-radius: 12px;
-  color: var(--emerald-600);
-  font-size: 13px;
-  margin-top: 8px;
-}
-
-[data-theme="dark"] .copilot-streaming-bar {
-  color: #34d399;
-}
-
-.streaming-bar-text {
-  font-weight: 500;
 }
 
 /* Bottom Composer Footer (ChatGPT / Claude Floating Bottom) */
@@ -12576,8 +12673,15 @@
   border-color: transparent;
 }
 
+.sidebar-new-chat-top-btn.active {
+  background: var(--surface-hover);
+  color: var(--emerald-400);
+  font-weight: 600;
+}
+
+.sidebar-new-chat-top-btn.active .new-chat-icon,
 .sidebar-new-chat-top-btn:hover .new-chat-icon {
-  color: var(--emerald-500);
+  color: var(--emerald-400);
 }
 
 .sidebar-new-chat-top-btn.btn-collapsed {
@@ -12846,59 +12950,7 @@
   font-size: 10.5px;
 }
 
-/* 6. Thinking Layer - Lower Contrast Subtle Design */
-.copilot-thought-accordion {
-  background: transparent !important;
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: var(--radius-sm);
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: none !important;
-}
 
-.thought-accordion-trigger {
-  background: transparent !important;
-  border: none !important;
-  color: var(--text-muted) !important;
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  cursor: pointer;
-  width: 100%;
-  transition: color 0.15s ease;
-}
-
-.thought-accordion-trigger:hover {
-  color: var(--text-secondary) !important;
-}
-
-.thought-icon {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.thought-accordion-drawer {
-  padding: 10px 14px;
-  border-top: 1px solid var(--border-subtle);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-[data-theme="dark"] .thought-accordion-drawer {
-  background: rgba(0, 0, 0, 0.18);
-}
-
-.thought-pre-code {
-  color: var(--text-muted) !important;
-  font-size: 12px;
-  line-height: 1.5;
-  font-family: var(--font-mono);
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: 0;
-}
 
 /* 7. Composer Staged Files & Buttons */
 .copilot-staged-attachments-row {

@@ -54,6 +54,7 @@ export default function Sidebar({
   onOpenCommandPalette,
   isCollapsed = false,
   onToggleCollapse,
+  onNewApplication,
 }) {
   const {
     conversations = [],
@@ -171,12 +172,6 @@ export default function Sidebar({
     );
   } else {
     navItems.push(
-      {
-        id: 'copilot',
-        label: 'Career Copilot',
-        icon: Bot,
-        badge: proposalsCount > 0 ? `${proposalsCount}` : null,
-      },
       {
         id: 'dashboard',
         label: 'Dashboard',
@@ -427,20 +422,21 @@ export default function Sidebar({
           {!isCollapsed && <span className="quick-search-label">Search...</span>}
         </button>
 
-        {/* New Chat Button just below Search (ChatGPT style SquarePen icon, clean transparent background) */}
+        {/* New Application Button (Unified New Chat + Career Copilot, ChatGPT/Claude style) */}
         {!isSuperadmin && (
           <button
             type="button"
-            className={`sidebar-new-chat-top-btn ${isCollapsed ? 'btn-collapsed' : ''}`}
+            className={`sidebar-new-chat-top-btn ${isCollapsed ? 'btn-collapsed' : ''} ${activeSection === 'copilot' && !activeConversationId ? 'active' : ''}`}
             onClick={() => {
+              if (onNewApplication) onNewApplication();
               resetConversation();
               setActiveSection('copilot');
             }}
-            title={isCollapsed ? 'New Chat' : 'Start fresh conversation'}
-            aria-label="Start new chat"
+            title={isCollapsed ? 'New Application (⌘N)' : 'Start new application'}
+            aria-label="New Application"
           >
             <SquarePen size={16} className="new-chat-icon" />
-            {!isCollapsed && <span className="new-chat-label">New Chat</span>}
+            {!isCollapsed && <span className="new-chat-label">New Application</span>}
           </button>
         )}
       </div>

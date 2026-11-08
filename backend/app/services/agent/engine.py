@@ -283,8 +283,96 @@ class AgentEngine:
         self.db.add(assistant_msg)
         self.db.commit()
 
-        # 6. Stream Done Frame
-        yield f"event: done\ndata: {json.dumps({'conversation_id': convo.id, 'message_id': assistant_msg.id})}\n\n"
+        # Refine conversation title if a specific job target was detected or general topic summarized
+        new_title = self._resolve_conversation_title(
+            convo=convo,
+            user_text=user_text,
+            tool_call=tool_call_dict,
+            tool_res=tool_res_obj,
+            context_filters=context_filters,
+        )
+        if new_title and (
+            convo.title in ("Career OS Session", "Agent Session", "New Application")
+            or " - " in new_title
+            or convo.title.endswith("...")
+        ):
+            convo.title = new_title
+            self.db.commit()
+
+        # 6. Stream Done Frame with conversation_id and resolved title
+        yield f"event: done\ndata: {json.dumps({'conversation_id': convo.id, 'message_id': assistant_msg.id, 'title': convo.title})}\n\n"
+
+    def _resolve_conversation_title(
+        self,
+        convo: AgentConversation,
+        user_text: str,
+        tool_call: Optional[Dict[str, Any]] = None,
+        tool_res: Optional[ToolResult] = None,
+        context_filters: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """
+        Determines the conversation title per rules:
+        - If a specific job is targeted/applied to: 'Company name - Role'
+        - If no specific job is targeted: clean summarized topic label
+        """
+        ctx = context_filters or {}
+        # 1. Check if tool result produced a SendApprovalGate or TailoredApplicationCard
+        if tool_res and tool_res.ui_widget:
+            props = tool_res.ui_widget.get("props", {})
+            company = props.get("company")
+            role = props.get("job_role") or props.get("role")
+            if company and role:
+                return f"{company} - {role}"
+
+        # 2. Check tool call arguments
+        if tool_call:
+            args = tool_call.get("arguments", {})
+            job_id = args.get("job_id")
+            if job_id:
+                from app.models.job import Job
+                job = self.db.query(Job).filter(Job.id == job_id).first()
+                if job and job.company and job.role:
+                    return f"{job.company} - {job.role}"
+
+        # 3. Check explicit targetJob in context_filters
+        target_job = ctx.get("targetJob") or ctx.get("job")
+        if isinstance(target_job, dict) and target_job.get("company") and target_job.get("role"):
+            return f"{target_job['company']} - {target_job['role']}"
+
+        # 4. Check user_text for explicit regex: e.g. 'at [Company]' / 'for [Role] at [Company]'
+        match = re.search(
+            r"(?:for|at)\s+([A-Za-z0-9\s/+#.-]+?)\s+at\s+([A-Za-z0-9\s/+#.-]+)",
+            user_text,
+            re.IGNORECASE,
+        )
+        if match:
+            role_candidate = match.group(1).strip()
+            comp_candidate = match.group(2).strip()
+            if role_candidate and comp_candidate and not role_candidate.lower().startswith("application"):
+                return f"{comp_candidate} - {role_candidate}"
+
+        # 5. Non-specific application / general topic summary
+        tool_name = tool_call.get("name") if tool_call else ""
+        t_low = user_text.lower()
+        if "radar" in t_low or tool_name == "search_and_rank_jobs":
+            q = (tool_call.get("arguments", {}).get("query") if tool_call else "") or ""
+            return f"Radar Scan: {q.title()}" if q and len(q) < 20 else "Radar Scan: Top Matches"
+
+        if "interview" in t_low or "star" in t_low or tool_name == "star_interview_prep":
+            comp = (tool_call.get("arguments", {}).get("competency") if tool_call else "") or "General"
+            return f"STAR Coach: {comp.title()}"
+
+        if "profile" in t_low or "skills" in t_low or tool_name == "reflect_candidate_profile":
+            return "Candidate Profile & Skills"
+
+        if "follow-up" in t_low or tool_name == "track_application_lifecycle":
+            return "Application Pipeline Tracker"
+
+        # Fallback: clean prompt snippet without trailing dots
+        clean = re.sub(r"[?!.,;]+$", "", user_text.strip())
+        if len(clean) > 32:
+            return clean[:30] + "..."
+        return clean.capitalize() if clean else "New Application"
 
     def _detect_fast_track_tool(
         self,

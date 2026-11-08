@@ -871,6 +871,7 @@ function CareerAppInner() {
         }}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleSidebar}
+        onNewApplication={() => setSelectedJobForStudio(null)}
       />
 
       {/* MAIN CONTENT AREA */}

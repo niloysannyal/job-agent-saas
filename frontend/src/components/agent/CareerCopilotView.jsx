@@ -108,31 +108,9 @@ export default function CareerCopilotView({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showStatusModal]);
 
-  // Resolve active/ongoing job application from proposals, messages, or active context
+  // Resolve active/ongoing job application STRICTLY from the current conversation's context
   const activeJobTarget = useMemo(() => {
-    // 1. Check pending proposals (staged Human-in-the-Loop review)
-    if (pendingProposals && pendingProposals.length > 0) {
-      const p = pendingProposals[0];
-      const comp = p.payload_snapshot?.company;
-      const role = p.payload_snapshot?.job_role;
-      if (comp || role) {
-        return {
-          company: comp || 'Target Company',
-          role: role || 'Target Role',
-          status: 'staged',
-          statusLabel: 'Staged for Review',
-          atsScore: p.payload_snapshot?.ats_score ?? 99,
-          channel: p.payload_snapshot?.channel || 'email',
-          recipient: p.payload_snapshot?.recipient,
-          draftBody: p.payload_snapshot?.draft_body,
-          cvDigest: p.payload_snapshot?.cv_sha256,
-          proposalId: p.id,
-          proposal: p,
-        };
-      }
-    }
-
-    // 2. Scan conversation messages backwards for recent widgets / actions
+    // 1. Scan the current conversation messages backwards for concrete application actions
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m.ui_widget) {
@@ -140,7 +118,7 @@ export default function CareerCopilotView({
         if (type === 'SendApprovalGate' && (props.company || props.job_role)) {
           return {
             company: props.company || 'Target Company',
-            role: props.job_role || 'Target Role',
+            role: props.job_role || props.role || 'Target Role',
             status: props.status || 'staged',
             statusLabel: props.status === 'approved' ? 'Approved & Sent' : 'Staged for Review',
             atsScore: props.ats_score ?? 99,
@@ -164,20 +142,8 @@ export default function CareerCopilotView({
             widgetProps: props,
           };
         }
-        if (type === 'OpportunityList' && Array.isArray(props.jobs) && props.jobs.length > 0) {
-          const topJob = props.jobs[0];
-          return {
-            company: topJob.company,
-            role: topJob.role,
-            status: 'radar_matched',
-            statusLabel: 'Radar Top Match',
-            matchScore: topJob.match_score,
-            jobUrl: topJob.url,
-            job: topJob,
-          };
-        }
       }
-      // Check user prompt text for explicit targeted company / role
+      // Check user prompt text in THIS conversation for targeted company / role
       if (m.role === 'user' && m.content) {
         const match = m.content.match(/(?:for|at)\s+([A-Za-z0-9\s/+#.-]+?)\s+at\s+([A-Za-z0-9\s/+#.-]+)/i);
         if (match) {
@@ -192,35 +158,40 @@ export default function CareerCopilotView({
             };
           }
         }
+        // Match format: Company - Role
+        const dashMatch = m.content.match(/^([A-Za-z0-9\s.-]+?)\s*-\s*([A-Za-z0-9\s/+#.-]+)$/i);
+        if (dashMatch) {
+          const c = dashMatch[1]?.trim();
+          const r = dashMatch[2]?.trim();
+          if (c && r && c.length > 2 && r.length > 2) {
+            return {
+              company: c,
+              role: r,
+              status: 'in_progress',
+              statusLabel: 'Target Identified',
+            };
+          }
+        }
       }
     }
 
-    // 3. Active context from parent app
-    if (activeContext?.job || activeContext?.selectedJob) {
-      const j = activeContext.job || activeContext.selectedJob;
-      return {
-        company: j.company,
-        role: j.role,
-        status: 'selected',
-        statusLabel: 'Selected Target',
-        job: j,
-      };
+    // 2. Fresh session initialized with explicit targetJob
+    if (messages.length <= 2 && (activeContext?.targetJob || activeContext?.job)) {
+      const j = activeContext.targetJob || activeContext.job;
+      if (j && j.company && j.role) {
+        return {
+          company: j.company,
+          role: j.role,
+          status: 'selected',
+          statusLabel: 'Selected Target',
+          job: j,
+        };
+      }
     }
 
-    // 4. Latest application from database / context
-    if (Array.isArray(activeContext?.applications) && activeContext.applications.length > 0) {
-      const app = activeContext.applications[0];
-      return {
-        company: app.company || app.job?.company || 'Target Company',
-        role: app.role || app.job?.role || 'Target Role',
-        status: app.status || 'applied',
-        statusLabel: app.status ? app.status.toUpperCase() : 'Active Application',
-        app: app,
-      };
-    }
-
+    // 3. Otherwise: this conversation has no specific job application target (idle / general chat)
     return null;
-  }, [pendingProposals, messages, activeContext]);
+  }, [messages, activeContext]);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -349,11 +320,11 @@ export default function CareerCopilotView({
             aria-haspopup="dialog"
             aria-expanded={showStatusModal}
           >
-            {activeJobTarget?.status === 'staged' || proposalsCount > 0 ? (
+            {activeJobTarget?.status === 'staged' ? (
               <>
                 <span className="status-pill-pulse-dot" />
                 <Clock size={13} className="text-amber" />
-                <span>Status: Staged ({proposalsCount || 1})</span>
+                <span>Status: Staged</span>
               </>
             ) : activeJobTarget?.status === 'applied' || activeJobTarget?.status === 'sent' ? (
               <>
@@ -382,10 +353,10 @@ export default function CareerCopilotView({
             type="button"
             className="copilot-new-chat-btn"
             onClick={resetConversation}
-            title="Start fresh conversation"
+            title="Start new application"
           >
             <RotateCcw size={14} />
-            <span>New Chat</span>
+            <span>New Application</span>
           </button>
         </div>
       </header>
@@ -435,10 +406,12 @@ export default function CareerCopilotView({
 
           {/* Render Messages */}
           <div className="copilot-messages-list">
-            {(isStarterState ? messages.filter((m) => m.id !== 'welcome-1') : messages).map((msg) => {
+            {(isStarterState ? messages.filter((m) => m.id !== 'welcome-1') : messages).map((msg, msgIdx, allMsgs) => {
               const isUser = msg.role === 'user';
               const hasThought = Boolean(msg.thought);
               const isThoughtOpen = expandedThoughts[msg.id];
+              const isLastAssistant = !isUser && msgIdx === allMsgs.length - 1;
+              const isCurrentStreaming = isStreaming && isLastAssistant;
 
               if (isUser) {
                 // User Turn: Right-aligned, no "ME" avatar badge
@@ -474,22 +447,70 @@ export default function CareerCopilotView({
               return (
                 <article key={msg.id} className="copilot-turn-container assistant-turn-container">
                   <div className="turn-body-content">
-                    {/* Collapsible Chain-of-Thought Disclosure (Clean, lower contrast, no neon highlights) */}
-                    {hasThought && (
-                      <div className="copilot-thought-accordion">
+                    {/* Unified Agent Action & Reasoning Section (Single Expandable Surface) */}
+                    {(isCurrentStreaming || hasThought || msg.tool_calls?.length > 0 || msg.steps?.length > 0) && (
+                      <div className={`copilot-action-trace ${isCurrentStreaming ? 'is-streaming' : 'is-completed'}`}>
                         <button
                           type="button"
-                          className="thought-accordion-trigger"
+                          className="action-trace-header"
                           onClick={() => toggleThought(msg.id)}
                           aria-expanded={isThoughtOpen}
                         >
-                          <Lightbulb size={13} className="thought-icon" />
-                          <span>{isThoughtOpen ? 'Hide Internal Planning & Reasoning' : 'Show Internal Planning & Reasoning'}</span>
-                          {isThoughtOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          <div className="action-trace-left">
+                            {isCurrentStreaming ? (
+                              <Loader2 size={13} className="spin text-emerald action-live-spinner" />
+                            ) : (
+                              <Lightbulb size={13} className="thought-icon" />
+                            )}
+                            <span className="action-trace-label">
+                              {isCurrentStreaming
+                                ? (msg.actionLabel || (activeTool ? `Executing ${activeTool.tool.replace(/_/g, ' ')}...` : activeThought || 'Connecting to Career Agent...'))
+                                : (msg.actionLabel && msg.actionLabel.startsWith('Completed') ? msg.actionLabel : 'Internal Planning & Reasoning')}
+                            </span>
+                          </div>
+
+                          <div className="action-trace-right">
+                            <span className="action-trace-toggle-hint">
+                              {isThoughtOpen ? 'Hide steps' : 'Show steps'}
+                            </span>
+                            {isThoughtOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          </div>
                         </button>
+
                         {isThoughtOpen && (
-                          <div className="thought-accordion-drawer">
-                            <pre className="thought-pre-code">{msg.thought}</pre>
+                          <div className="action-trace-drawer">
+                            {/* Step list if tools or discrete steps were recorded */}
+                            {Array.isArray(msg.steps) && msg.steps.length > 0 && (
+                              <div className="action-steps-timeline">
+                                {msg.steps.map((st, sIdx) => (
+                                  <div key={sIdx} className="action-step-item">
+                                    <span className="action-step-bullet">✓</span>
+                                    <span className="action-step-text">
+                                      {st.label || st.summary || st.content || st.tool}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Recorded tool calls if steps array not populated */}
+                            {(!msg.steps || msg.steps.length === 0) && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0 && (
+                              <div className="action-steps-timeline">
+                                {msg.tool_calls.map((tc, tcIdx) => (
+                                  <div key={tcIdx} className="action-step-item">
+                                    <span className="action-step-bullet">✓</span>
+                                    <span className="action-step-text">
+                                      <strong>{tc.name}</strong>: {tc.summary || 'Executed successfully'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Detailed chain-of-thought code/text trace */}
+                            {msg.thought && (
+                              <pre className="thought-pre-code">{msg.thought}</pre>
+                            )}
                           </div>
                         )}
                       </div>
@@ -512,18 +533,6 @@ export default function CareerCopilotView({
                 </article>
               );
             })}
-
-            {/* Active Streaming Indicator */}
-            {isStreaming && (
-              <div className="copilot-streaming-bar">
-                <Loader2 size={16} className="spin text-emerald" />
-                <span className="streaming-bar-text">
-                  {activeTool
-                    ? `Executing ${activeTool.tool}...`
-                    : activeThought || 'Synthesizing response with Fact Ledger audit...'}
-                </span>
-              </div>
-            )}
 
             <div ref={messagesEndRef} />
           </div>

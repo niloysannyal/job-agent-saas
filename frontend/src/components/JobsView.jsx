@@ -120,7 +120,8 @@ export default function JobsView({
   const handleCheckLiveness = async (job) => {
     try {
       setCheckingLiveness((prev) => ({ ...prev, [job.id]: true }));
-      const res = await fetch(`/api/v1/jobs/${job.id}/check-liveness`, {
+      const accountQuery = job.account_id ? `?account_id=${encodeURIComponent(job.account_id)}` : '';
+      const res = await fetch(`/api/v1/jobs/${job.id}/check-liveness${accountQuery}`, {
         method: 'POST',
         headers: { ...authHeaders },
       });

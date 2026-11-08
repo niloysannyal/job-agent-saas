@@ -21,6 +21,7 @@ export default function JobRadarCarousel({ props, actions }) {
       job_id: job.job_id,
       company: job.company,
       role: job.role,
+      targetJob: { company: job.company, role: job.role },
     });
   };
 

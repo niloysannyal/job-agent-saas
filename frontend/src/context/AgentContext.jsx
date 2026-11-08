@@ -335,7 +335,11 @@ export const AgentProvider = ({ children }) => {
         id: assistantMsgId,
         role: 'assistant',
         content: '',
-        thought: 'Initializing reasoning...',
+        thought: '',
+        actionLabel: 'Connecting to Career Agent...',
+        steps: [
+          { type: 'status', label: 'Connecting to Career Agent...', timestamp: Date.now() }
+        ],
         ui_widget: null,
         timestamp: new Date().toISOString(),
       }
@@ -348,7 +352,19 @@ export const AgentProvider = ({ children }) => {
     // If starting a fresh chat session without an ID yet, create optimistic entry
     const isNewSession = !activeConversationId;
     const tempSessionId = 'temp-' + Date.now();
-    const titleSnippet = trimmedPrompt.slice(0, 32) + (trimmedPrompt.length > 32 ? '...' : '');
+
+    const targetJob = contextFilters?.targetJob || contextFilters?.job;
+    let titleSnippet;
+    if (targetJob && targetJob.company && targetJob.role) {
+      titleSnippet = `${targetJob.company} - ${targetJob.role}`;
+    } else {
+      const match = trimmedPrompt.match(/(?:for|at)\s+([A-Za-z0-9\s/+#.-]+?)\s+at\s+([A-Za-z0-9\s/+#.-]+)/i);
+      if (match && match[1] && match[2] && !match[1].toLowerCase().includes('application')) {
+        titleSnippet = `${match[2].trim()} - ${match[1].trim()}`;
+      } else {
+        titleSnippet = trimmedPrompt.slice(0, 32) + (trimmedPrompt.length > 32 ? '...' : '');
+      }
+    }
 
     if (isNewSession) {
       const optimisticConvo = {
@@ -410,22 +426,78 @@ export const AgentProvider = ({ children }) => {
                 setActiveThought(frame.content);
                 setMessages((prev) =>
                   prev.map((m) =>
-                    m.id === assistantMsgId ? { ...m, thought: latestThought } : m
+                    m.id === assistantMsgId
+                      ? {
+                          ...m,
+                          thought: latestThought,
+                          actionLabel: frame.content ? 'Analyzing intent & profile context...' : m.actionLabel,
+                          steps: [
+                            ...(m.steps || []).filter((s) => s.type !== 'thought'),
+                            {
+                              type: 'thought',
+                              label: 'Planning & Reasoning',
+                              content: frame.content,
+                              timestamp: Date.now(),
+                            },
+                          ],
+                        }
+                      : m
                   )
                 );
               } else if (frame.type === 'tool_start') {
-                setActiveTool({ tool: frame.tool, arguments: frame.arguments });
+                const toolName = frame.tool;
+                const toolLabel = `Executing ${toolName.replace(/_/g, ' ')}...`;
+                setActiveTool({ tool: toolName, arguments: frame.arguments });
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId
+                      ? {
+                          ...m,
+                          actionLabel: toolLabel,
+                          steps: [
+                            ...(m.steps || []),
+                            {
+                              type: 'tool',
+                              tool: toolName,
+                              label: toolLabel,
+                              status: 'running',
+                              arguments: frame.arguments,
+                              timestamp: Date.now(),
+                            },
+                          ],
+                        }
+                      : m
+                  )
+                );
               } else if (frame.type === 'tool_complete') {
                 if (frame.ui_widget) {
                   latestWidget = frame.ui_widget;
+                  const p = frame.ui_widget.props;
+                  if (p && p.company && (p.role || p.job_role)) {
+                    const compRoleTitle = `${p.company} - ${p.role || p.job_role}`;
+                    setConversations((prev) =>
+                      prev.map((c) =>
+                        (c.id === activeConversationId || c.id === tempSessionId)
+                          ? { ...c, title: compRoleTitle }
+                          : c
+                      )
+                    );
+                  }
                 }
+                const toolName = frame.tool;
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
                       ? {
                           ...m,
                           ui_widget: latestWidget || m.ui_widget,
-                          tool_calls: [{ name: frame.tool, summary: frame.summary }],
+                          tool_calls: [{ name: toolName, summary: frame.summary }],
+                          actionLabel: frame.summary || `Completed ${toolName.replace(/_/g, ' ')}`,
+                          steps: (m.steps || []).map((s) =>
+                            s.type === 'tool' && s.tool === toolName
+                              ? { ...s, status: 'completed', summary: frame.summary }
+                              : s
+                          ),
                         }
                       : m
                   )
@@ -434,6 +506,17 @@ export const AgentProvider = ({ children }) => {
                 fetchProposals();
                 if (frame.ui_widget) {
                   latestWidget = frame.ui_widget;
+                  const p = frame.ui_widget.props;
+                  if (p && p.company && (p.job_role || p.role)) {
+                    const compRoleTitle = `${p.company} - ${p.job_role || p.role}`;
+                    setConversations((prev) =>
+                      prev.map((c) =>
+                        (c.id === activeConversationId || c.id === tempSessionId)
+                          ? { ...c, title: compRoleTitle }
+                          : c
+                      )
+                    );
+                  }
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMsgId ? { ...m, ui_widget: latestWidget } : m
@@ -444,12 +527,19 @@ export const AgentProvider = ({ children }) => {
                 accumulatedText += frame.content;
                 setMessages((prev) =>
                   prev.map((m) =>
-                    m.id === assistantMsgId ? { ...m, content: accumulatedText } : m
+                    m.id === assistantMsgId
+                      ? {
+                          ...m,
+                          content: accumulatedText,
+                          actionLabel: 'Synthesizing response with Fact Ledger audit...',
+                        }
+                      : m
                   )
                 );
               } else if (frame.type === 'done' || lines[i - 1]?.startsWith('event: done')) {
                 if (frame.conversation_id) {
                   const realId = frame.conversation_id;
+                  const resolvedTitle = frame.title || titleSnippet;
                   setActiveConversationId(realId);
                   localStorage.setItem(ACTIVE_CONVO_STORAGE_KEY, realId);
                   setConversations((prev) => {
@@ -457,7 +547,7 @@ export const AgentProvider = ({ children }) => {
                     return [
                       {
                         id: realId,
-                        title: titleSnippet,
+                        title: resolvedTitle,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                       },
