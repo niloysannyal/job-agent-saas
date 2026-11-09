@@ -198,6 +198,7 @@ class Education(Base):
     institution: Mapped[str] = mapped_column(String(255), nullable=False)
     degree: Mapped[str] = mapped_column(String(255), nullable=False)
     field_of_study: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     end_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     grade: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -278,6 +279,7 @@ class Project(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    github_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     end_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -533,6 +535,7 @@ class EducationBase(BaseModel):
     institution: str
     degree: str
     field_of_study: Optional[str] = None
+    location: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     grade: Optional[str] = None
@@ -548,6 +551,7 @@ class EducationUpdate(BaseModel):
     institution: Optional[str] = None
     degree: Optional[str] = None
     field_of_study: Optional[str] = None
+    location: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     grade: Optional[str] = None
@@ -598,6 +602,7 @@ class ProjectBase(BaseModel):
     title: str
     role: Optional[str] = None
     url: Optional[str] = None
+    github_url: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     description: Optional[str] = None
@@ -614,6 +619,7 @@ class ProjectUpdate(BaseModel):
     title: Optional[str] = None
     role: Optional[str] = None
     url: Optional[str] = None
+    github_url: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     description: Optional[str] = None

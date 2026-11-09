@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
+  Bot,
   Search,
   LayoutDashboard,
   Briefcase,
@@ -50,6 +51,17 @@ export default function CommandPalette({
   const commands = useMemo(() => {
     const list = [
       // Navigation
+      {
+        id: 'nav-copilot',
+        category: 'Navigation',
+        label: 'Go to Career Copilot (Autonomous AI Agent)',
+        icon: Bot,
+        shortcut: '⌘J',
+        action: () => {
+          onNavigate('copilot');
+          onClose();
+        },
+      },
       {
         id: 'nav-dashboard',
         category: 'Navigation',

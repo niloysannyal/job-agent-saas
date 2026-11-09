@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
 from app.models.account import Account
+from app.models.cv_template import CvTemplate
 from app.models.profile import (
     CompensationExpectation,
     SpokenLanguage,
@@ -321,7 +322,7 @@ def test_work_experiences_crud(client: TestClient, account_a: Account):
     assert len(client.get(f"/api/v1/profile/experiences?account_id={account_a.id}").json()) == 0
 
 
-def test_educations_skills_and_preview(client: TestClient, account_a: Account):
+def test_educations_skills_and_preview(client: TestClient, account_a: Account, api_test_db: Session):
     """Test educations, bulk skills, and preview CV generation."""
     # 1. Add Education
     edu_res = client.post(
@@ -382,3 +383,89 @@ def test_educations_skills_and_preview(client: TestClient, account_a: Account):
     assert "MIT" in latex
     assert "HyperMesh" in latex
     assert "Rust" in latex
+
+    # 5. Seed template and preview CV with specific template name
+    api_test_db.add(CvTemplate(
+        account_id=account_a.id,
+        name="02_CLASSIC_CORPORATE",
+        latex_source="\\documentclass{article}\n\\begin{document}\n{{FULL_NAME}}\n\\end{document}",
+    ))
+    api_test_db.commit()
+
+    # 6. Preview CV with specific template name
+    prev_by_name = client.get(f"/api/v1/profile/preview-cv?account_id={account_a.id}&template_id=02_CLASSIC_CORPORATE")
+    assert prev_by_name.status_code == 200
+    assert prev_by_name.json()["template_name"] == "02_CLASSIC_CORPORATE"
+
+
+
+def test_projects_crud_and_education_location(client: TestClient, account_a: Account):
+    """Test full Project CRUD with github_url and Education with location."""
+    # 1. Add Education with location
+    edu_res = client.post(
+        f"/api/v1/profile/educations?account_id={account_a.id}",
+        json={
+            "institution": "Stanford University",
+            "degree": "M.S.",
+            "field_of_study": "AI & Robotics",
+            "location": "Stanford, CA",
+            "start_date": "2020",
+            "end_date": "2022",
+            "grade": "3.95",
+        },
+    )
+    assert edu_res.status_code == 201
+    edu_data = edu_res.json()
+    assert edu_data["location"] == "Stanford, CA"
+
+    # 2. Add Project with github_url, live link, tech stack, etc.
+    proj_payload = {
+        "title": "Agentic Job SaaS",
+        "role": "Founder & Lead Architect",
+        "url": "https://jobeazy.com",
+        "github_url": "https://github.com/niloy/job-agent-saas",
+        "start_date": "2024-01",
+        "end_date": "Present",
+        "technologies": "FastAPI, React 19, PostgreSQL, Qdrant",
+        "description": "Multi-tenant autonomous job search pipeline with LaTeX CV tailoring.",
+        "highlights": "Led end-to-end design\nBuilt 5-phase verification loop",
+    }
+    proj_res = client.post(
+        f"/api/v1/profile/projects?account_id={account_a.id}",
+        json=proj_payload,
+    )
+    assert proj_res.status_code == 201
+    proj_data = proj_res.json()
+    proj_id = proj_data["id"]
+    assert proj_data["title"] == "Agentic Job SaaS"
+    assert proj_data["github_url"] == "https://github.com/niloy/job-agent-saas"
+    assert proj_data["url"] == "https://jobeazy.com"
+
+    # 3. List projects
+    list_res = client.get(f"/api/v1/profile/projects?account_id={account_a.id}")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) >= 1
+    assert any(p["id"] == proj_id for p in list_res.json())
+
+    # 4. Patch project
+    patch_res = client.patch(
+        f"/api/v1/profile/projects/{proj_id}?account_id={account_a.id}",
+        json={"title": "JobEazy Career OS", "github_url": "https://github.com/niloy/jobeazy"},
+    )
+    assert patch_res.status_code == 200
+    assert patch_res.json()["title"] == "JobEazy Career OS"
+    assert patch_res.json()["github_url"] == "https://github.com/niloy/jobeazy"
+
+    # 5. Preview CV contains updated project and education location
+    prev_res = client.get(f"/api/v1/profile/preview-cv?account_id={account_a.id}")
+    assert prev_res.status_code == 200
+    latex = prev_res.json()["latex_source"]
+    assert "JobEazy Career OS" in latex
+    assert "Stanford, CA" in latex
+    assert "GitHub" in latex
+
+    # 6. Delete project
+    del_res = client.delete(f"/api/v1/profile/projects/{proj_id}?account_id={account_a.id}")
+    assert del_res.status_code == 204
+    after_list = client.get(f"/api/v1/profile/projects?account_id={account_a.id}").json()
+    assert not any(p["id"] == proj_id for p in after_list)

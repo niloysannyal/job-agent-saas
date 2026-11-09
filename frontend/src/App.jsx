@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './App.css';
 import { useTheme } from './utils/theme';
 import { AuthProvider, useAuth, parseJwtPayload } from './context/AuthContext';
+import { AgentProvider } from './context/AgentContext';
+import CareerCopilotView from './components/agent/CareerCopilotView';
 
 import LandingPageView from './components/LandingPageView';
 import LoginModal from './components/LoginModal';
@@ -19,6 +21,7 @@ import MaterialsModal from './components/MaterialsModal';
 import OnboardingModal from './components/OnboardingModal';
 import CommandPalette from './components/CommandPalette';
 import Toast from './components/Toast';
+import { Agentation } from 'agentation';
 
 const DEFAULT_ACCOUNT_ID = '6e488188-0015-4657-94c9-92d01413dcfb';
 const API_BASE = '/api/v1';
@@ -72,6 +75,36 @@ function CareerAppInner() {
   const { theme, setTheme, toggleTheme } = useTheme();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [adminTab, setAdminTab] = useState('overview');
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('jobeazy_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('jobeazy_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Global Keyboard Shortcut: Cmd+\ / Ctrl+\ for Sidebar Toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebar]);
 
   // Sync accountId with authenticated user or impersonated tenant
   useEffect(() => {
@@ -143,6 +176,11 @@ function CareerAppInner() {
         setIsCommandPaletteOpen((prev) => !prev);
         return;
       }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setActiveSection((prev) => (prev === 'copilot' ? 'dashboard' : 'copilot'));
+        return;
+      }
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         if (isSuperadmin && !isImpersonating) {
           if (e.key === '1') { e.preventDefault(); setActiveSection('admin'); setAdminTab('overview'); }
@@ -152,7 +190,8 @@ function CareerAppInner() {
           else if (e.key === '5') { e.preventDefault(); setActiveSection('admin'); setAdminTab('templates'); }
           else if (e.key === '6') { e.preventDefault(); setActiveSection('admin'); setAdminTab('flagged'); }
         } else {
-          if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
+          if (e.key === '0') { e.preventDefault(); setActiveSection('copilot'); }
+          else if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
           else if (e.key === '2') { e.preventDefault(); setActiveSection('jobs'); }
           else if (e.key === '3') { e.preventDefault(); setActiveSection('studio'); }
           else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
@@ -232,11 +271,15 @@ function CareerAppInner() {
         if (data) {
           setProfileForm({
             full_name: data.full_name || '',
+            headline: data.headline || '',
+            phone: data.phone || '',
+            summary: data.summary || '',
             current_role: data.current_role || '',
             current_company: data.current_company || '',
             education: data.education || '',
             location_city: data.location_city || '',
             location_country: data.location_country || '',
+            portfolio_url: data.portfolio_url || '',
             linkedin_url: data.linkedin_url || '',
             github_url: data.github_url || '',
             one_liner: data.one_liner || '',
@@ -248,6 +291,11 @@ function CareerAppInner() {
             tone_preferences: data.tone_preferences || '',
             avoid_phrases: data.avoid_phrases || '',
             dealbreakers: data.dealbreakers || '',
+            notice_period: data.notice_period || '',
+            visa_needs: data.visa_needs || '',
+            reason_for_leaving: data.reason_for_leaving || '',
+            active_template_id: data.active_template_id || '',
+            master_cv_latex: data.master_cv_latex || '',
           });
         }
       }
@@ -821,10 +869,13 @@ function CareerAppInner() {
           setViewMode('landing');
           showToast('Signed out of session.');
         }}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
+        onNewApplication={() => setSelectedJobForStudio(null)}
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="career-os-main">
+      <main className={`career-os-main ${effectiveSection === "copilot" ? "copilot-main-no-pad" : ""}`}>
         {/* QA DOGFOODING IMPERSONATION BANNER */}
         {isImpersonating && impersonatedTenant && (
           <div className="impersonation-qa-banner">
@@ -869,6 +920,22 @@ function CareerAppInner() {
               showToast(`Acting as tenant: ${tenant.email}`);
             }}
             showToast={showToast}
+          />
+        )}
+
+        {/* SECTION 0: AUTONOMOUS CAREER COPILOT (FULL SCREEN CHATGPT/CLAUDE OS) */}
+        {effectiveSection === 'copilot' && (
+          <CareerCopilotView
+            activeContext={{
+              screen: effectiveSection,
+              job_id: selectedJobForStudio?.id,
+              job: selectedJobForStudio,
+              candidate_name: profileForm?.full_name,
+              applications: applications,
+            }}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onExpandSidebar={() => setIsSidebarCollapsed(false)}
+            onNavigate={(section) => setActiveSection(section)}
           />
         )}
 
@@ -1049,6 +1116,8 @@ function CareerAppInner() {
         showToast={showToast}
       />
 
+
+
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
   );
@@ -1057,7 +1126,10 @@ function CareerAppInner() {
 export default function App() {
   return (
     <AuthProvider>
-      <CareerAppInner />
+      <AgentProvider>
+        <CareerAppInner />
+        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      </AgentProvider>
     </AuthProvider>
   );
 }

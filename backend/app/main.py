@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.admin import router as admin_router
+from app.api.agent import router as agent_router
 from app.api.applications import router as applications_router
 from app.api.auth import router as auth_router
 from app.api.interview import router as interview_router
@@ -43,8 +44,13 @@ def create_app() -> FastAPI:
     def health_check():
         return {"status": "ok"}
 
+    @app.get("/openapi.json", include_in_schema=False)
+    def openapi_fallback():
+        return app.openapi()
+
     # Register API v1 prefix routes
     app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(agent_router, prefix=settings.API_V1_PREFIX)
     app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
     app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
     app.include_router(profile_router, prefix=settings.API_V1_PREFIX)

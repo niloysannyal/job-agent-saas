@@ -125,8 +125,10 @@ class CVTemplateCompiler:
                 end = escape_latex(edu.get("end_date", ""))
                 date_str = f"{start} -- {end}" if start and end else (start or end)
                 grade = escape_latex(edu.get("grade", ""))
+                loc = escape_latex(edu.get("location", ""))
+                inst_line = f"{inst} $\\cdot$ {loc}" if inst and loc else (inst or loc)
 
-                edu_lines.append(f"  \\resumeQuadHeading{{{full_deg}}}{{{date_str}}}{{{inst}}}{{{grade}}}")
+                edu_lines.append(f"  \\resumeQuadHeading{{{full_deg}}}{{{date_str}}}{{{inst_line}}}{{{grade}}}")
             edu_lines.append("\\resumeHeadingListEnd")
             edu_lines.append("\\vspace{-5pt}")
         education_section = "\n".join(edu_lines)
@@ -160,6 +162,16 @@ class CVTemplateCompiler:
             proj_lines.append("\\resumeHeadingListStart")
             for p in projects:
                 title = escape_latex(p.get("title", ""))
+                url = p.get("url")
+                github_url = p.get("github_url")
+                links = []
+                if url:
+                    links.append(f"\\href{{{url}}}{{Live}}")
+                if github_url:
+                    links.append(f"\\href{{{github_url}}}{{GitHub}}")
+                link_str = f" ({' $\\cdot$ '.join(links)})" if links else ""
+                title_display = f"{title}{link_str}"
+
                 role = escape_latex(p.get("role", ""))
                 tech = escape_latex(p.get("technologies", ""))
                 sub = f"{role} $\\cdot$ \\textmd{{{tech}}}" if role and tech else (role or tech)
@@ -167,7 +179,7 @@ class CVTemplateCompiler:
                 end = escape_latex(p.get("end_date", ""))
                 date_str = f"{start} -- {end}" if start and end else (start or end)
 
-                proj_lines.append(f"  \\resumeQuadHeading{{{title}}}{{{date_str}}}{{{sub}}}{{}}")
+                proj_lines.append(f"  \\resumeQuadHeading{{{title_display}}}{{{date_str}}}{{{sub}}}{{}}")
 
                 bullets = cls._parse_bullets(p.get("highlights") or p.get("description"))
                 if bullets:

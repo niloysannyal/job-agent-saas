@@ -10,7 +10,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.auth import get_current_account
@@ -983,6 +983,10 @@ def delete_language(
     "/parse-cv",
     summary="Upload CV file (PDF, DOCX, TXT) and extract structured career data via LLM",
 )
+@router.post(
+    "/parse_cv",
+    include_in_schema=False,
+)
 async def parse_cv_file(
     file: UploadFile = File(...),
     account_id: Optional[str] = Query(None),
@@ -1096,6 +1100,7 @@ def apply_parsed_cv(
                     institution=edu_data.get("institution") or "University",
                     degree=edu_data.get("degree") or "Degree",
                     field_of_study=edu_data.get("field_of_study"),
+                    location=edu_data.get("location"),
                     start_date=edu_data.get("start_date"),
                     end_date=edu_data.get("end_date"),
                     grade=edu_data.get("grade"),
@@ -1137,6 +1142,7 @@ def apply_parsed_cv(
                     title=p_data.get("title") or "Project",
                     role=p_data.get("role"),
                     url=p_data.get("url"),
+                    github_url=p_data.get("github_url"),
                     start_date=p_data.get("start_date"),
                     end_date=p_data.get("end_date"),
                     description=p_data.get("description"),
@@ -1176,6 +1182,10 @@ def apply_parsed_cv(
     "/preview-cv",
     summary="Generate compiled LaTeX CV preview from candidate's profile entities",
 )
+@router.get(
+    "/preview_cv",
+    include_in_schema=False,
+)
 def preview_cv(
     account_id: str = Query(...),
     template_id: Optional[str] = Query(None),
@@ -1198,12 +1208,29 @@ def preview_cv(
     )
     profile = db.scalars(stmt).first()
     if not profile:
+        # Check if account exists
+        account = db.scalars(select(Account).where(Account.id == account_id)).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found.")
+        _get_or_create_profile(db, account_id)
+        profile = db.scalars(stmt).first()
+    if not profile:
         raise HTTPException(status_code=404, detail="Profile not found.")
 
     target_template_id = template_id or profile.active_template_id
     template = None
     if target_template_id:
-        template = db.scalars(select(CvTemplate).where(CvTemplate.id == target_template_id)).first()
+        template = db.scalars(
+            select(CvTemplate).where(
+                or_(
+                    CvTemplate.id == target_template_id,
+                    CvTemplate.name == target_template_id,
+                )
+            )
+        ).first()
+        if template and template_id:
+            profile.active_template_id = template.id
+            db.commit()
     if not template:
         template = db.scalars(select(CvTemplate).where(CvTemplate.is_admin_default == True)).first()
     if not template:
@@ -1250,6 +1277,7 @@ def preview_cv(
                 "institution": ed.institution,
                 "degree": ed.degree,
                 "field_of_study": ed.field_of_study,
+                "location": ed.location,
                 "start_date": ed.start_date,
                 "end_date": ed.end_date,
                 "grade": ed.grade,
@@ -1262,6 +1290,7 @@ def preview_cv(
                 "title": pr.title,
                 "role": pr.role,
                 "url": pr.url,
+                "github_url": pr.github_url,
                 "start_date": pr.start_date,
                 "end_date": pr.end_date,
                 "technologies": pr.technologies,

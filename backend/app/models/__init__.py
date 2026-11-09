@@ -5,6 +5,17 @@ from app.models.account import (
     AccountRead,
     AccountUpdate,
 )
+from app.models.agent import (
+    AgentActionProposal,
+    AgentActionProposalBase,
+    AgentActionProposalRead,
+    AgentConversation,
+    AgentConversationRead,
+    AgentMessage,
+    AgentMessageRead,
+    AgentChatRequest,
+    ProposalApprovalRequest,
+)
 from app.models.application import (
     Application,
     ApplicationBase,
@@ -229,4 +240,14 @@ __all__ = [
     "StarStoryCreate",
     "StarStoryRead",
     "StarStoryUpdate",
+    # Agent OS
+    "AgentActionProposal",
+    "AgentActionProposalBase",
+    "AgentActionProposalRead",
+    "AgentConversation",
+    "AgentConversationRead",
+    "AgentMessage",
+    "AgentMessageRead",
+    "AgentChatRequest",
+    "ProposalApprovalRequest",
 ]

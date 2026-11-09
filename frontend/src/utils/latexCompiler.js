@@ -101,6 +101,26 @@ export function cleanLatexInline(text) {
   // flow naturally across the page width without premature breaks
   str = str.replace(/(?<!\n)\r?\n(?!\r?\n)/g, ' ');
 
+  // Strip environments: \begin{itemize}[...], \begin{...}, \end{...}
+  str = str.replace(/\\begin\{[a-zA-Z*]+\}(?:\[[^\]]*\])?(?:\{[^{}]*\})*/g, '');
+  str = str.replace(/\\end\{[a-zA-Z*]+\}/g, '');
+
+  // Strip list helpers: \resumeItemListStart, \resumeHeadingListStart, etc.
+  str = str.replace(/\\resume[a-zA-Z]+Start(?:\{\})?/g, '');
+  str = str.replace(/\\resume[a-zA-Z]+End(?:\{\})?/g, '');
+
+  // Strip list item markers: \item, \item[...]
+  str = str.replace(/\\item\s*(?:\[[^\]]*\])?\s*/g, '');
+
+  // Convert \url{target} using extractMacroArgs
+  const urlMatches = extractMacroArgs(str, '\\url', 1);
+  for (let i = urlMatches.length - 1; i >= 0; i--) {
+    const m = urlMatches[i];
+    const targetUrl = m.args[0].trim();
+    const linkHtml = `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="cv-link">${targetUrl}</a>`;
+    str = str.slice(0, m.index) + linkHtml + str.slice(m.index + m.length);
+  }
+
   // Convert \href{url}{label} using extractMacroArgs
   const hrefMatches = extractMacroArgs(str, '\\href', 2);
   // Replace in reverse order so indices remain valid
@@ -110,7 +130,11 @@ export function cleanLatexInline(text) {
     let rawLabel = m.args[1];
     let cleanLabel = rawLabel
       .replace(/\\uline\{([^}]+)\}/g, '$1')
+      .replace(/\\underline\{([^}]+)\}/g, '$1')
       .replace(/\\textnormal\{([^}]+)\}/g, '$1')
+      .replace(/\\textmd\{([^}]+)\}/g, '$1')
+      .replace(/\\textbf\{([^}]+)\}/g, '$1')
+      .replace(/\\textit\{([^}]+)\}/g, '$1')
       .replace(/\\normalsize\s*/g, '')
       .replace(/\\[a-zA-Z]+\s*/g, '')
       .replace(/[{}]/g, '')
@@ -120,20 +144,35 @@ export function cleanLatexInline(text) {
     str = str.slice(0, m.index) + linkHtml + str.slice(m.index + m.length);
   }
 
-  // Convert \textbf{content} -> <strong>content</strong>
-  str = str.replace(/\\textbf\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<strong>$1</strong>');
-  // Convert \textit{content} -> <em>content</em>
-  str = str.replace(/\\textit\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<em>$1</em>');
-  // Convert \uline{content} -> <u>content</u>
-  str = str.replace(/\\uline\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<u>$1</u>');
+  // Convert font style wrappers (looping to handle nested braces cleanly)
+  let prevStr = '';
+  let maxIters = 10;
+  while (prevStr !== str && maxIters-- > 0) {
+    prevStr = str;
+    str = str.replace(/\\textbf\{([^{}]*)\}/g, '<strong>$1</strong>');
+    str = str.replace(/\\textit\{([^{}]*)\}/g, '<em>$1</em>');
+    str = str.replace(/\\(?:uline|underline)\{([^{}]*)\}/g, '<u>$1</u>');
+    str = str.replace(/\\(?:textmd|textnormal|textsc|textrm|textsf)\{([^{}]*)\}/g, '$1');
+    str = str.replace(/\\texttt\{([^{}]*)\}/g, '<code>$1</code>');
+    str = str.replace(/\{\\(?:small|footnotesize|normalsize|large|Huge|rm|bf|it|sc)\s*([^{}]*)\}/g, '$1');
+  }
 
-  // Replace symbols and spacing
-  str = str.replace(/\\textbullet/g, '•');
-  str = str.replace(/\\vspace\{[^}]*\}/g, ' ');
-  str = str.replace(/\\hspace\{[^}]*\}/g, ' ');
+  // Strip standalone font sizing and switches
+  str = str.replace(/\\(?:normalsize|small|footnotesize|large|Huge|scshape|normalfont|rmfamily|bfseries|itshape|rm|bf|it|sc)\b\s*/g, '');
 
-  // Strip formatting/sizing commands
-  str = str.replace(/\\(?:normalsize|small|footnotesize|large|Huge|scshape)\b\s*/g, '');
+  // Replace math and special symbols
+  str = str.replace(/\$\s*\\cdot\s*\$/g, ' · ');
+  str = str.replace(/\\cdot\b/g, ' · ');
+  str = str.replace(/\\textbullet\b/g, '•');
+  str = str.replace(/\\textbar(?:\{\})?\b/g, '|');
+  str = str.replace(/---/g, '—');
+  str = str.replace(/--/g, '–');
+
+  // Spacing and layout macros
+  str = str.replace(/\\vspace\*?\{[^}]*\}/g, ' ');
+  str = str.replace(/\\hspace\*?\{[^}]*\}/g, ' ');
+  str = str.replace(/\\(?:hfill|vfill|newline|noindent|centering|raggedright|allowbreak|smallskip|medskip|bigskip)\b/g, ' ');
+  str = str.replace(/\\\\/g, ' ');
 
   // Unescape LaTeX special characters
   str = str.replace(/\\&/g, '&');
@@ -141,12 +180,20 @@ export function cleanLatexInline(text) {
   str = str.replace(/\\\$/g, '$');
   str = str.replace(/\\_/g, '_');
   str = str.replace(/\\#/g, '#');
+  str = str.replace(/\\\{/g, '{');
+  str = str.replace(/\\\}/g, '}');
+  str = str.replace(/\\\|/g, '|');
+  str = str.replace(/\\\s/g, ' ');
   str = str.replace(/~/g, ' ');
 
-  // Clean remaining stray unescaped braces outside HTML tags
+  // Clean any remaining unhandled single backslash commands with optional brace arg
+  str = str.replace(/\\[a-zA-Z]+\b(?:\{([^{}]*)\})?/g, '$1');
+
+  // Clean stray unescaped curly braces outside HTML tags
   str = str.replace(/(?<!<[^>]*)[{}]/g, '');
 
-  return str.trim();
+  // Normalize multi-spaces
+  return str.replace(/[ \t]+/g, ' ').trim();
 }
 
 /**
@@ -155,7 +202,8 @@ export function cleanLatexInline(text) {
 export function latexToPlainText(latexInline) {
   if (!latexInline) return '';
   const html = cleanLatexInline(latexInline);
-  return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const textWithoutTags = html.replace(/<[^>]+>/g, '');
+  return decodeHtmlEntities(textWithoutTags).replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -323,13 +371,37 @@ export function parseLatexDocument(latexSource) {
     // Quad Headings (4 args: role, location, company, dates)
     const quadMatches = extractMacroArgs(sBody, '\\resumeQuadHeading', 4);
     for (const q of quadMatches) {
+      const roleHtml = cleanLatexInline(q.args[0]);
+      const rolePlain = latexToPlainText(q.args[0]);
+      const locHtml = cleanLatexInline(q.args[1]);
+      const locPlain = latexToPlainText(q.args[1]);
+      const compHtml = cleanLatexInline(q.args[2]);
+      const compPlain = latexToPlainText(q.args[2]);
+      const subHtml = cleanLatexInline(q.args[3]);
+      const subPlain = latexToPlainText(q.args[3]);
+      const quadLinks = [
+        ...extractLinksFromLatex(q.args[0]),
+        ...extractLinksFromLatex(q.args[1]),
+        ...extractLinksFromLatex(q.args[2]),
+        ...extractLinksFromLatex(q.args[3]),
+      ];
+
       rawItems.push({
         type: 'heading',
         index: q.index,
-        role: cleanLatexInline(q.args[0]),
-        locationOrDate: cleanLatexInline(q.args[1]), // Location
-        companyOrDegree: cleanLatexInline(q.args[2]), // Company
-        submeta: cleanLatexInline(q.args[3]), // Dates
+        role: roleHtml,
+        roleHtml: roleHtml,
+        rolePlain: rolePlain,
+        locationOrDate: locHtml,
+        locationOrDateHtml: locHtml,
+        locationOrDatePlain: locPlain,
+        companyOrDegree: compHtml,
+        companyOrDegreeHtml: compHtml,
+        companyOrDegreePlain: compPlain,
+        submeta: subHtml,
+        submetaHtml: subHtml,
+        submetaPlain: subPlain,
+        links: quadLinks,
       });
     }
 
@@ -337,15 +409,29 @@ export function parseLatexDocument(latexSource) {
     const trioMatches = extractMacroArgs(sBody, '\\resumeTrioHeading', 3);
     for (const tr of trioMatches) {
       const rawTrioTitle = tr.args[0];
+      const titleHtml = cleanLatexInline(rawTrioTitle);
+      const titlePlain = latexToPlainText(rawTrioTitle);
+      const subHtml = cleanLatexInline(tr.args[1]);
+      const subPlain = latexToPlainText(tr.args[1]);
+      const rightHtml = cleanLatexInline(tr.args[2]);
+      const rightPlain = latexToPlainText(tr.args[2]);
+      const trioLinks = extractLinksFromLatex(rawTrioTitle);
+
       rawItems.push({
         type: 'trio_heading',
         index: tr.index,
-        title: cleanLatexInline(rawTrioTitle),
-        sub: cleanLatexInline(tr.args[1]),
-        right: cleanLatexInline(tr.args[2]),
-        contentHtml: cleanLatexInline(rawTrioTitle),
-        plainText: latexToPlainText(rawTrioTitle),
-        links: extractLinksFromLatex(rawTrioTitle),
+        title: titlePlain,
+        titleHtml: titleHtml,
+        titlePlain: titlePlain,
+        sub: subPlain,
+        subHtml: subHtml,
+        subPlain: subPlain,
+        right: rightPlain,
+        rightHtml: rightHtml,
+        rightPlain: rightPlain,
+        contentHtml: titleHtml,
+        plainText: titlePlain,
+        links: trioLinks,
       });
     }
 
@@ -536,7 +622,7 @@ export function paginateParsedDocument(parsedDoc, maxPageHeight = 770) {
         pages.push(currentPage);
         currentPage = { pageNumber: pages.length + 1, hasHeader: false, sections: [] };
         currentHeight = 0;
-        currentSecOnPage = { title: `${sec.title} (cont.)`, items: [] };
+        currentSecOnPage = { title: '', isContinuation: true, parentTitle: sec.title, items: [] };
         currentPage.sections.push(currentSecOnPage);
       }
       currentSecOnPage.items.push(item);
@@ -694,8 +780,121 @@ export function compactLatexToTwoPages(rawLatex, role = 'AI Engineer', descripti
 }
 
 /**
- * Compiles parsed LaTeX document into an Overleaf-identical publication-quality A4 PDF
- * with fully active clickable hyperlinks and precise Overleaf geometry.
+ * Parses inline HTML tags (strong, em, a) into styled tokens with attached punctuation.
+ */
+export function parseRichTokens(htmlText) {
+  if (!htmlText) return [];
+  const tokens = [];
+  const chunkRegex = /(<strong>[\s\S]*?<\/strong>|<em>[\s\S]*?<\/em>|<a\s+[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>|[^<]+)/gi;
+  let match;
+
+  while ((match = chunkRegex.exec(htmlText)) !== null) {
+    const chunk = match[0];
+    if (chunk.toLowerCase().startsWith('<strong>')) {
+      const inner = chunk.replace(/<\/?strong>/gi, '');
+      const words = inner.split(/\s+/).filter(Boolean);
+      words.forEach(w => tokens.push({ text: decodeHtmlEntities(w), bold: true, italic: false }));
+    } else if (chunk.toLowerCase().startsWith('<em>')) {
+      const inner = chunk.replace(/<\/?em>/gi, '');
+      const words = inner.split(/\s+/).filter(Boolean);
+      words.forEach(w => tokens.push({ text: decodeHtmlEntities(w), bold: false, italic: true }));
+    } else if (chunk.toLowerCase().startsWith('<a')) {
+      const url = match[2];
+      const inner = match[3];
+      const words = inner.split(/\s+/).filter(Boolean);
+      words.forEach(w => tokens.push({ text: decodeHtmlEntities(w), bold: false, italic: false, url }));
+    } else {
+      const words = chunk.split(/\s+/).filter(Boolean);
+      words.forEach(w => tokens.push({ text: decodeHtmlEntities(w), bold: false, italic: false }));
+    }
+  }
+
+  // Merge standalone or leading punctuation like ",", ".", ")", ";", ":" with previous token
+  for (let i = 1; i < tokens.length; i++) {
+    const currentText = tokens[i].text;
+    if (/^[,\.;:!?\)]/.test(currentText)) {
+      if (currentText.length === 1) {
+        tokens[i - 1].text += currentText;
+        tokens.splice(i, 1);
+        i--;
+      } else if (!tokens[i].url) {
+        const punctMatch = currentText.match(/^[,\.;:!?\)]+/);
+        if (punctMatch) {
+          const punct = punctMatch[0];
+          tokens[i - 1].text += punct;
+          tokens[i].text = currentText.slice(punct.length);
+          if (!tokens[i].text) {
+            tokens.splice(i, 1);
+            i--;
+          }
+        }
+      }
+    }
+  }
+
+  return tokens;
+}
+
+/**
+ * Draws wrapped rich text with authentic font weight (bold highlights), clickable links, and natural line-height.
+ */
+export function drawRichText(doc, htmlText, x, startY, maxWidth, lineHeight, fontSize = 8.5) {
+  const tokens = parseRichTokens(htmlText);
+  if (tokens.length === 0) return startY;
+
+  doc.setFontSize(fontSize);
+  const spaceW = 3.2;
+
+  const lines = [];
+  let currentLine = [];
+  let currentLineWidth = 0;
+
+  tokens.forEach(tok => {
+    doc.setFont('helvetica', tok.bold ? 'bold' : (tok.italic ? 'italic' : 'normal'));
+    const tw = doc.getTextWidth(tok.text);
+    tok.width = tw;
+
+    if (currentLineWidth + tw > maxWidth && currentLine.length > 0) {
+      lines.push(currentLine);
+      currentLine = [tok];
+      currentLineWidth = tw + spaceW;
+    } else {
+      currentLine.push(tok);
+      currentLineWidth += tw + spaceW;
+    }
+  });
+
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  let y = startY;
+  lines.forEach(line => {
+    let currX = x;
+    line.forEach(tok => {
+      doc.setFont('helvetica', tok.bold ? 'bold' : (tok.italic ? 'italic' : 'normal'));
+      if (tok.url) {
+        doc.setTextColor(37, 99, 235);
+        doc.textWithLink(tok.text, currX, y, { url: tok.url });
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(0.5);
+        doc.line(currX, y + 1.2, currX + tok.width, y + 1.2);
+      } else {
+        doc.setTextColor(tok.bold ? 17 : 55, tok.bold ? 24 : 65, tok.bold ? 39 : 81);
+        doc.text(tok.text, currX, y);
+      }
+      currX += tok.width + spaceW;
+    });
+    y += lineHeight;
+  });
+
+  return y;
+}
+
+/**
+ * Compiles parsed LaTeX document into an Overleaf-identical publication-quality A4 PDF.
+ * Uses the exact same discrete-page pagination engine as the HTML preview, guaranteeing
+ * identical page counts, generous breathing space, bold key-metric highlights, and zero text collisions.
  */
 export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV.pdf') {
   const doc = new jsPDF({
@@ -708,294 +907,290 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
   const pageHeight = 841.89;
   const margin = 36;
   const contentWidth = pageWidth - margin * 2;
-  const maxY = pageHeight - margin - 15;
-  let y = margin + 18;
 
   const LINK_COLOR = [37, 99, 235]; // Tailwind blue-600
   const TEXT_DARK = [17, 24, 39];
   const TEXT_MUTED = [75, 85, 99];
   const LINE_COLOR = [31, 41, 55];
 
-  // Helper to add a new page with header reset
-  const checkNewPage = (neededHeight) => {
-    if (y + neededHeight > maxY) {
+  // Paginate parsed document using the EXACT SAME engine as the HTML preview
+  const pages = paginateParsedDocument(parsedDoc);
+  const totalPages = pages.length;
+
+  pages.forEach((page, pIdx) => {
+    if (pIdx > 0) {
       doc.addPage();
-      y = margin + 20;
-      return true;
     }
-    return false;
-  };
 
-  // 1. HEADER (Overleaf 2-column tabular layout)
-  // Left Column: Candidate Name
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(...TEXT_DARK);
-  doc.text((parsedDoc.header.name || 'NILOY SANNYAL').toUpperCase(), margin, y);
+    let y = margin + 18;
 
-  // Right Column: Location
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...TEXT_MUTED);
-  const locStr = `Location: ${parsedDoc.header.location || 'Dhaka, Bangladesh'}`;
-  doc.text(locStr, pageWidth - margin, y - 2, { align: 'right' });
+    // 1. PAGE HEADER (Only on page 1)
+    if (page.hasHeader) {
+      // Candidate Name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(...TEXT_DARK);
+      doc.text((parsedDoc.header.name || 'NILOY SANNYAL').toUpperCase(), margin, y);
 
-  // Header Line 2: Links on Left, Contact on Right
-  y += 14;
-  let linkX = margin;
-  doc.setFontSize(8.5);
-
-  const leftLinks = parsedDoc.header.leftLinks || [
-    { label: 'Portfolio', url: 'https://www.niloysannyal.me/' },
-    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/niloysannyal/' },
-    { label: 'GitHub', url: 'https://github.com/niloysannyal' },
-    { label: 'LeetCode', url: 'https://leetcode.com/NiloySannyal/' },
-  ];
-
-  leftLinks.forEach((item, idx) => {
-    doc.setTextColor(...LINK_COLOR);
-    doc.textWithLink(item.label, linkX, y, { url: item.url });
-    const tw = doc.getTextWidth(item.label);
-
-    // Clickable link underline
-    doc.setDrawColor(...LINK_COLOR);
-    doc.setLineWidth(0.5);
-    doc.line(linkX, y + 1.5, linkX + tw, y + 1.5);
-    linkX += tw + 4;
-
-    if (idx < leftLinks.length - 1) {
+      // Location
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
       doc.setTextColor(...TEXT_MUTED);
-      doc.text('|', linkX, y);
-      linkX += 8;
-    }
-  });
+      const locStr = `Location: ${parsedDoc.header.location || 'Dhaka, Bangladesh'}`;
+      doc.text(locStr, pageWidth - margin, y - 2, { align: 'right' });
 
-  // Right Column: Email | Mobile
-  const rightLinks = parsedDoc.header.rightLinks || [
-    { label: 'niloysannyal@gmail.com', url: 'mailto:niloysannyal@gmail.com' },
-    { label: '+8801783445245', url: 'tel:+8801783445245' },
-  ];
+      // Links on Left
+      y += 15;
+      let linkX = margin;
+      doc.setFontSize(8.5);
 
-  let rightEnd = pageWidth - margin;
-  for (let i = rightLinks.length - 1; i >= 0; i--) {
-    const item = rightLinks[i];
-    const prefix = item.url.startsWith('mailto:') ? 'Email: ' : 'Mobile: ';
-    const prefixW = doc.getTextWidth(prefix);
-    const labelW = doc.getTextWidth(item.label);
-    const totalW = prefixW + labelW;
-    const startX = rightEnd - totalW;
+      const leftLinks = parsedDoc.header.leftLinks || [
+        { label: 'Portfolio', url: 'https://www.niloysannyal.me/' },
+        { label: 'LinkedIn', url: 'https://www.linkedin.com/in/niloysannyal/' },
+        { label: 'GitHub', url: 'https://github.com/niloysannyal' },
+        { label: 'LeetCode', url: 'https://leetcode.com/NiloySannyal/' },
+      ];
 
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...TEXT_MUTED);
-    doc.text(prefix, startX, y);
+      leftLinks.forEach((item, idx) => {
+        doc.setTextColor(...LINK_COLOR);
+        doc.textWithLink(item.label, linkX, y, { url: item.url });
+        const tw = doc.getTextWidth(item.label);
 
-    doc.setTextColor(...LINK_COLOR);
-    doc.textWithLink(item.label, startX + prefixW, y, { url: item.url });
-    doc.setDrawColor(...LINK_COLOR);
-    doc.setLineWidth(0.5);
-    doc.line(startX + prefixW, y + 1.5, startX + prefixW + labelW, y + 1.5);
+        doc.setDrawColor(...LINK_COLOR);
+        doc.setLineWidth(0.5);
+        doc.line(linkX, y + 1.5, linkX + tw, y + 1.5);
+        linkX += tw + 4;
 
-    rightEnd = startX - 6;
-    if (i > 0) {
-      doc.setTextColor(...TEXT_MUTED);
-      doc.text('|', rightEnd - 4, y);
-      rightEnd -= 10;
-    }
-  }
-
-  // Header Dividing Line
-  y += 9;
-  doc.setDrawColor(...LINE_COLOR);
-  doc.setLineWidth(1.1);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 13;
-
-  // 2. SECTIONS
-  let renderedExperience = false;
-  for (const sec of parsedDoc.sections) {
-    // Senior Recruiter 2-page split: Page 1 holds Header + Summary + Professional Experience + Technical Skills.
-    // Start Page 2 cleanly with Selected Flagship Projects for perfect visual balance (if multi-page)!
-    if (!parsedDoc.isOnePage && doc.getNumberOfPages() === 1 && sec.title.includes('PROJECT') && renderedExperience) {
-      doc.addPage();
-      y = margin + 20;
-    }
-
-    if (sec.title.includes('EXPERIENCE')) {
-      renderedExperience = true;
-    }
-
-    checkNewPage(45);
-
-    // Section title (Overleaf small-caps style)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10.5);
-    doc.setTextColor(...TEXT_DARK);
-    doc.text(sec.title.toUpperCase(), margin, y);
-
-    // Section horizontal rule (titlerule)
-    y += 3;
-    doc.setDrawColor(200, 205, 215);
-    doc.setLineWidth(0.75);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 11;
-
-    for (const item of sec.items) {
-      if (item.type === 'skills_line') {
-        checkNewPage(18);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-
-        const cleanCat = item.categoryPlain || latexToPlainText(item.category) || '';
-
-        // If category itself has links (e.g. Problem Solving LeetCode / Codeforces)
-        const catLink = item.links?.find(lk => cleanCat.toLowerCase().includes(lk.label.toLowerCase()));
-        if (catLink) {
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8.5);
-          doc.setTextColor(...LINK_COLOR);
-          doc.textWithLink(catLink.label, margin, y, { url: catLink.url });
-          const tw = doc.getTextWidth(catLink.label);
-
-          doc.setDrawColor(...LINK_COLOR);
-          doc.setLineWidth(0.5);
-          doc.line(margin, y + 1.5, margin + tw, y + 1.5);
-
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...TEXT_DARK);
-          doc.text(':', margin + tw, y);
-        } else {
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8.5);
-          doc.setTextColor(...TEXT_DARK);
-          doc.text(`${cleanCat}:`, margin, y);
+        if (idx < leftLinks.length - 1) {
+          doc.setTextColor(...TEXT_MUTED);
+          doc.text('|', linkX, y);
+          linkX += 8;
         }
+      });
 
-        // Skills / Problem solved count
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.setTextColor(55, 65, 81);
-        const splitContent = doc.splitTextToSize(item.plainText, contentWidth - 110);
-        doc.text(splitContent, margin + 110, y);
-        y += Math.max(12, splitContent.length * 10.5 + 2);
+      // Email | Mobile on Right
+      const rightLinks = parsedDoc.header.rightLinks || [
+        { label: 'niloysannyal@gmail.com', url: 'mailto:niloysannyal@gmail.com' },
+        { label: '+8801783445245', url: 'tel:+8801783445245' },
+      ];
 
-      } else if (item.type === 'heading') {
-        // Quad Heading: Role & Location (Line 1), Company & Dates (Line 2)
-        // Orphan protection: ensure heading + space for bullets fits
-        checkNewPage(45);
-
-        // Line 1: Role (left bold) & Location (right)
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
-        doc.setTextColor(...TEXT_DARK);
-        doc.text(item.role || '', margin, y);
+      let rightEnd = pageWidth - margin;
+      for (let i = rightLinks.length - 1; i >= 0; i--) {
+        const item = rightLinks[i];
+        const prefix = item.url.startsWith('mailto:') ? 'Email: ' : 'Mobile: ';
+        const prefixW = doc.getTextWidth(prefix);
+        const labelW = doc.getTextWidth(item.label);
+        const totalW = prefixW + labelW;
+        const startX = rightEnd - totalW;
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
         doc.setTextColor(...TEXT_MUTED);
-        doc.text(item.locationOrDate || '', pageWidth - margin, y, { align: 'right' });
-        y += 11;
+        doc.text(prefix, startX, y);
 
-        // Line 2: Company / Degree (left italic) & Dates (right italic)
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(9);
-        doc.setTextColor(55, 65, 81);
-        doc.text(item.companyOrDegree || '', margin, y);
+        doc.setTextColor(...LINK_COLOR);
+        doc.textWithLink(item.label, startX + prefixW, y, { url: item.url });
+        doc.setDrawColor(...LINK_COLOR);
+        doc.setLineWidth(0.5);
+        doc.line(startX + prefixW, y + 1.5, startX + prefixW + labelW, y + 1.5);
 
-        if (item.submeta) {
-          doc.setFontSize(8.5);
+        rightEnd = startX - 6;
+        if (i > 0) {
           doc.setTextColor(...TEXT_MUTED);
-          doc.text(item.submeta, pageWidth - margin, y, { align: 'right' });
+          doc.text('|', rightEnd - 4, y);
+          rightEnd -= 10;
         }
-        y += 11;
+      }
 
-      } else if (item.type === 'trio_heading') {
-        // Orphan protection: require at least 55 pt so title and initial bullet stay together
-        checkNewPage(55);
+      // Header Dividing Line
+      y += 9;
+      doc.setDrawColor(...LINE_COLOR);
+      doc.setLineWidth(1.1);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 14;
+    } else {
+      // Continuation pages start cleanly with top margin
+      y = margin + 12;
+    }
 
+    // 2. SECTIONS ON THIS PAGE
+    page.sections.forEach((sec) => {
+      // Section title (only when starting a section, not on page continuations)
+      const cleanSectionTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
+      if (cleanSectionTitle && !sec.isContinuation) {
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
+        doc.setFontSize(10.5);
         doc.setTextColor(...TEXT_DARK);
+        doc.text(cleanSectionTitle.toUpperCase(), margin, y);
 
-        // Check if trio title contains embedded hyperlinks (e.g. App Store, Live Demo, GitHub)
-        if (item.links && item.links.length > 0) {
-          let currX = margin;
-          const mainTitle = item.title.split('•')[0].trim();
-          doc.text(mainTitle, currX, y);
-          currX += doc.getTextWidth(mainTitle) + 4;
+        // Section horizontal rule (titlerule)
+        y += 3;
+        doc.setDrawColor(200, 205, 215);
+        doc.setLineWidth(0.75);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 11; // breathing space after titlerule
+      }
 
+      sec.items.forEach((item) => {
+        if (item.type === 'skills_line') {
           doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...TEXT_MUTED);
-          doc.text('•', currX, y);
-          currX += 8;
+          doc.setFontSize(8.5);
 
-          item.links.forEach((lk, lIdx) => {
+          const cleanCat = item.categoryPlain || latexToPlainText(item.category) || '';
+
+          // Calculate category width
+          doc.setFont('helvetica', 'bold');
+          const catFullText = cleanCat.endsWith(':') ? cleanCat : `${cleanCat}:`;
+          const catTextWidth = doc.getTextWidth(catFullText);
+
+          // Category on left
+          const catLink = item.links?.find((lk) => cleanCat.toLowerCase().includes(lk.label.toLowerCase()));
+          if (catLink) {
             doc.setTextColor(...LINK_COLOR);
-            doc.textWithLink(lk.label, currX, y, { url: lk.url });
-            const lw = doc.getTextWidth(lk.label);
+            doc.textWithLink(catLink.label, margin, y, { url: catLink.url });
+            const tw = doc.getTextWidth(catLink.label);
             doc.setDrawColor(...LINK_COLOR);
             doc.setLineWidth(0.5);
-            doc.line(currX, y + 1.5, currX + lw, y + 1.5);
-            currX += lw + 4;
+            doc.line(margin, y + 1.5, margin + tw, y + 1.5);
+            doc.setTextColor(...TEXT_DARK);
+            doc.text(':', margin + tw, y);
+          } else {
+            doc.setTextColor(...TEXT_DARK);
+            doc.text(catFullText, margin, y);
+          }
 
-            if (lIdx < item.links.length - 1) {
-              doc.setTextColor(...TEXT_MUTED);
-              doc.text('|', currX, y);
-              currX += 8;
-            }
-          });
-        } else {
-          doc.text(item.title || '', margin, y);
-        }
+          // Content start X is dynamically computed to PREVENT ANY COLLISION:
+          const contentStartX = Math.max(margin + 120, margin + catTextWidth + 8);
+          const maxContentWidth = pageWidth - margin - contentStartX;
 
-        if (item.right) {
+          // Check if content itself is a clickable link (e.g. Codebasics course)
+          const contentLink = item.links?.find((lk) => item.plainText?.toLowerCase().includes(lk.label.toLowerCase()));
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8.5);
+
+          if (contentLink && item.plainText === contentLink.label) {
+            doc.setTextColor(...LINK_COLOR);
+            doc.textWithLink(contentLink.label, contentStartX, y, { url: contentLink.url });
+            const lw = doc.getTextWidth(contentLink.label);
+            doc.setDrawColor(...LINK_COLOR);
+            doc.setLineWidth(0.5);
+            doc.line(contentStartX, y + 1.5, contentStartX + lw, y + 1.5);
+            y += 14;
+          } else {
+            doc.setTextColor(55, 65, 81);
+            const splitContent = doc.splitTextToSize(item.plainText || '', maxContentWidth);
+            doc.text(splitContent, contentStartX, y);
+            y += Math.max(14, splitContent.length * 11.5 + 2.5);
+          }
+
+        } else if (item.type === 'heading') {
+          // Quad Heading: Role & Location (Line 1), Company & Dates (Line 2)
+          y += 2;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.setTextColor(...TEXT_DARK);
+          const cleanRole = item.rolePlain || latexToPlainText(item.role) || '';
+          doc.text(cleanRole, margin, y);
+
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(8.5);
           doc.setTextColor(...TEXT_MUTED);
-          doc.text(item.right, pageWidth - margin, y, { align: 'right' });
+          const cleanLoc = item.locationOrDatePlain || latexToPlainText(item.locationOrDate) || '';
+          doc.text(cleanLoc, pageWidth - margin, y, { align: 'right' });
+          y += 12;
+
+          // Line 2: Company / Degree (left italic) & Dates (right italic)
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(9);
+          doc.setTextColor(55, 65, 81);
+          const cleanComp = item.companyOrDegreePlain || latexToPlainText(item.companyOrDegree) || '';
+          doc.text(cleanComp, margin, y);
+
+          const cleanSub = item.submetaPlain || latexToPlainText(item.submeta);
+          if (cleanSub) {
+            doc.setFontSize(8.5);
+            doc.setTextColor(...TEXT_MUTED);
+            doc.text(cleanSub, pageWidth - margin, y, { align: 'right' });
+          }
+          y += 13; // breathing room before bullets start
+
+        } else if (item.type === 'trio_heading') {
+          y += 2;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.setTextColor(...TEXT_DARK);
+
+          const cleanTrioTitle = item.titlePlain || item.plainText || latexToPlainText(item.title) || '';
+
+          if (item.links && item.links.length > 0) {
+            let currX = margin;
+            const mainTitle = cleanTrioTitle.split('•')[0].trim();
+            doc.text(mainTitle, currX, y);
+            currX += doc.getTextWidth(mainTitle) + 4;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...TEXT_MUTED);
+            doc.text('•', currX, y);
+            currX += 8;
+
+            item.links.forEach((lk, lIdx) => {
+              doc.setTextColor(...LINK_COLOR);
+              doc.textWithLink(lk.label, currX, y, { url: lk.url });
+              const lw = doc.getTextWidth(lk.label);
+              doc.setDrawColor(...LINK_COLOR);
+              doc.setLineWidth(0.5);
+              doc.line(currX, y + 1.5, currX + lw, y + 1.5);
+              currX += lw + 4;
+
+              if (lIdx < item.links.length - 1) {
+                doc.setTextColor(...TEXT_MUTED);
+                doc.text('|', currX, y);
+                currX += 8;
+              }
+            });
+          } else {
+            doc.text(cleanTrioTitle, margin, y);
+          }
+
+          const cleanRight = item.rightPlain || item.right || '';
+          if (cleanRight) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(...TEXT_MUTED);
+            doc.text(cleanRight, pageWidth - margin, y, { align: 'right' });
+          }
+          y += 13;
+
+        } else if (item.type === 'bullet') {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(...TEXT_DARK);
+          doc.text('•', margin + 3, y);
+
+          const bulletHtml = item.contentHtml || item.plainText || '';
+          const bulletEndX = margin + 14;
+          const bulletWidth = contentWidth - 14;
+
+          const nextY = drawRichText(doc, bulletHtml, bulletEndX, y, bulletWidth, 12.5, 8.5);
+          y = nextY + 2.5;
+
+        } else if (item.type === 'prose') {
+          const proseHtml = item.contentHtml || item.plainText || '';
+          const nextY = drawRichText(doc, proseHtml, margin, y, contentWidth, 12.5, 8.5);
+          y = nextY + 4;
         }
-        y += 11;
+      });
 
-      } else if (item.type === 'bullet') {
-        // Bullet with hanging indent aligned with right margin rule
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.setTextColor(55, 65, 81);
+      y += 10; // comfortable section spacing matching preview
+    });
 
-        const cleanText = item.plainText || latexToPlainText(item.contentHtml);
-        const splitBullet = doc.splitTextToSize(cleanText, contentWidth - 14);
-        checkNewPage(splitBullet.length * 10.5 + 4);
-
-        doc.text('•', margin + 3, y);
-        doc.text(splitBullet, margin + 14, y);
-        y += splitBullet.length * 10.5 + 2;
-
-      } else if (item.type === 'prose') {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.setTextColor(55, 65, 81);
-
-        const cleanProse = item.plainText || latexToPlainText(item.contentHtml);
-        const splitProse = doc.splitTextToSize(cleanProse, contentWidth);
-        checkNewPage(splitProse.length * 10.5 + 4);
-
-        doc.text(splitProse, margin, y);
-        y += splitProse.length * 10.5 + 4;
-      }
-    }
-
-    y += 7; // spacing between sections
-  }
-
-  // 3. PAGE NUMBERS (Footer at bottom center of each page)
-  const totalPages = doc.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    doc.setPage(p);
+    // 3. PAGE NUMBER FOOTER (Bottom Center)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(156, 163, 175);
-    const footerStr = `Page ${p} of ${totalPages}`;
+    const footerStr = `Page ${page.pageNumber} of ${totalPages}`;
     doc.text(footerStr, pageWidth / 2, pageHeight - 20, { align: 'center' });
-  }
+  });
 
   return doc;
 }
