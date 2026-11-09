@@ -31475,7 +31475,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L605",
+      "source_location": "L611",
       "weight": 1.0
     },
     {
@@ -31571,7 +31571,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1036",
+      "source_location": "L1038",
       "weight": 1.0
     },
     {
@@ -31583,7 +31583,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1172",
+      "source_location": "L1174",
       "weight": 1.0
     },
     {
@@ -91718,5 +91718,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "df22f7bde4f08776e2113ba17d6fd6f261356000"
+  "built_at_commit": "ebf6db4d9220c65a02eb5ca0f30152380cef349d"
 }

@@ -622,7 +622,7 @@ export function paginateParsedDocument(parsedDoc, maxPageHeight = 770) {
         pages.push(currentPage);
         currentPage = { pageNumber: pages.length + 1, hasHeader: false, sections: [] };
         currentHeight = 0;
-        currentSecOnPage = { title: sec.title.replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim(), items: [] };
+        currentSecOnPage = { title: '', isContinuation: true, parentTitle: sec.title, items: [] };
         currentPage.sections.push(currentSecOnPage);
       }
       currentSecOnPage.items.push(item);
@@ -1014,19 +1014,21 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
 
     // 2. SECTIONS ON THIS PAGE
     page.sections.forEach((sec) => {
-      // Section title
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10.5);
-      doc.setTextColor(...TEXT_DARK);
+      // Section title (only when starting a section, not on page continuations)
       const cleanSectionTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
-      doc.text(cleanSectionTitle.toUpperCase(), margin, y);
+      if (cleanSectionTitle && !sec.isContinuation) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(...TEXT_DARK);
+        doc.text(cleanSectionTitle.toUpperCase(), margin, y);
 
-      // Section horizontal rule (titlerule)
-      y += 3;
-      doc.setDrawColor(200, 205, 215);
-      doc.setLineWidth(0.75);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 11; // breathing space after titlerule
+        // Section horizontal rule (titlerule)
+        y += 3;
+        doc.setDrawColor(200, 205, 215);
+        doc.setLineWidth(0.75);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 11; // breathing space after titlerule
+      }
 
       sec.items.forEach((item) => {
         if (item.type === 'skills_line') {

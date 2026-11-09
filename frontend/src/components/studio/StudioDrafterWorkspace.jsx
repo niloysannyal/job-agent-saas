@@ -492,14 +492,19 @@ export default function StudioDrafterWorkspace({
                           )}
 
                           {/* Sections on this page */}
-                          {page.sections.map((sec, secIdx) => (
-                            <div key={secIdx} className="cv-section-container">
-                              <div className="cv-section-title-wrap">
-                                <h3 className="cv-section-heading">{(sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim()}</h3>
-                                <div className="cv-section-rule" />
-                              </div>
+                          {page.sections.map((sec, secIdx) => {
+                            const cleanTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
+                            const showTitle = Boolean(cleanTitle && !sec.isContinuation);
+                            return (
+                              <div key={secIdx} className="cv-section-container">
+                                {showTitle && (
+                                  <div className="cv-section-title-wrap">
+                                    <h3 className="cv-section-heading">{cleanTitle}</h3>
+                                    <div className="cv-section-rule" />
+                                  </div>
+                                )}
 
-                              <div className="cv-section-items-body">
+                                <div className="cv-section-items-body">
                                 {sec.items.map((item, itemIdx) => {
                                   if (item.type === 'skills_line') {
                                     return (
@@ -577,7 +582,8 @@ export default function StudioDrafterWorkspace({
                                 })}
                               </div>
                             </div>
-                          ))}
+                          );
+                        })}
 
                           {/* Authentic A4 Page Number Footer */}
                           <div className="a4-page-number-footer">
