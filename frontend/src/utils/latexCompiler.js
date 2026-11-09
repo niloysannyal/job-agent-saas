@@ -101,6 +101,26 @@ export function cleanLatexInline(text) {
   // flow naturally across the page width without premature breaks
   str = str.replace(/(?<!\n)\r?\n(?!\r?\n)/g, ' ');
 
+  // Strip environments: \begin{itemize}[...], \begin{...}, \end{...}
+  str = str.replace(/\\begin\{[a-zA-Z*]+\}(?:\[[^\]]*\])?(?:\{[^{}]*\})*/g, '');
+  str = str.replace(/\\end\{[a-zA-Z*]+\}/g, '');
+
+  // Strip list helpers: \resumeItemListStart, \resumeHeadingListStart, etc.
+  str = str.replace(/\\resume[a-zA-Z]+Start(?:\{\})?/g, '');
+  str = str.replace(/\\resume[a-zA-Z]+End(?:\{\})?/g, '');
+
+  // Strip list item markers: \item, \item[...]
+  str = str.replace(/\\item\s*(?:\[[^\]]*\])?\s*/g, '');
+
+  // Convert \url{target} using extractMacroArgs
+  const urlMatches = extractMacroArgs(str, '\\url', 1);
+  for (let i = urlMatches.length - 1; i >= 0; i--) {
+    const m = urlMatches[i];
+    const targetUrl = m.args[0].trim();
+    const linkHtml = `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="cv-link">${targetUrl}</a>`;
+    str = str.slice(0, m.index) + linkHtml + str.slice(m.index + m.length);
+  }
+
   // Convert \href{url}{label} using extractMacroArgs
   const hrefMatches = extractMacroArgs(str, '\\href', 2);
   // Replace in reverse order so indices remain valid
@@ -110,7 +130,11 @@ export function cleanLatexInline(text) {
     let rawLabel = m.args[1];
     let cleanLabel = rawLabel
       .replace(/\\uline\{([^}]+)\}/g, '$1')
+      .replace(/\\underline\{([^}]+)\}/g, '$1')
       .replace(/\\textnormal\{([^}]+)\}/g, '$1')
+      .replace(/\\textmd\{([^}]+)\}/g, '$1')
+      .replace(/\\textbf\{([^}]+)\}/g, '$1')
+      .replace(/\\textit\{([^}]+)\}/g, '$1')
       .replace(/\\normalsize\s*/g, '')
       .replace(/\\[a-zA-Z]+\s*/g, '')
       .replace(/[{}]/g, '')
@@ -120,20 +144,35 @@ export function cleanLatexInline(text) {
     str = str.slice(0, m.index) + linkHtml + str.slice(m.index + m.length);
   }
 
-  // Convert \textbf{content} -> <strong>content</strong>
-  str = str.replace(/\\textbf\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<strong>$1</strong>');
-  // Convert \textit{content} -> <em>content</em>
-  str = str.replace(/\\textit\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<em>$1</em>');
-  // Convert \uline{content} -> <u>content</u>
-  str = str.replace(/\\uline\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<u>$1</u>');
+  // Convert font style wrappers (looping to handle nested braces cleanly)
+  let prevStr = '';
+  let maxIters = 10;
+  while (prevStr !== str && maxIters-- > 0) {
+    prevStr = str;
+    str = str.replace(/\\textbf\{([^{}]*)\}/g, '<strong>$1</strong>');
+    str = str.replace(/\\textit\{([^{}]*)\}/g, '<em>$1</em>');
+    str = str.replace(/\\(?:uline|underline)\{([^{}]*)\}/g, '<u>$1</u>');
+    str = str.replace(/\\(?:textmd|textnormal|textsc|textrm|textsf)\{([^{}]*)\}/g, '$1');
+    str = str.replace(/\\texttt\{([^{}]*)\}/g, '<code>$1</code>');
+    str = str.replace(/\{\\(?:small|footnotesize|normalsize|large|Huge|rm|bf|it|sc)\s*([^{}]*)\}/g, '$1');
+  }
 
-  // Replace symbols and spacing
-  str = str.replace(/\\textbullet/g, '•');
-  str = str.replace(/\\vspace\{[^}]*\}/g, ' ');
-  str = str.replace(/\\hspace\{[^}]*\}/g, ' ');
+  // Strip standalone font sizing and switches
+  str = str.replace(/\\(?:normalsize|small|footnotesize|large|Huge|scshape|normalfont|rmfamily|bfseries|itshape|rm|bf|it|sc)\b\s*/g, '');
 
-  // Strip formatting/sizing commands
-  str = str.replace(/\\(?:normalsize|small|footnotesize|large|Huge|scshape)\b\s*/g, '');
+  // Replace math and special symbols
+  str = str.replace(/\$\s*\\cdot\s*\$/g, ' · ');
+  str = str.replace(/\\cdot\b/g, ' · ');
+  str = str.replace(/\\textbullet\b/g, '•');
+  str = str.replace(/\\textbar(?:\{\})?\b/g, '|');
+  str = str.replace(/---/g, '—');
+  str = str.replace(/--/g, '–');
+
+  // Spacing and layout macros
+  str = str.replace(/\\vspace\*?\{[^}]*\}/g, ' ');
+  str = str.replace(/\\hspace\*?\{[^}]*\}/g, ' ');
+  str = str.replace(/\\(?:hfill|vfill|newline|noindent|centering|raggedright|allowbreak|smallskip|medskip|bigskip)\b/g, ' ');
+  str = str.replace(/\\\\/g, ' ');
 
   // Unescape LaTeX special characters
   str = str.replace(/\\&/g, '&');
@@ -141,12 +180,20 @@ export function cleanLatexInline(text) {
   str = str.replace(/\\\$/g, '$');
   str = str.replace(/\\_/g, '_');
   str = str.replace(/\\#/g, '#');
+  str = str.replace(/\\\{/g, '{');
+  str = str.replace(/\\\}/g, '}');
+  str = str.replace(/\\\|/g, '|');
+  str = str.replace(/\\\s/g, ' ');
   str = str.replace(/~/g, ' ');
 
-  // Clean remaining stray unescaped braces outside HTML tags
+  // Clean any remaining unhandled single backslash commands with optional brace arg
+  str = str.replace(/\\[a-zA-Z]+\b(?:\{([^{}]*)\})?/g, '$1');
+
+  // Clean stray unescaped curly braces outside HTML tags
   str = str.replace(/(?<!<[^>]*)[{}]/g, '');
 
-  return str.trim();
+  // Normalize multi-spaces
+  return str.replace(/[ \t]+/g, ' ').trim();
 }
 
 /**
@@ -155,7 +202,8 @@ export function cleanLatexInline(text) {
 export function latexToPlainText(latexInline) {
   if (!latexInline) return '';
   const html = cleanLatexInline(latexInline);
-  return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const textWithoutTags = html.replace(/<[^>]+>/g, '');
+  return decodeHtmlEntities(textWithoutTags).replace(/\s+/g, ' ').trim();
 }
 
 /**
@@ -323,13 +371,37 @@ export function parseLatexDocument(latexSource) {
     // Quad Headings (4 args: role, location, company, dates)
     const quadMatches = extractMacroArgs(sBody, '\\resumeQuadHeading', 4);
     for (const q of quadMatches) {
+      const roleHtml = cleanLatexInline(q.args[0]);
+      const rolePlain = latexToPlainText(q.args[0]);
+      const locHtml = cleanLatexInline(q.args[1]);
+      const locPlain = latexToPlainText(q.args[1]);
+      const compHtml = cleanLatexInline(q.args[2]);
+      const compPlain = latexToPlainText(q.args[2]);
+      const subHtml = cleanLatexInline(q.args[3]);
+      const subPlain = latexToPlainText(q.args[3]);
+      const quadLinks = [
+        ...extractLinksFromLatex(q.args[0]),
+        ...extractLinksFromLatex(q.args[1]),
+        ...extractLinksFromLatex(q.args[2]),
+        ...extractLinksFromLatex(q.args[3]),
+      ];
+
       rawItems.push({
         type: 'heading',
         index: q.index,
-        role: cleanLatexInline(q.args[0]),
-        locationOrDate: cleanLatexInline(q.args[1]), // Location
-        companyOrDegree: cleanLatexInline(q.args[2]), // Company
-        submeta: cleanLatexInline(q.args[3]), // Dates
+        role: roleHtml,
+        roleHtml: roleHtml,
+        rolePlain: rolePlain,
+        locationOrDate: locHtml,
+        locationOrDateHtml: locHtml,
+        locationOrDatePlain: locPlain,
+        companyOrDegree: compHtml,
+        companyOrDegreeHtml: compHtml,
+        companyOrDegreePlain: compPlain,
+        submeta: subHtml,
+        submetaHtml: subHtml,
+        submetaPlain: subPlain,
+        links: quadLinks,
       });
     }
 
@@ -337,15 +409,29 @@ export function parseLatexDocument(latexSource) {
     const trioMatches = extractMacroArgs(sBody, '\\resumeTrioHeading', 3);
     for (const tr of trioMatches) {
       const rawTrioTitle = tr.args[0];
+      const titleHtml = cleanLatexInline(rawTrioTitle);
+      const titlePlain = latexToPlainText(rawTrioTitle);
+      const subHtml = cleanLatexInline(tr.args[1]);
+      const subPlain = latexToPlainText(tr.args[1]);
+      const rightHtml = cleanLatexInline(tr.args[2]);
+      const rightPlain = latexToPlainText(tr.args[2]);
+      const trioLinks = extractLinksFromLatex(rawTrioTitle);
+
       rawItems.push({
         type: 'trio_heading',
         index: tr.index,
-        title: cleanLatexInline(rawTrioTitle),
-        sub: cleanLatexInline(tr.args[1]),
-        right: cleanLatexInline(tr.args[2]),
-        contentHtml: cleanLatexInline(rawTrioTitle),
-        plainText: latexToPlainText(rawTrioTitle),
-        links: extractLinksFromLatex(rawTrioTitle),
+        title: titlePlain,
+        titleHtml: titleHtml,
+        titlePlain: titlePlain,
+        sub: subPlain,
+        subHtml: subHtml,
+        subPlain: subPlain,
+        right: rightPlain,
+        rightHtml: rightHtml,
+        rightPlain: rightPlain,
+        contentHtml: titleHtml,
+        plainText: titlePlain,
+        links: trioLinks,
       });
     }
 
@@ -887,24 +973,28 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9.5);
         doc.setTextColor(...TEXT_DARK);
-        doc.text(item.role || '', margin, y);
+        const cleanRole = item.rolePlain || latexToPlainText(item.role) || '';
+        doc.text(cleanRole, margin, y);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(...TEXT_MUTED);
-        doc.text(item.locationOrDate || '', pageWidth - margin, y, { align: 'right' });
+        const cleanLoc = item.locationOrDatePlain || latexToPlainText(item.locationOrDate) || '';
+        doc.text(cleanLoc, pageWidth - margin, y, { align: 'right' });
         y += 11;
 
         // Line 2: Company / Degree (left italic) & Dates (right italic)
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(9);
         doc.setTextColor(55, 65, 81);
-        doc.text(item.companyOrDegree || '', margin, y);
+        const cleanComp = item.companyOrDegreePlain || latexToPlainText(item.companyOrDegree) || '';
+        doc.text(cleanComp, margin, y);
 
-        if (item.submeta) {
+        const cleanSub = item.submetaPlain || latexToPlainText(item.submeta);
+        if (cleanSub) {
           doc.setFontSize(8.5);
           doc.setTextColor(...TEXT_MUTED);
-          doc.text(item.submeta, pageWidth - margin, y, { align: 'right' });
+          doc.text(cleanSub, pageWidth - margin, y, { align: 'right' });
         }
         y += 11;
 
@@ -916,10 +1006,12 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
         doc.setFontSize(9.5);
         doc.setTextColor(...TEXT_DARK);
 
+        const cleanTrioTitle = item.titlePlain || item.plainText || latexToPlainText(item.title) || '';
+
         // Check if trio title contains embedded hyperlinks (e.g. App Store, Live Demo, GitHub)
         if (item.links && item.links.length > 0) {
           let currX = margin;
-          const mainTitle = item.title.split('•')[0].trim();
+          const mainTitle = cleanTrioTitle.split('•')[0].trim();
           doc.text(mainTitle, currX, y);
           currX += doc.getTextWidth(mainTitle) + 4;
 
@@ -944,14 +1036,15 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
             }
           });
         } else {
-          doc.text(item.title || '', margin, y);
+          doc.text(cleanTrioTitle, margin, y);
         }
 
-        if (item.right) {
+        const cleanRight = item.rightPlain || item.right || '';
+        if (cleanRight) {
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(8.5);
           doc.setTextColor(...TEXT_MUTED);
-          doc.text(item.right, pageWidth - margin, y, { align: 'right' });
+          doc.text(cleanRight, pageWidth - margin, y, { align: 'right' });
         }
         y += 11;
 

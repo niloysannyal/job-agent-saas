@@ -521,13 +521,25 @@ export default function StudioDrafterWorkspace({
                                     return (
                                       <div key={itemIdx} className="cv-quad-heading-block">
                                         <div className="quad-row quad-top">
-                                          <span className="quad-role-title">{item.role}</span>
-                                          <span className="quad-location-text">{item.locationOrDate}</span>
+                                          <span
+                                            className="quad-role-title"
+                                            dangerouslySetInnerHTML={{ __html: item.roleHtml || item.role }}
+                                          />
+                                          <span
+                                            className="quad-location-text"
+                                            dangerouslySetInnerHTML={{ __html: item.locationOrDateHtml || item.locationOrDate }}
+                                          />
                                         </div>
                                         <div className="quad-row quad-bottom">
-                                          <span className="quad-company-text"><em>{item.companyOrDegree}</em></span>
-                                          {item.submeta && (
-                                            <span className="quad-dates-text"><em>{item.submeta}</em></span>
+                                          <span
+                                            className="quad-company-text"
+                                            dangerouslySetInnerHTML={{ __html: `<em>${item.companyOrDegreeHtml || item.companyOrDegree}</em>` }}
+                                          />
+                                          {(item.submetaHtml || item.submeta) && (
+                                            <span
+                                              className="quad-dates-text"
+                                              dangerouslySetInnerHTML={{ __html: `<em>${item.submetaHtml || item.submeta}</em>` }}
+                                            />
                                           )}
                                         </div>
                                       </div>

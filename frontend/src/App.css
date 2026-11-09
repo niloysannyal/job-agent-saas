@@ -4453,8 +4453,12 @@
 }
 
 .overleaf-viewer-bg {
-  background: var(--canvas-subtle) !important;
+  background: #f1f5f9 !important;
   padding: 30px 20px !important;
+}
+
+[data-theme="dark"] .overleaf-viewer-bg {
+  background: #090d16 !important;
 }
 
 .overleaf-multi-page-container {
@@ -4472,7 +4476,8 @@
   background: #ffffff;
   color: #111827;
   padding: 44px 48px;
-  box-shadow: var(--shadow-xl), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 20px 48px -10px rgba(0, 0, 0, 0.10);
   border-radius: 2px;
   position: relative;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -4482,7 +4487,8 @@
 }
 
 [data-theme="dark"] .overleaf-a4-page-card {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.8), 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
 .a4-page-top-badge {
@@ -10461,7 +10467,7 @@
 .cv-preview-col {
   display: flex;
   flex-direction: column;
-  background: var(--surface-ground);
+  background: #f1f5f9;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: auto;
@@ -10469,16 +10475,24 @@
   padding: 16px;
 }
 
+[data-theme="dark"] .cv-preview-col {
+  background: #090d16;
+}
+
 .cv-full-preview-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--surface-ground);
+  background: #f1f5f9;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 24px 16px;
   margin-top: 16px;
   overflow: auto;
+}
+
+[data-theme="dark"] .cv-full-preview-container {
+  background: #090d16;
 }
 
 /* ==========================================================================
