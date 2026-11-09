@@ -622,7 +622,7 @@ export function paginateParsedDocument(parsedDoc, maxPageHeight = 770) {
         pages.push(currentPage);
         currentPage = { pageNumber: pages.length + 1, hasHeader: false, sections: [] };
         currentHeight = 0;
-        currentSecOnPage = { title: `${sec.title} (cont.)`, items: [] };
+        currentSecOnPage = { title: sec.title.replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim(), items: [] };
         currentPage.sections.push(currentSecOnPage);
       }
       currentSecOnPage.items.push(item);
@@ -1018,7 +1018,8 @@ export function compileParsedLatexToPdf(parsedDoc, targetFilename = 'Tailored_CV
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10.5);
       doc.setTextColor(...TEXT_DARK);
-      doc.text(sec.title.toUpperCase(), margin, y);
+      const cleanSectionTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
+      doc.text(cleanSectionTitle.toUpperCase(), margin, y);
 
       // Section horizontal rule (titlerule)
       y += 3;

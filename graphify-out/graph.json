@@ -31571,7 +31571,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1035",
+      "source_location": "L1036",
       "weight": 1.0
     },
     {
@@ -31583,7 +31583,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1171",
+      "source_location": "L1172",
       "weight": 1.0
     },
     {
@@ -91718,5 +91718,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "bbc61e7bb62f4da14889f61ada2c1aabfca8fbd3"
+  "built_at_commit": "df22f7bde4f08776e2113ba17d6fd6f261356000"
 }

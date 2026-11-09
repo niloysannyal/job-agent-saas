@@ -125,7 +125,7 @@ export default function ProfileTemplatesTab({
             {page.sections.map((sec, secIdx) => (
               <div key={secIdx} className="cv-section-container">
                 <div className="cv-section-title-wrap">
-                  <h3 className="cv-section-heading">{sec.title}</h3>
+                  <h3 className="cv-section-heading">{(sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim()}</h3>
                   <div className="cv-section-rule" />
                 </div>
 
