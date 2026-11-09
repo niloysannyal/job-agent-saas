@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/latexCompiler.js": {
-    "mtime": 1794202058.638435,
-    "seen": 1794202725.6762562,
-    "ast_hash": "8d944aa354767ed1d7584ff5b169ed5f",
+    "mtime": 1794204309.6893332,
+    "seen": 1794204470.5721629,
+    "ast_hash": "1cd420ac614e9f79320f7ce2d24d01aa",
     "semantic_hash": ""
   },
   "frontend/vite.config.js": {
@@ -1386,8 +1386,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794202069.605609,
-    "seen": 1794202725.6762426,
+    "mtime": 1794203195.0301971,
+    "seen": 1794204470.5721493,
     "ast_hash": "a1d7e32f9994c23811fec5c01d97f162",
     "semantic_hash": ""
   },
@@ -1398,8 +1398,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794202090.9783757,
-    "seen": 1794202725.676245,
+    "mtime": 1794203195.314137,
+    "seen": 1794204470.5721524,
     "ast_hash": "25a2c7a35184aa34261c5918aa994fe8",
     "semantic_hash": ""
   },
