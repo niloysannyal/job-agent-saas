@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
 from app.models.account import Account
+from app.models.cv_template import CvTemplate
 from app.models.profile import (
     CompensationExpectation,
     SpokenLanguage,
@@ -321,7 +322,7 @@ def test_work_experiences_crud(client: TestClient, account_a: Account):
     assert len(client.get(f"/api/v1/profile/experiences?account_id={account_a.id}").json()) == 0
 
 
-def test_educations_skills_and_preview(client: TestClient, account_a: Account):
+def test_educations_skills_and_preview(client: TestClient, account_a: Account, api_test_db: Session):
     """Test educations, bulk skills, and preview CV generation."""
     # 1. Add Education
     edu_res = client.post(
@@ -382,6 +383,19 @@ def test_educations_skills_and_preview(client: TestClient, account_a: Account):
     assert "MIT" in latex
     assert "HyperMesh" in latex
     assert "Rust" in latex
+
+    # 5. Seed template and preview CV with specific template name
+    api_test_db.add(CvTemplate(
+        account_id=account_a.id,
+        name="02_CLASSIC_CORPORATE",
+        latex_source="\\documentclass{article}\n\\begin{document}\n{{FULL_NAME}}\n\\end{document}",
+    ))
+    api_test_db.commit()
+
+    # 6. Preview CV with specific template name
+    prev_by_name = client.get(f"/api/v1/profile/preview-cv?account_id={account_a.id}&template_id=02_CLASSIC_CORPORATE")
+    assert prev_by_name.status_code == 200
+    assert prev_by_name.json()["template_name"] == "02_CLASSIC_CORPORATE"
 
 
 

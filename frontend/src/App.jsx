@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './App.css';
 import { useTheme } from './utils/theme';
 import { AuthProvider, useAuth, parseJwtPayload } from './context/AuthContext';
+import { AgentProvider } from './context/AgentContext';
+import CareerCopilotView from './components/agent/CareerCopilotView';
 
 import LandingPageView from './components/LandingPageView';
 import LoginModal from './components/LoginModal';
@@ -74,6 +76,36 @@ function CareerAppInner() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [adminTab, setAdminTab] = useState('overview');
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('jobeazy_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('jobeazy_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  // Global Keyboard Shortcut: Cmd+\ / Ctrl+\ for Sidebar Toggle
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleToggleSidebar]);
+
   // Sync accountId with authenticated user or impersonated tenant
   useEffect(() => {
     if (impersonatedTenant?.id) {
@@ -144,6 +176,11 @@ function CareerAppInner() {
         setIsCommandPaletteOpen((prev) => !prev);
         return;
       }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setActiveSection((prev) => (prev === 'copilot' ? 'dashboard' : 'copilot'));
+        return;
+      }
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         if (isSuperadmin && !isImpersonating) {
           if (e.key === '1') { e.preventDefault(); setActiveSection('admin'); setAdminTab('overview'); }
@@ -153,7 +190,8 @@ function CareerAppInner() {
           else if (e.key === '5') { e.preventDefault(); setActiveSection('admin'); setAdminTab('templates'); }
           else if (e.key === '6') { e.preventDefault(); setActiveSection('admin'); setAdminTab('flagged'); }
         } else {
-          if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
+          if (e.key === '0') { e.preventDefault(); setActiveSection('copilot'); }
+          else if (e.key === '1') { e.preventDefault(); setActiveSection('dashboard'); }
           else if (e.key === '2') { e.preventDefault(); setActiveSection('jobs'); }
           else if (e.key === '3') { e.preventDefault(); setActiveSection('studio'); }
           else if (e.key === '4') { e.preventDefault(); setActiveSection('pipeline'); }
@@ -831,10 +869,13 @@ function CareerAppInner() {
           setViewMode('landing');
           showToast('Signed out of session.');
         }}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
+        onNewApplication={() => setSelectedJobForStudio(null)}
       />
 
       {/* MAIN CONTENT AREA */}
-      <main className="career-os-main">
+      <main className={`career-os-main ${effectiveSection === "copilot" ? "copilot-main-no-pad" : ""}`}>
         {/* QA DOGFOODING IMPERSONATION BANNER */}
         {isImpersonating && impersonatedTenant && (
           <div className="impersonation-qa-banner">
@@ -879,6 +920,22 @@ function CareerAppInner() {
               showToast(`Acting as tenant: ${tenant.email}`);
             }}
             showToast={showToast}
+          />
+        )}
+
+        {/* SECTION 0: AUTONOMOUS CAREER COPILOT (FULL SCREEN CHATGPT/CLAUDE OS) */}
+        {effectiveSection === 'copilot' && (
+          <CareerCopilotView
+            activeContext={{
+              screen: effectiveSection,
+              job_id: selectedJobForStudio?.id,
+              job: selectedJobForStudio,
+              candidate_name: profileForm?.full_name,
+              applications: applications,
+            }}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onExpandSidebar={() => setIsSidebarCollapsed(false)}
+            onNavigate={(section) => setActiveSection(section)}
           />
         )}
 
@@ -1059,6 +1116,8 @@ function CareerAppInner() {
         showToast={showToast}
       />
 
+
+
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
   );
@@ -1067,8 +1126,10 @@ function CareerAppInner() {
 export default function App() {
   return (
     <AuthProvider>
-      <CareerAppInner />
-      {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      <AgentProvider>
+        <CareerAppInner />
+        {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+      </AgentProvider>
     </AuthProvider>
   );
 }

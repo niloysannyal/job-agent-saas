@@ -208,6 +208,10 @@ def list_jobs(
     "/{job_id}/check-liveness",
     summary="Check if a job posting URL is still active and alive",
 )
+@router.post(
+    "/{job_id}/check_liveness",
+    include_in_schema=False,
+)
 async def check_job_liveness(
     job_id: str,
     account_id: Optional[str] = Query(None),
@@ -216,10 +220,14 @@ async def check_job_liveness(
 ):
     effective_account_id = resolve_tenant_id(current_account, account_id)
     job = db.scalars(
-        select(Job).where(Job.id == job_id, Job.account_id == effective_account_id)
+        select(Job).where(Job.id == job_id)
     ).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found.")
+
+    is_admin = getattr(current_account, "role", "") in ("admin", "superadmin") or getattr(current_account, "is_superuser", False)
+    if not is_admin and job.account_id != effective_account_id:
+        raise HTTPException(status_code=403, detail="Not authorized to inspect this job.")
 
     is_alive = True
     status_code = 200

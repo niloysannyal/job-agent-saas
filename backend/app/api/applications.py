@@ -790,12 +790,11 @@ def mark_follow_up_sent(
     return application
 
 
-class StatusUpdateRequest(BaseModel):
-    status: str = Field(..., description="Target status: draft | sent | responded | interview | offer | rejected")
-    notes: Optional[str] = None
-
-
-@router.patch("/{application_id}/status", response_model=ApplicationRead)
+@router.patch(
+    "/{application_id}/status",
+    response_model=ApplicationRead,
+    operation_id="update_application_status",
+)
 def update_application_status(
     application_id: str,
     req: StatusUpdateRequest,

@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/applications.py": {
-    "mtime": 1793686004.156348,
-    "seen": 1793696871.7291622,
-    "ast_hash": "f27b8adf75c12b5b2a7806ad10fa7df3",
+    "mtime": 1794122291.389326,
+    "seen": 1794123045.57103,
+    "ast_hash": "6f7bee8fb16409594282762b81abeba4",
     "semantic_hash": ""
   },
   "backend/app/api/interview.py": {
@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "backend/app/api/jobs.py": {
-    "mtime": 1793442511.5085003,
-    "seen": 1793444436.8095622,
-    "ast_hash": "14b86ab6e1061cb1f3d3c62980c7e3f4",
+    "mtime": 1794122291.5187063,
+    "seen": 1794123045.5710413,
+    "ast_hash": "9839bde587d531d3e6e82add38eb2961",
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1793767020.3626888,
-    "seen": 1793768162.964796,
-    "ast_hash": "6a5629cd48d6bcd82e049456ba9a9070",
+    "mtime": 1794195959.0561943,
+    "seen": 1794196945.1061082,
+    "ast_hash": "230dafa6ac00ee05eb594f0271f91245",
     "semantic_hash": ""
   },
   "backend/app/core/__init__.py": {
@@ -96,15 +96,15 @@
     "semantic_hash": ""
   },
   "backend/app/main.py": {
-    "mtime": 1793274831.1684332,
-    "seen": 1793276171.7263236,
-    "ast_hash": "459fe09019f58636678f8b22b35f4759",
+    "mtime": 1794121816.1012626,
+    "seen": 1794123045.5710902,
+    "ast_hash": "db38eb84d4cf881d8e58b5baea4fe61e",
     "semantic_hash": ""
   },
   "backend/app/models/__init__.py": {
-    "mtime": 1793442512.3482897,
-    "seen": 1793444436.8095818,
-    "ast_hash": "06577f60587c038409a19d848d006ed1",
+    "mtime": 1793774937.2133546,
+    "seen": 1793776916.6516101,
+    "ast_hash": "79a3aeefd1939e40dee653024d1cffbd",
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_profile.py": {
-    "mtime": 1793768757.1291547,
-    "seen": 1793769497.3057427,
-    "ast_hash": "7cabb43524e23f5014d44407d518dd12",
+    "mtime": 1794196368.8147542,
+    "seen": 1794196945.1065066,
+    "ast_hash": "7813898345bb1bccbe59831d22c71ccb",
     "semantic_hash": ""
   },
   "backend/tests/conftest.py": {
@@ -468,15 +468,15 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1793771696.710185,
-    "seen": 1793771792.1499586,
-    "ast_hash": "865d83fe23337363ea72e231676c5a43",
+    "mtime": 1794122827.9704487,
+    "seen": 1794123045.5712953,
+    "ast_hash": "dfbafdbe034ee3de3e903f8efa268c64",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1793420762.041604,
-    "seen": 1793421850.3063767,
-    "ast_hash": "28290c80e4993980eb7120e071dfdf19",
+    "mtime": 1793779198.8426623,
+    "seen": 1793788486.3022985,
+    "ast_hash": "9de0142ccec4dceeff414f45c76fe8f1",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -504,9 +504,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/JobsView.jsx": {
-    "mtime": 1793677310.6467242,
-    "seen": 1793679459.936515,
-    "ast_hash": "cac46ce4720003c474419e6b2f36f7c7",
+    "mtime": 1794122291.8674643,
+    "seen": 1794123045.57131,
+    "ast_hash": "e1a0a9b8ddc153085e91bef6a6f39297",
     "semantic_hash": ""
   },
   "frontend/src/components/MaterialsModal.jsx": {
@@ -522,15 +522,15 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1793771712.367068,
-    "seen": 1793771792.1499832,
-    "ast_hash": "580b36977485b1b1d97713619bc7ed62",
+    "mtime": 1794195994.6915746,
+    "seen": 1794196945.106606,
+    "ast_hash": "64de709a7e151d528d12b9df932401b8",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1793765107.4613507,
-    "seen": 1793768162.9651253,
-    "ast_hash": "7e80457e14924d2ac56739f3f508907d",
+    "mtime": 1794122827.9679222,
+    "seen": 1794123045.571323,
+    "ast_hash": "e307f0929c0df836b507667cc5235ab8",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "backend/requirements.txt": {
-    "mtime": 1793614327.0341637,
-    "seen": 1793615114.4515061,
-    "ast_hash": "532687440347cd50615874ff715f0cf9",
+    "mtime": 1793855431.219202,
+    "seen": 1793857841.3582199,
+    "ast_hash": "060c57d48e48001bbae2c58e09915a02",
     "semantic_hash": ""
   },
   "docs/ARCHITECTURE.md": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/CommandPalette.jsx": {
-    "mtime": 1793162402.119373,
-    "seen": 1793162601.7274919,
-    "ast_hash": "2d0702ee52806c1619444a3327e6dbcf",
+    "mtime": 1793787974.9230676,
+    "seen": 1793788486.3023002,
+    "ast_hash": "9e3a48953581668887e15fb25a97e91e",
     "semantic_hash": ""
   },
   "frontend/src/utils/theme.js": {
@@ -1191,6 +1191,258 @@
     "mtime": 1793763624.6173363,
     "seen": 1793768162.9651709,
     "ast_hash": "1259dc3268dd83dc508b00586d87949d",
+    "semantic_hash": ""
+  },
+  "backend/app/api/agent.py": {
+    "mtime": 1793855578.7217946,
+    "seen": 1793857841.3577669,
+    "ast_hash": "5ea7452c1b45adba776f938a838a9474",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/3257c49a645d_add_agent_action_proposals_.py": {
+    "mtime": 1793779199.99439,
+    "seen": 1793788486.302094,
+    "ast_hash": "aedbe83238bb94c91f12986d70bdcb4e",
+    "semantic_hash": ""
+  },
+  "backend/app/models/agent.py": {
+    "mtime": 1793857232.924232,
+    "seen": 1793857841.357834,
+    "ast_hash": "24cd948c1bcf396652a627c86c9038a6",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/base_tool.py": {
+    "mtime": 1793779200.4970298,
+    "seen": 1793788486.3021371,
+    "ast_hash": "0e0222bdc0a92ad9769190ccf81ebf6a",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/engine.py": {
+    "mtime": 1794122582.344329,
+    "seen": 1794123045.5711179,
+    "ast_hash": "2ce21ffb5965e6dac216cae555201a83",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/event_bus.py": {
+    "mtime": 1793778156.012439,
+    "seen": 1793788486.3021398,
+    "ast_hash": "735d2c1e4859a059a95e6473b5ecdd95",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/registry.py": {
+    "mtime": 1793778156.0134416,
+    "seen": 1793788486.3021407,
+    "ast_hash": "39b2368bc9ee58b831f379771b1ded87",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/__init__.py": {
+    "mtime": 1793778156.0144386,
+    "seen": 1793788486.302142,
+    "ast_hash": "903dfaee442720233af03301b422045e",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/experience_reflector_tool.py": {
+    "mtime": 1793779200.6977117,
+    "seen": 1793788486.3021436,
+    "ast_hash": "82c99d4ee056d3fbab4fac26c3d458b3",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/search_jobs_tool.py": {
+    "mtime": 1793778156.0144386,
+    "seen": 1793788486.302145,
+    "ast_hash": "1534f8c30012bd97bb5f0cdaf4e559bb",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/stage_proposal_tool.py": {
+    "mtime": 1793779200.9288633,
+    "seen": 1793788486.3021462,
+    "ast_hash": "fdad189298404fb485af612c10969a16",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/star_coach_tool.py": {
+    "mtime": 1793778156.0154397,
+    "seen": 1793788486.3021476,
+    "ast_hash": "515e45d1768875a288ebce05c9235ce6",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/tailor_cv_tool.py": {
+    "mtime": 1793779201.277997,
+    "seen": 1793788486.302149,
+    "ast_hash": "737ff8484834a0d198b38d3513a5add4",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/tools/track_lifecycle_tool.py": {
+    "mtime": 1793778156.0164385,
+    "seen": 1793788486.3021505,
+    "ast_hash": "72ecc5b384b54e542d675b7f4be1dcd4",
+    "semantic_hash": ""
+  },
+  "backend/tests/api/test_agent.py": {
+    "mtime": 1793855651.692864,
+    "seen": 1793857841.3579848,
+    "ast_hash": "0d9dfd044d1282f28e40fce73a71eda0",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/FunnelInsight.jsx": {
+    "mtime": 1793778156.0194438,
+    "seen": 1793788486.3023415,
+    "ast_hash": "e9cdf1577f70b570dd1fd122fa05c122",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/JobRadarCarousel.jsx": {
+    "mtime": 1794122806.8749738,
+    "seen": 1794123045.5713305,
+    "ast_hash": "50f3a8f0b40ca0de934c59183c91118f",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/STARStoryMatch.jsx": {
+    "mtime": 1793778156.0204442,
+    "seen": 1793788486.3023448,
+    "ast_hash": "92d54d07db55cc66b5b786e2083d1314",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/SendApprovalGate.jsx": {
+    "mtime": 1793778156.021446,
+    "seen": 1793788486.302346,
+    "ast_hash": "a33cfe2f21bf838da191c9979b63daae",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/TailorDiffReview.jsx": {
+    "mtime": 1793778156.0224478,
+    "seen": 1793788486.3023472,
+    "ast_hash": "4b730881676114c9b815676871d88df8",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/widgets/WidgetRegistry.jsx": {
+    "mtime": 1793778156.0234468,
+    "seen": 1793788486.3023484,
+    "ast_hash": "df215d4b6273fb5c9de84aff2703b08f",
+    "semantic_hash": ""
+  },
+  "frontend/src/context/AgentContext.jsx": {
+    "mtime": 1794195147.5606349,
+    "seen": 1794196945.1066718,
+    "ast_hash": "eda1f3fc1a8bad2a55c5fc815468ec86",
+    "semantic_hash": ""
+  },
+  "frontend/src/hooks/useAgent.js": {
+    "mtime": 1793778156.0254464,
+    "seen": 1793788486.3023813,
+    "ast_hash": "a84b0fa213cd4868fcf68d6edc8cf9d0",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileEducationModal.jsx": {
+    "mtime": 1793777951.4198673,
+    "seen": 1793778131.4498403,
+    "ast_hash": "589c092f8ebbaa2d7b7951f941c1285b",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileEducationTab.jsx": {
+    "mtime": 1793777951.5801008,
+    "seen": 1793778131.4498422,
+    "ast_hash": "6bb306a679e9c9e2b6aaa462401e678b",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileExperienceModal.jsx": {
+    "mtime": 1793777951.7518456,
+    "seen": 1793778131.4498446,
+    "ast_hash": "aa4921a73059347a6494e17453ff2b3a",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileExperienceTab.jsx": {
+    "mtime": 1793777951.9804728,
+    "seen": 1793778131.4498458,
+    "ast_hash": "c6e1c6450b28deb9b3edbc81940b991c",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileIdentityTab.jsx": {
+    "mtime": 1793777952.1407847,
+    "seen": 1793778131.4498467,
+    "ast_hash": "0c3852ed403bc8fc36a5a49b349d8dbc",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileProjectModal.jsx": {
+    "mtime": 1793777952.3325224,
+    "seen": 1793778131.4498477,
+    "ast_hash": "827150529917ea101ccaeb4ff9d47a16",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileProjectsTab.jsx": {
+    "mtime": 1793777952.501623,
+    "seen": 1793778131.4498487,
+    "ast_hash": "820800a8e7b0e51bf8b97034084026e9",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileSkillsTab.jsx": {
+    "mtime": 1793777952.7114425,
+    "seen": 1793778131.4498496,
+    "ast_hash": "8046dca0adf38e583ba9863168481003",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileTargetsTab.jsx": {
+    "mtime": 1793777952.88969,
+    "seen": 1793778131.4498503,
+    "ast_hash": "2aa89a9ff567043d58de15a912fc1370",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
+    "mtime": 1794196110.4703834,
+    "seen": 1794196945.1066546,
+    "ast_hash": "0779bc66544cc4fd8cb1c26ed1d3c2d5",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/StudioApprovalGate.jsx": {
+    "mtime": 1793777953.3000782,
+    "seen": 1793778131.4498522,
+    "ast_hash": "9b7730fe218aa495594ee8619e74bc79",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
+    "mtime": 1793779199.750036,
+    "seen": 1793788486.3023655,
+    "ast_hash": "3c787ce078120625b474dfacb3f0841a",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/StudioFactAuditBadge.jsx": {
+    "mtime": 1793777953.8052359,
+    "seen": 1793778131.449854,
+    "ast_hash": "e42f2ece0b44943dc9c4785530b0045f",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/StudioFormQAWorkspace.jsx": {
+    "mtime": 1793777961.2237654,
+    "seen": 1793778131.4498546,
+    "ast_hash": "e05e783c861670e8590e77f2c0fdfd0d",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/StudioJobContext.jsx": {
+    "mtime": 1793777954.0371158,
+    "seen": 1793778131.4498556,
+    "ast_hash": "f47fb798164d04cb1e606394014c31d7",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/studioExportUtils.js": {
+    "mtime": 1793777961.5250156,
+    "seen": 1793778131.4498563,
+    "ast_hash": "a6d8e4210a7568d1478b2c6db1889677",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/agent/CareerCopilotView.jsx": {
+    "mtime": 1794122862.1126902,
+    "seen": 1794123045.5713265,
+    "ast_hash": "8c0254a08c133984bb5d49f92c90e4d9",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/74cebd545352_add_is_pinned_to_agent_conversations.py": {
+    "mtime": 1793857232.5266516,
+    "seen": 1793857841.3578,
+    "ast_hash": "c124da78e894f4d2a05a2dca8600b114",
+    "semantic_hash": ""
+  },
+  "backend/app/services/agent/file_extractor.py": {
+    "mtime": 1793855609.7834392,
+    "seen": 1793857841.357861,
+    "ast_hash": "39e8854298099c058cf0fe96551e2af4",
     "semantic_hash": ""
   }
 }
