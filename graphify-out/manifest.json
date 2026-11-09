@@ -474,8 +474,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1794215611.0120587,
-    "seen": 1794216518.2789667,
+    "mtime": 1794217122.3634324,
+    "seen": 1794218087.7646928,
     "ast_hash": "87b6fb7bea91153ab86fd714ed6e13de",
     "semantic_hash": ""
   },
@@ -1128,8 +1128,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/template_compiler.py": {
-    "mtime": 1794215187.6285076,
-    "seen": 1794216518.2787323,
+    "mtime": 1794217121.38439,
+    "seen": 1794218087.7645025,
     "ast_hash": "007e79b3d5edae36b1f23fea1e26cb72",
     "semantic_hash": ""
   },
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794215409.7863932,
-    "seen": 1794216518.2790613,
-    "ast_hash": "2b980674568f44cc6fdd99febf94890f",
+    "mtime": 1794217387.376872,
+    "seen": 1794218087.7647676,
+    "ast_hash": "c5f1bcc52580910cfd1f98bbe5f7969a",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {
@@ -1398,9 +1398,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794215597.859699,
-    "seen": 1794216518.279072,
-    "ast_hash": "642aa01baad5b15c0018e7524f676653",
+    "mtime": 1794217894.832783,
+    "seen": 1794218087.7647772,
+    "ast_hash": "c8d730ead2848c61b9117555c973eafd",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioFactAuditBadge.jsx": {
@@ -1464,9 +1464,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/LatexCodeEditor.jsx": {
-    "mtime": 1794215847.867087,
-    "seen": 1794216518.2790666,
-    "ast_hash": "3f8eb35cd9c1a46023cc6c71aa2e4afa",
+    "mtime": 1794217812.0174048,
+    "seen": 1794218087.7647727,
+    "ast_hash": "5224203ca69d8a9d831afe2e7b9856c2",
     "semantic_hash": ""
   },
   "frontend/src/utils/latexLogParser.js": {

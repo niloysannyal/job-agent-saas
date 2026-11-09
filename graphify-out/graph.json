@@ -32337,18 +32337,6 @@
     },
     {
       "source": "frontend_src_components_studio_studiodrafterworkspace_studiodrafterworkspace",
-      "target": "frontend_src_utils_latexcompiler_decodehtmlentities",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L787",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_components_studio_studiodrafterworkspace_studiodrafterworkspace",
       "target": "frontend_src_utils_latexlogparser_analyzelatexdiagnostics",
       "relation": "calls",
       "_origin": "ast",
@@ -32356,7 +32344,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L93",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_components_studio_studiodrafterworkspace_studiodrafterworkspace",
+      "target": "frontend_src_utils_latexcompiler_decodehtmlentities",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
+      "source_location": "L798",
       "weight": 1.0
     },
     {
@@ -93985,5 +93985,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a24451c076ca38e39f70c4d32c839ed1e6690934"
+  "built_at_commit": "53901d7974fbbb658ca1195fcfea3c4bf5ab32c1"
 }

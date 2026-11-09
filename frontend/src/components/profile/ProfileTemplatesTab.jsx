@@ -113,9 +113,7 @@ export default function ProfileTemplatesTab({
       <div
         className="overleaf-multi-page-container"
         style={{
-          width: `${Math.round(794 * (zoomLevel / 100))}px`,
-          transform: `scale(${zoomLevel / 100})`,
-          transformOrigin: 'top left',
+          zoom: zoomLevel / 100,
           margin: '0 auto',
         }}
       >
@@ -323,18 +321,6 @@ export default function ProfileTemplatesTab({
           </div>
 
           <div className="cv-toolbar-divider" />
-
-          {/* Re-compile button */}
-          <button
-            type="button"
-            className="action-btn-secondary cv-toolbar-btn"
-            onClick={() => handleFetchPreview()}
-            disabled={isLoadingPreview}
-            title="Re-compile LaTeX from profile data"
-          >
-            <RefreshCw size={14} className={isLoadingPreview ? 'icon-spin' : ''} />
-            <span>{isLoadingPreview ? 'Compiling...' : 'Re-compile'}</span>
-          </button>
 
           {/* Copy LaTeX button */}
           <button

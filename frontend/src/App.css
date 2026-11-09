@@ -4210,48 +4210,31 @@
   color: #fbbf24;
 }
 
-.compact-dropdown-wrap {
+.compact-tool-btn {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  background: rgba(2, 132, 199, 0.1);
-  border: 1px solid rgba(2, 132, 199, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
-  gap: 5px;
-  transition: all 0.2s ease;
-  color: #0284c7;
-}
-
-.compact-dropdown-wrap:hover {
-  background: rgba(2, 132, 199, 0.2);
-  border-color: #0284c7;
-}
-
-[data-theme="dark"] .compact-dropdown-wrap {
-  background: rgba(2, 132, 199, 0.18);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-}
-
-[data-theme="dark"] .compact-dropdown-wrap:hover {
-  background: rgba(2, 132, 199, 0.3);
-  border-color: #38bdf8;
-}
-
-.compact-select {
-  background: transparent;
-  color: #0284c7;
-  border: none;
-  font-size: 11.5px;
-  font-weight: 600;
+  overflow: hidden;
   cursor: pointer;
-  outline: none;
-  padding: 2px 2px;
 }
 
-[data-theme="dark"] .compact-select {
-  color: #38bdf8;
+.compact-select-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  z-index: 2;
+}
+
+.compact-select-overlay option {
+  background: var(--surface-card, #1e293b);
+  color: var(--text-primary, #ffffff);
 }
 
 .compact-select option {
@@ -4482,6 +4465,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: fit-content;
+  min-width: 100%;
+  margin: 0 auto;
   gap: 36px;
   padding-bottom: 50px;
   transition: transform 0.15s ease-out;
@@ -14229,14 +14215,86 @@
 }
 
 .codemirror-wrapper {
-  flex: 1;
+  flex: 1 1 0%;
   position: relative;
   overflow: hidden;
   height: calc(100% - 37px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .codemirror-wrapper .cm-editor {
-  height: 100%;
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 0% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.codemirror-wrapper .cm-scroller {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  flex: 1 1 0% !important;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.codemirror-wrapper .cm-content {
+  min-height: 100%;
+  padding: 16px 0;
+}
+
+/* Force dark theme consistency across all CodeMirror elements in dark mode */
+[data-theme="dark"] .latex-code-editor-container,
+[data-theme="dark"] .codemirror-wrapper,
+[data-theme="dark"] .cm-editor,
+[data-theme="dark"] .cm-scroller,
+[data-theme="dark"] .cm-theme-light,
+[data-theme="dark"] .cm-theme-dark {
+  background-color: #0b0f17 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .cm-gutters {
+  background-color: #080c14 !important;
+  color: #475569 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .cm-activeLineGutter {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .cm-activeLine {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Force light theme consistency in light mode */
+[data-theme="light"] .latex-code-editor-container,
+[data-theme="light"] .codemirror-wrapper,
+[data-theme="light"] .cm-editor,
+[data-theme="light"] .cm-scroller,
+[data-theme="light"] .cm-theme-light,
+[data-theme="light"] .cm-theme-dark {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .cm-gutters {
+  background-color: #f8fafc !important;
+  color: #94a3b8 !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .cm-activeLineGutter {
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
 }
 
 /* --- Compiler Diagnostics Drawer --- */

@@ -165,7 +165,12 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
   const [resolvedTheme, setResolvedTheme] = useState(() => {
     if (themeMode && themeMode !== 'auto') return themeMode;
     if (typeof document !== 'undefined') {
-      return document.documentElement.getAttribute('data-theme') || 'dark';
+      const attr = document.documentElement.getAttribute('data-theme');
+      if (attr) return attr;
+    }
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('jobeazy_theme');
+      if (stored) return stored;
     }
     return 'dark';
   });
@@ -175,11 +180,16 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
       setResolvedTheme(themeMode);
       return;
     }
-    if (typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(() => {
-      const active = document.documentElement.getAttribute('data-theme') || 'dark';
+    const updateTheme = () => {
+      const active =
+        (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme')) ||
+        (typeof localStorage !== 'undefined' ? localStorage.getItem('jobeazy_theme') : null) ||
+        'dark';
       setResolvedTheme(active);
-    });
+    };
+    updateTheme();
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(updateTheme);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, [themeMode]);
@@ -360,9 +370,11 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
           value={value}
           onChange={onChange}
           extensions={extensions}
+          theme={activeTheme === 'light' ? 'light' : 'dark'}
           readOnly={readOnly}
           placeholder={placeholder}
           height="100%"
+          style={{ height: '100%', flex: 1, minHeight: 0 }}
           basicSetup={{
             lineNumbers: true,
             highlightActiveLineGutter: true,

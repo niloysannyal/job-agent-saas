@@ -89,6 +89,17 @@ export default function StudioDrafterWorkspace({
     return fit;
   }, [previewRef]);
 
+  // Auto-fit preview on mount or tab change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (previewRef?.current && setZoomLevel) {
+        const fit = calculateFitWidth();
+        setZoomLevel(fit);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [calculateFitWidth, setZoomLevel, activeDraftTab]);
+
   const diagnostics = useMemo(() => {
     return analyzeLatexDiagnostics({
       latexSource: editedLatex || '',
@@ -363,10 +374,13 @@ export default function StudioDrafterWorkspace({
                   onCompile={handleCompile}
                   extraActions={
                     <>
-                      <div className="compact-dropdown-wrap">
-                        <Scissors size={12} />
+                      <div
+                        className="editor-tool-btn compact-tool-btn"
+                        title="Budget CV (1 or 2 pages)"
+                      >
+                        <Scissors size={13} />
                         <select
-                          className="compact-select"
+                          className="compact-select-overlay"
                           defaultValue=""
                           onChange={(e) => {
                             if (e.target.value) {
@@ -376,7 +390,7 @@ export default function StudioDrafterWorkspace({
                           }}
                           title="Budget CV to 1 or 2 pages"
                         >
-                          <option value="" disabled>Compact...</option>
+                          <option value="" disabled>Compact CV to...</option>
                           <option value="1">1 Page</option>
                           <option value="2">2 Pages</option>
                         </select>
@@ -594,9 +608,7 @@ export default function StudioDrafterWorkspace({
                     <div
                       className="overleaf-multi-page-container"
                       style={{
-                        width: `${Math.round(794 * (zoomLevel / 100))}px`,
-                        transform: `scale(${zoomLevel / 100})`,
-                        transformOrigin: 'top left',
+                        zoom: zoomLevel / 100,
                         margin: '0 auto',
                       }}
                     >
@@ -775,53 +787,53 @@ export default function StudioDrafterWorkspace({
                   ) : (
                     /* COVER LETTER PREVIEW */
                     <div
-                      className="letter-paper-preview overleaf-paper"
+                      className="overleaf-multi-page-container"
                       style={{
-                        width: `${Math.round(794 * (zoomLevel / 100))}px`,
-                        transform: `scale(${zoomLevel / 100})`,
-                        transformOrigin: 'top left',
+                        zoom: zoomLevel / 100,
                         margin: '0 auto',
                       }}
                     >
-                      <div className="letter-header">
-                        <h2>{decodeHtmlEntities(profile?.full_name || 'Niloy Sannyal')}</h2>
-                        <p className="letter-subhead">
-                          Dhaka, Bangladesh • niloysannyal@gmail.com • +8801783445245 • niloysannyal.me
-                        </p>
-                        <div className="letter-rule"></div>
-                      </div>
+                      <div className="letter-paper-preview overleaf-paper">
+                        <div className="letter-header">
+                          <h2>{decodeHtmlEntities(profile?.full_name || 'Niloy Sannyal')}</h2>
+                          <p className="letter-subhead">
+                            Dhaka, Bangladesh • niloysannyal@gmail.com • +8801783445245 • niloysannyal.me
+                          </p>
+                          <div className="letter-rule"></div>
+                        </div>
 
-                      <div className="letter-meta-block">
-                        <p>
-                          <strong>Date:</strong>{' '}
-                          {new Date().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </p>
-                        <p>
-                          <strong>To:</strong> Hiring Team at {decodeHtmlEntities(customCompany || 'Target Company')}
-                        </p>
-                        <p>
-                          <strong>Re:</strong> Application for {decodeHtmlEntities(customRole || 'AI Engineer')}
-                        </p>
-                      </div>
+                        <div className="letter-meta-block">
+                          <p>
+                            <strong>Date:</strong>{' '}
+                            {new Date().toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                          <p>
+                            <strong>To:</strong> Hiring Team at {decodeHtmlEntities(customCompany || 'Target Company')}
+                          </p>
+                          <p>
+                            <strong>Re:</strong> Application for {decodeHtmlEntities(customRole || 'AI Engineer')}
+                          </p>
+                        </div>
 
-                      <div className="letter-body">
-                        {decodeHtmlEntities(editedCoverDraft)
-                          .split(/\n\s*\n/)
-                          .map((paragraph, idx) => (
-                            <p key={idx} className="letter-paragraph">
-                              {paragraph.trim()}
-                            </p>
-                          ))}
-                      </div>
+                        <div className="letter-body">
+                          {decodeHtmlEntities(editedCoverDraft)
+                            .split(/\n\s*\n/)
+                            .map((paragraph, idx) => (
+                              <p key={idx} className="letter-paragraph">
+                                {paragraph.trim()}
+                              </p>
+                            ))}
+                        </div>
 
-                      <div className="letter-signature-block">
-                        <p>Sincerely,</p>
-                        <p className="signature-name">{decodeHtmlEntities(profile?.full_name || 'Niloy Sannyal')}</p>
-                        <p className="signature-title">AI Engineer</p>
+                        <div className="letter-signature-block">
+                          <p>Sincerely,</p>
+                          <p className="signature-name">{decodeHtmlEntities(profile?.full_name || 'Niloy Sannyal')}</p>
+                          <p className="signature-title">AI Engineer</p>
+                        </div>
                       </div>
                     </div>
                   )}
