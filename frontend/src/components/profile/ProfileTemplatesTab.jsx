@@ -40,9 +40,40 @@ export default function ProfileTemplatesTab({
   const [zoomLevel, setZoomLevel] = useState(70);
   const [activePage, setActivePage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [splitRatio, setSplitRatio] = useState(48);
+  const isDraggingSplitter = useRef(false);
   const downloadRef = useRef(null);
   const editorRef = useRef(null);
   const previewScrollRef = useRef(null);
+
+  const handleSplitterMouseDown = useCallback((e) => {
+    e.preventDefault();
+    isDraggingSplitter.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isDraggingSplitter.current) return;
+      const container = document.querySelector('.cv-preview-split-layout');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      if (newRatio >= 25 && newRatio <= 75) {
+        setSplitRatio(Math.round(newRatio));
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDraggingSplitter.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
 
   // Auto calculate fit width based on container width
   const calculateFitWidth = useCallback(() => {
@@ -433,7 +464,10 @@ export default function ProfileTemplatesTab({
 
       {/* SPLIT MODE: Side-by-Side Editor (Left) + Live Preview (Right) */}
       {previewMode === 'split' && (
-        <div className="cv-preview-split-layout">
+        <div
+          className="cv-preview-split-layout"
+          style={{ gridTemplateColumns: `${splitRatio}% 10px calc(${100 - splitRatio}% - 10px)` }}
+        >
           {/* Left Column: Overleaf-Grade Code Editor */}
           <div className="cv-editor-col">
             <LatexCodeEditor
@@ -474,6 +508,16 @@ export default function ProfileTemplatesTab({
               diagnostics={diagnostics}
               onJumpToLine={(line) => editorRef.current?.jumpToLine(line)}
             />
+          </div>
+
+          {/* Draggable Gutter Resizer */}
+          <div
+            className="overleaf-splitter-gutter"
+            onMouseDown={handleSplitterMouseDown}
+            onDoubleClick={() => setSplitRatio(50)}
+            title="Drag to resize split view (Double-click to reset 50/50)"
+          >
+            <div className="splitter-handle-bar" />
           </div>
 
           {/* Right Column: Live Compiled A4 Preview */}

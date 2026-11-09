@@ -32284,7 +32284,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L67",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -93985,5 +93985,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "53901d7974fbbb658ca1195fcfea3c4bf5ab32c1"
+  "built_at_commit": "2debed0975f9fcf404125582dd34a5483b07fc0c"
 }

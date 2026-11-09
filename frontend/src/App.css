@@ -3895,8 +3895,20 @@
 }
 
 .textarea-container {
-  flex: 1;
+  flex: 1 1 0%;
   display: flex;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.overleaf-editor-wrapper {
+  height: 100%;
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .code-textarea {
@@ -10411,8 +10423,8 @@
 /* Side-by-Side Split CV Editor & Preview */
 .cv-preview-split-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 48% 10px calc(52% - 10px);
+  gap: 0;
   margin-top: 16px;
   height: calc(100vh - 210px);
   min-height: 680px;
@@ -10433,6 +10445,7 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   height: 100%;
+  min-height: 0;
 }
 
 [data-theme="dark"] .cv-editor-col {
