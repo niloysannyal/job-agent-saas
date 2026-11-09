@@ -78,9 +78,11 @@ class CVTemplateCompiler:
         if summary_text.strip():
             summary_section = (
                 "\\section{Summary}\n"
-                "\\begin{itemize}[leftmargin=0.15in, label={}]\n"
-                f"  \\small{{\\item {escape_latex(summary_text.strip())}}}\n"
-                "\\end{itemize}\n"
+                "\\resumeHeadingListStart\n"
+                "  \\resumeItemListStart\n"
+                f"    \\resumeItem{{{escape_latex(summary_text.strip())}}}\n"
+                "  \\resumeItemListEnd\n"
+                "\\resumeHeadingListEnd\n"
                 "\\vspace{-5pt}"
             )
 
@@ -226,14 +228,38 @@ class CVTemplateCompiler:
         if not raw:
             return []
         if isinstance(raw, list):
-            return [str(item).strip() for item in raw if str(item).strip()]
+            res: List[str] = []
+            for item in raw:
+                if isinstance(item, dict):
+                    # Could be {"field": "...", "detail": "..."} or {"text": "..."} or {"bullet": "..."}
+                    val = item.get("detail") or item.get("text") or item.get("bullet") or item.get("value")
+                    if not val:
+                        field = item.get("field") or ""
+                        detail = item.get("detail") or ""
+                        val = f"{field}: {detail}".strip(": ") if (field or detail) else ""
+                    if val:
+                        res.append(str(val).strip())
+                elif isinstance(item, str) and item.strip():
+                    s = item.strip()
+                    if (s.startswith("{") and s.endswith("}")) or (s.startswith("[") and s.endswith("]")):
+                        try:
+                            nested = json.loads(s)
+                            nested_parsed = TemplateCompiler._parse_bullets(nested if isinstance(nested, list) else [nested])
+                            res.extend(nested_parsed)
+                            continue
+                        except Exception:
+                            pass
+                    res.append(s)
+            return [x for x in res if x]
         if isinstance(raw, str):
             trimmed = raw.strip()
-            if trimmed.startswith("[") and trimmed.endswith("]"):
+            if (trimmed.startswith("[") and trimmed.endswith("]")) or (trimmed.startswith("{") and trimmed.endswith("}")):
                 try:
                     parsed = json.loads(trimmed)
                     if isinstance(parsed, list):
-                        return [str(item).strip() for item in parsed if str(item).strip()]
+                        return TemplateCompiler._parse_bullets(parsed)
+                    if isinstance(parsed, dict):
+                        return TemplateCompiler._parse_bullets([parsed])
                 except Exception:
                     pass
             # Split by newline

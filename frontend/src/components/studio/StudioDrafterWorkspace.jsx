@@ -19,6 +19,8 @@ import {
   Printer,
   ExternalLink,
   Check,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import StudioFactAuditBadge from './StudioFactAuditBadge';
 import { StudioFormQAEditor, StudioFormQADispatchHub } from './StudioFormQAWorkspace';
@@ -76,7 +78,16 @@ export default function StudioDrafterWorkspace({
   const editorRef = useRef(null);
   const [splitRatio, setSplitRatio] = useState(48);
   const [activePage, setActivePage] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const isDraggingSplitter = useRef(false);
+
+  // Auto fit width calculation helper
+  const calculateFitWidth = useCallback(() => {
+    if (!previewRef?.current) return 75;
+    const availableWidth = previewRef.current.clientWidth - 40;
+    const fit = Math.min(130, Math.max(50, Math.round((availableWidth / 794) * 100)));
+    return fit;
+  }, [previewRef]);
 
   const diagnostics = useMemo(() => {
     return analyzeLatexDiagnostics({
@@ -130,7 +141,7 @@ export default function StudioDrafterWorkspace({
   }, [editedLatex]);
 
   return (
-    <div className="split-workspace-panel panel-card overleaf-workspace">
+    <div className={`split-workspace-panel panel-card overleaf-workspace ${isFullscreen ? 'overleaf-fullscreen-mode' : ''}`}>
       {/* Workspace Subheader Navigation */}
       <div className="workspace-tabs-bar">
         <div className="draft-tabs-group">
@@ -178,111 +189,76 @@ export default function StudioDrafterWorkspace({
       >
         {/* LEFT COLUMN: CODE EDITOR */}
         <div className="editor-column overleaf-editor-column">
-          <div className="column-toolbar overleaf-editor-toolbar">
-            <div className="column-title">
-              <strong>
-                {activeDraftTab === 'latex'
-                  ? 'main.tex (LaTeX Source)'
-                  : activeDraftTab === 'cover'
-                  ? 'cover_letter.txt'
-                  : activeDraftTab === 'form_qa'
-                  ? 'form_questionnaire.json'
-                  : `outreach_${channel}.txt`}
-              </strong>
-            </div>
+          {activeDraftTab !== 'latex' && (
+            <div className="column-toolbar overleaf-editor-toolbar">
+              <div className="column-title">
+                <strong>
+                  {activeDraftTab === 'cover'
+                    ? 'cover_letter.txt'
+                    : activeDraftTab === 'form_qa'
+                    ? 'form_questionnaire.json'
+                    : `outreach_${channel}.txt`}
+                </strong>
+              </div>
 
-            <div className="toolbar-actions">
-              {activeDraftTab === 'form_qa' ? (
-                <div className="btn-group-row">
-                  {bookmarkletJs && (
-                    <a
-                      href={bookmarkletJs}
-                      className="draggable-bookmarklet-badge"
-                      title="Drag this link to your browser bookmarks bar! Click it on any job application page to auto-fill."
-                      onClick={(e) => {
-                        if (!e.defaultPrevented) {
-                          e.preventDefault();
-                          handleCopyBookmarklet();
-                        }
-                      }}
+              <div className="toolbar-actions">
+                {activeDraftTab === 'form_qa' ? (
+                  <div className="btn-group-row">
+                    {bookmarkletJs && (
+                      <a
+                        href={bookmarkletJs}
+                        className="draggable-bookmarklet-badge"
+                        title="Drag this link to your browser bookmarks bar! Click it on any job application page to auto-fill."
+                        onClick={(e) => {
+                          if (!e.defaultPrevented) {
+                            e.preventDefault();
+                            handleCopyBookmarklet();
+                          }
+                        }}
+                      >
+                        <Zap className="btn-icon-xxs text-amber" />
+                        <span>Drag: <strong>⚡ JobEazy Autofill</strong></span>
+                      </a>
+                    )}
+                    <button
+                      className="action-btn-xs"
+                      onClick={handleCopyBookmarklet}
+                      title="Copy browser bookmarklet to autofill Google Forms & ATS applications with 1 click"
                     >
-                      <Zap className="btn-icon-xxs text-amber" />
-                      <span>Drag: <strong>⚡ JobEazy Autofill</strong></span>
-                    </a>
-                  )}
+                      <Bookmark className="btn-icon-xxs" />
+                      <span>Autofill Bookmarklet</span>
+                    </button>
+                    <button
+                      className="action-btn-xs"
+                      onClick={handleCopyAllAnswers}
+                      title="Copy all questions and generated answers into formatted text"
+                    >
+                      <Copy className="btn-icon-xxs" />
+                      <span>Copy All Q&A</span>
+                    </button>
+                  </div>
+                ) : (
                   <button
                     className="action-btn-xs"
-                    onClick={handleCopyBookmarklet}
-                    title="Copy browser bookmarklet to autofill Google Forms & ATS applications with 1 click"
-                  >
-                    <Bookmark className="btn-icon-xxs" />
-                    <span>Autofill Bookmarklet</span>
-                  </button>
-                  <button
-                    className="action-btn-xs"
-                    onClick={handleCopyAllAnswers}
-                    title="Copy all questions and generated answers into formatted text"
+                    onClick={() =>
+                      handleCopyDraft(
+                        activeDraftTab === 'cover'
+                          ? editedCoverDraft
+                          : editedOutreachDraft,
+                        activeDraftTab === 'cover'
+                          ? 'Cover Letter'
+                          : 'Outreach Message'
+                      )
+                    }
+                    title="Copy content"
                   >
                     <Copy className="btn-icon-xxs" />
-                    <span>Copy All Q&A</span>
+                    <span>Copy</span>
                   </button>
-                </div>
-              ) : (
-                <button
-                  className="action-btn-xs"
-                  onClick={() =>
-                    handleCopyDraft(
-                      activeDraftTab === 'cover'
-                        ? editedCoverDraft
-                        : activeDraftTab === 'outreach'
-                        ? editedOutreachDraft
-                        : editedLatex,
-                      activeDraftTab === 'cover'
-                        ? 'Cover Letter'
-                        : activeDraftTab === 'outreach'
-                        ? 'Outreach Message'
-                        : 'LaTeX Source'
-                    )
-                  }
-                  title="Copy content"
-                >
-                  <Copy className="btn-icon-xxs" />
-                  <span>Copy</span>
-                </button>
-              )}
-
-              {activeDraftTab === 'latex' && (
-                <>
-                  <div className="compact-dropdown-wrap">
-                    <Scissors className="btn-icon-xxs" />
-                    <select
-                      className="compact-select"
-                      defaultValue=""
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleCompactToPages(Number(e.target.value));
-                          e.target.value = '';
-                        }
-                      }}
-                      title="Budget CV to 1 or 2 pages"
-                    >
-                      <option value="" disabled>Compact...</option>
-                      <option value="1">1 Page</option>
-                      <option value="2">2 Pages</option>
-                    </select>
-                  </div>
-                  <button
-                    className="action-btn-xs"
-                    onClick={handleDownloadLatex}
-                    title="Download raw LaTeX (.tex) file"
-                  >
-                    <Download className="btn-icon-xxs" />
-                    <span>.tex</span>
-                  </button>
-                </>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="textarea-container">
             {activeDraftTab === 'cover' && (
@@ -379,12 +355,59 @@ export default function StudioDrafterWorkspace({
             )}
 
             {activeDraftTab === 'latex' && (
-              <div className="overleaf-editor-wrapper" style={{ height: '640px', display: 'flex', flexDirection: 'column' }}>
+              <div className="overleaf-editor-wrapper" style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <LatexCodeEditor
                   ref={editorRef}
                   value={editedLatex}
                   onChange={setEditedLatex}
                   onCompile={handleCompile}
+                  extraActions={
+                    <>
+                      <div className="compact-dropdown-wrap">
+                        <Scissors size={12} />
+                        <select
+                          className="compact-select"
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleCompactToPages(Number(e.target.value));
+                              e.target.value = '';
+                            }
+                          }}
+                          title="Budget CV to 1 or 2 pages"
+                        >
+                          <option value="" disabled>Compact...</option>
+                          <option value="1">1 Page</option>
+                          <option value="2">2 Pages</option>
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        className="editor-tool-btn"
+                        onClick={handleDownloadLatex}
+                        title="Download raw LaTeX (.tex) file"
+                      >
+                        <Download size={13} />
+                        <span style={{ fontSize: '11px', marginLeft: '3px' }}>.tex</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="editor-tool-btn"
+                        onClick={() => handleCopyDraft(editedLatex, 'LaTeX Source')}
+                        title="Copy LaTeX source"
+                      >
+                        <Copy size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className="editor-tool-btn"
+                        onClick={() => setIsFullscreen((prev) => !prev)}
+                        title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+                      >
+                        {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                      </button>
+                    </>
+                  }
                 />
                 <CompilerDiagnosticsDrawer
                   diagnostics={diagnostics}
@@ -473,9 +496,17 @@ export default function StudioDrafterWorkspace({
                       <select
                         className="zoom-dropdown-select"
                         value={zoomLevel}
-                        onChange={(e) => setZoomLevel(Number(e.target.value))}
+                        onChange={(e) => {
+                          if (e.target.value === 'fit') {
+                            setZoomLevel(calculateFitWidth());
+                          } else {
+                            setZoomLevel(Number(e.target.value));
+                          }
+                        }}
                         title="Zoom Preset"
                       >
+                        <option value="fit">Fit Width</option>
+                        <option value={50}>50%</option>
                         <option value={60}>60%</option>
                         <option value={75}>75%</option>
                         <option value={85}>85%</option>
@@ -544,6 +575,15 @@ export default function StudioDrafterWorkspace({
                       <Printer className="btn-icon-xxs" />
                       <span>Print</span>
                     </button>
+
+                    <button
+                      type="button"
+                      className="action-btn-xs"
+                      onClick={() => setIsFullscreen((prev) => !prev)}
+                      title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+                    >
+                      {isFullscreen ? <Minimize2 className="btn-icon-xxs" /> : <Maximize2 className="btn-icon-xxs" />}
+                    </button>
                   </div>
                 </div>
 
@@ -554,8 +594,10 @@ export default function StudioDrafterWorkspace({
                     <div
                       className="overleaf-multi-page-container"
                       style={{
+                        width: `${Math.round(794 * (zoomLevel / 100))}px`,
                         transform: `scale(${zoomLevel / 100})`,
-                        transformOrigin: 'top center',
+                        transformOrigin: 'top left',
+                        margin: '0 auto',
                       }}
                     >
                       {paginatedPages.map((page, pIdx) => (
@@ -735,8 +777,10 @@ export default function StudioDrafterWorkspace({
                     <div
                       className="letter-paper-preview overleaf-paper"
                       style={{
+                        width: `${Math.round(794 * (zoomLevel / 100))}px`,
                         transform: `scale(${zoomLevel / 100})`,
-                        transformOrigin: 'top center',
+                        transformOrigin: 'top left',
+                        margin: '0 auto',
                       }}
                     >
                       <div className="letter-header">

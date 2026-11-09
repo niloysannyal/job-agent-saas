@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1793779198.8426623,
-    "seen": 1793788486.3022985,
-    "ast_hash": "9de0142ccec4dceeff414f45c76fe8f1",
+    "mtime": 1794215611.0120587,
+    "seen": 1794216518.2789667,
+    "ast_hash": "87b6fb7bea91153ab86fd714ed6e13de",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/latexCompiler.js": {
-    "mtime": 1794210620.3409894,
-    "seen": 1794213234.384965,
-    "ast_hash": "1ca1fe62207b05ebdf58203ed74f9fa9",
+    "mtime": 1794215226.811028,
+    "seen": 1794216518.2790985,
+    "ast_hash": "32b70ba23e119422621ba19397f85769",
     "semantic_hash": ""
   },
   "frontend/vite.config.js": {
@@ -1128,9 +1128,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/template_compiler.py": {
-    "mtime": 1793768756.8768587,
-    "seen": 1793769497.3056571,
-    "ast_hash": "9f6a0b05e83a5b70e4e8fc3f9f0ffeff",
+    "mtime": 1794215187.6285076,
+    "seen": 1794216518.2787323,
+    "ast_hash": "007e79b3d5edae36b1f23fea1e26cb72",
     "semantic_hash": ""
   },
   "backend/app/services/profile/__init__.py": {
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794212724.7921813,
-    "seen": 1794213234.3849437,
-    "ast_hash": "fa914811ff3a2a0b3f54883f1ed4299d",
+    "mtime": 1794215409.7863932,
+    "seen": 1794216518.2790613,
+    "ast_hash": "2b980674568f44cc6fdd99febf94890f",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {
@@ -1398,9 +1398,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794212913.8587306,
-    "seen": 1794213234.3849502,
-    "ast_hash": "1cd22051fb5bfe6619a78880b4125968",
+    "mtime": 1794215597.859699,
+    "seen": 1794216518.279072,
+    "ast_hash": "642aa01baad5b15c0018e7524f676653",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioFactAuditBadge.jsx": {
@@ -1446,8 +1446,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/texlive_compiler.py": {
-    "mtime": 1794213037.9181228,
-    "seen": 1794213234.3847435,
+    "mtime": 1794214585.3081279,
+    "seen": 1794216518.278736,
     "ast_hash": "4f2143ac490a9594b524dbcac8a3cb6c",
     "semantic_hash": ""
   },
@@ -1464,9 +1464,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/LatexCodeEditor.jsx": {
-    "mtime": 1794213082.1540377,
-    "seen": 1794213234.3849466,
-    "ast_hash": "4185f164ab03d0a0fb98162761b03c27",
+    "mtime": 1794215847.867087,
+    "seen": 1794216518.2790666,
+    "ast_hash": "3f8eb35cd9c1a46023cc6c71aa2e4afa",
     "semantic_hash": ""
   },
   "frontend/src/utils/latexLogParser.js": {

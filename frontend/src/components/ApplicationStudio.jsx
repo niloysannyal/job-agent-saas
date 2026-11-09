@@ -62,7 +62,7 @@ export default function ApplicationStudio({
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileStatus, setCompileStatus] = useState('success'); // idle | compiling | success | error
   const [compileTime, setCompileTime] = useState('0.3s');
-  const [zoomLevel, setZoomLevel] = useState(100); // 70 to 130
+  const [zoomLevel, setZoomLevel] = useState(75); // Responsive fit default for split view
   const [parsedDoc, setParsedDoc] = useState(() => parseLatexDocument(''));
 
   // Multi-page discrete A4 sheets

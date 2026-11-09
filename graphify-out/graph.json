@@ -6966,7 +6966,7 @@
       "file_type": "code",
       "norm_label": "profiletemplatestab()",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L18"
+      "source_location": "L22"
     },
     {
       "id": "frontend_src_components_studio_compilerdiagnosticsdrawer_compilerdiagnosticsdrawer",
@@ -6990,7 +6990,7 @@
       "file_type": "code",
       "norm_label": "studiodrafterworkspace()",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L30"
+      "source_location": "L32"
     },
     {
       "id": "frontend_src_components_studio_studiofactauditbadge_studiofactauditbadge",
@@ -10530,7 +10530,7 @@
       "file_type": "code",
       "norm_label": "._parse_bullets()",
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L224"
+      "source_location": "L226"
     },
     {
       "id": "backend_app_services_cv_tailor_template_compiler_escape_latex",
@@ -10794,7 +10794,7 @@
       "file_type": "code",
       "norm_label": "compactlatex()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L643"
+      "source_location": "L690"
     },
     {
       "id": "frontend_src_utils_latexcompiler_compactlatextotwopages",
@@ -10806,7 +10806,7 @@
       "file_type": "code",
       "norm_label": "compactlatextotwopages()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L778"
+      "source_location": "L825"
     },
     {
       "id": "frontend_src_utils_latexcompiler_compileparsedlatextopdf",
@@ -10818,7 +10818,7 @@
       "file_type": "code",
       "norm_label": "compileparsedlatextopdf()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L899"
+      "source_location": "L946"
     },
     {
       "id": "frontend_src_utils_latexcompiler_decodehtmlentities",
@@ -10842,7 +10842,7 @@
       "file_type": "code",
       "norm_label": "drawrichtext()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L841"
+      "source_location": "L888"
     },
     {
       "id": "frontend_src_utils_latexcompiler_estimateitemheight",
@@ -10854,7 +10854,7 @@
       "file_type": "code",
       "norm_label": "estimateitemheight()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L555"
+      "source_location": "L602"
     },
     {
       "id": "frontend_src_utils_latexcompiler_extractlinksfromlatex",
@@ -10866,7 +10866,7 @@
       "file_type": "code",
       "norm_label": "extractlinksfromlatex()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L212"
+      "source_location": "L239"
     },
     {
       "id": "frontend_src_utils_latexcompiler_extractmacroargs",
@@ -10890,7 +10890,7 @@
       "file_type": "code",
       "norm_label": "latextoplaintext()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L202"
+      "source_location": "L229"
     },
     {
       "id": "frontend_src_utils_latexcompiler_paginateparseddocument",
@@ -10902,7 +10902,7 @@
       "file_type": "code",
       "norm_label": "paginateparseddocument()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L582"
+      "source_location": "L629"
     },
     {
       "id": "frontend_src_utils_latexcompiler_parselatexdocument",
@@ -10914,7 +10914,7 @@
       "file_type": "code",
       "norm_label": "parselatexdocument()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L275"
+      "source_location": "L302"
     },
     {
       "id": "frontend_src_utils_latexcompiler_parserichtokens",
@@ -10926,7 +10926,7 @@
       "file_type": "code",
       "norm_label": "parserichtokens()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L785"
+      "source_location": "L832"
     },
     {
       "id": "frontend_src_utils_latexcompiler_validatelatexbraces",
@@ -10938,7 +10938,7 @@
       "file_type": "code",
       "norm_label": "validatelatexbraces()",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L233"
+      "source_location": "L260"
     },
     {
       "id": "backend_app_services_agent_engine_agentengine_approve_proposal",
@@ -14500,7 +14500,7 @@
       "file_type": "code",
       "norm_label": "cyberlighttheme",
       "source_file": "frontend/src/components/studio/LatexCodeEditor.jsx",
-      "source_location": "L82"
+      "source_location": "L83"
     },
     {
       "id": "frontend_src_components_studio_latexcodeeditor_latexcodeeditor",
@@ -14511,7 +14511,7 @@
       "file_type": "code",
       "norm_label": "latexcodeeditor",
       "source_file": "frontend/src/components/studio/LatexCodeEditor.jsx",
-      "source_location": "L146"
+      "source_location": "L148"
     },
     {
       "id": "frontend_src_components_studio_latexcodeeditor_obsidiandarktheme",
@@ -20788,7 +20788,7 @@
       "source_location": "L1"
     },
     {
-      "id": "backend_app_services_cv_tailor_template_compiler_rationale_225",
+      "id": "backend_app_services_cv_tailor_template_compiler_rationale_227",
       "label": "Convert highlights string, JSON array, or newline list into a list of strings.",
       "_origin": "ast",
       "community": 55,
@@ -20796,7 +20796,7 @@
       "file_type": "rationale",
       "norm_label": "convert highlights string, json array, or newline list into a list of strings.",
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L225"
+      "source_location": "L227"
     },
     {
       "id": "backend_app_services_cv_tailor_template_compiler_rationale_27",
@@ -25266,6 +25266,18 @@
       "type": "external"
     },
     {
+      "id": "shutil",
+      "label": "shutil",
+      "_origin": "semantic",
+      "community": 14,
+      "community_name": "texlive_compiler.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "shutil",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "subprocess",
       "label": "subprocess",
       "_origin": "semantic",
@@ -25286,6 +25298,30 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "sys",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "tempfile",
+      "label": "tempfile",
+      "_origin": "semantic",
+      "community": 14,
+      "community_name": "texlive_compiler.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "tempfile",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "time",
+      "label": "time",
+      "_origin": "semantic",
+      "community": 14,
+      "community_name": "texlive_compiler.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "time",
       "source_file": "",
       "type": "external"
     },
@@ -25322,6 +25358,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "urllib_parse",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_codemirror_autocomplete",
+      "label": "ref_codemirror_autocomplete",
+      "_origin": "semantic",
+      "community": 16,
+      "community_name": "package.json",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_codemirror_autocomplete",
       "source_file": "",
       "type": "external"
     },
@@ -25826,50 +25874,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "unittest_mock",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "shutil",
-      "label": "shutil",
-      "community": 14,
-      "community_name": "texlive_compiler.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "shutil",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "tempfile",
-      "label": "tempfile",
-      "community": 14,
-      "community_name": "texlive_compiler.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "tempfile",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "time",
-      "label": "time",
-      "community": 14,
-      "community_name": "texlive_compiler.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "time",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "ref_codemirror_autocomplete",
-      "label": "ref_codemirror_autocomplete",
-      "community": 16,
-      "community_name": "package.json",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_codemirror_autocomplete",
       "source_file": "",
       "type": "external"
     }
@@ -27648,7 +27652,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -32280,7 +32284,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L40",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -32340,7 +32344,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L743",
+      "source_location": "L787",
       "weight": 1.0
     },
     {
@@ -32352,7 +32356,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L82",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -32436,7 +32440,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L779",
+      "source_location": "L826",
       "weight": 1.0
     },
     {
@@ -32448,7 +32452,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1038",
+      "source_location": "L1085",
       "weight": 1.0
     },
     {
@@ -32460,7 +32464,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L1174",
+      "source_location": "L1221",
       "weight": 1.0
     },
     {
@@ -32472,7 +32476,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L917",
+      "source_location": "L964",
       "weight": 1.0
     },
     {
@@ -32484,7 +32488,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L842",
+      "source_location": "L889",
       "weight": 1.0
     },
     {
@@ -32496,7 +32500,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L215",
+      "source_location": "L242",
       "weight": 1.0
     },
     {
@@ -32508,7 +32512,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L204",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -32520,7 +32524,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L206",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -32532,7 +32536,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L617",
+      "source_location": "L664",
       "weight": 1.0
     },
     {
@@ -32544,7 +32548,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L291",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -32556,7 +32560,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L332",
+      "source_location": "L359",
       "weight": 1.0
     },
     {
@@ -32568,7 +32572,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L365",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -32580,7 +32584,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L372",
+      "source_location": "L399",
       "weight": 1.0
     },
     {
@@ -32592,7 +32596,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L375",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -32604,7 +32608,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L796",
+      "source_location": "L843",
       "weight": 1.0
     },
     {
@@ -49692,7 +49696,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L14",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -49704,7 +49708,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L15",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -49716,7 +49720,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L16",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -49896,7 +49900,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L23",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -49908,7 +49912,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -49920,7 +49924,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -49932,7 +49936,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L25",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -49944,7 +49948,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -49956,7 +49960,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -49968,7 +49972,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L28",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -59700,7 +59704,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L14",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -59712,19 +59716,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L15",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_components_profile_profiletemplatestab",
-      "target": "frontend_src_utils_latexlogparser",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -59737,6 +59729,18 @@
       "context": "import",
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
       "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_components_profile_profiletemplatestab",
+      "target": "frontend_src_utils_latexlogparser",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -60096,7 +60100,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L23",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -60108,7 +60112,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -60120,7 +60124,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L25",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -60132,7 +60136,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -60144,7 +60148,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -60156,7 +60160,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L28",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -62532,7 +62536,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L224",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -75502,7 +75506,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/profile/ProfileTemplatesTab.jsx",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -75568,7 +75572,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/studio/LatexCodeEditor.jsx",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -75579,7 +75583,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/studio/LatexCodeEditor.jsx",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -75601,7 +75605,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/studio/StudioDrafterWorkspace.jsx",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -75788,7 +75792,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L202",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -75799,7 +75803,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L212",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -75810,7 +75814,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L233",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -75821,7 +75825,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L275",
+      "source_location": "L302",
       "weight": 1.0
     },
     {
@@ -75832,7 +75836,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L555",
+      "source_location": "L602",
       "weight": 1.0
     },
     {
@@ -75843,7 +75847,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L582",
+      "source_location": "L629",
       "weight": 1.0
     },
     {
@@ -75854,7 +75858,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L643",
+      "source_location": "L690",
       "weight": 1.0
     },
     {
@@ -75887,7 +75891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L778",
+      "source_location": "L825",
       "weight": 1.0
     },
     {
@@ -75898,7 +75902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L785",
+      "source_location": "L832",
       "weight": 1.0
     },
     {
@@ -75909,18 +75913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L841",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_utils_latexcompiler",
-      "target": "frontend_src_utils_latexcompiler_compileparsedlatextopdf",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/utils/latexCompiler.js",
-      "source_location": "L899",
+      "source_location": "L888",
       "weight": 1.0
     },
     {
@@ -75932,6 +75925,17 @@
       "confidence_score": 1.0,
       "source_file": "frontend/src/utils/latexCompiler.js",
       "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_utils_latexcompiler",
+      "target": "frontend_src_utils_latexcompiler_compileparsedlatextopdf",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/utils/latexCompiler.js",
+      "source_location": "L946",
       "weight": 1.0
     },
     {
@@ -79132,7 +79136,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L224",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -82502,14 +82506,14 @@
       "weight": 1.0
     },
     {
-      "source": "backend_app_services_cv_tailor_template_compiler_rationale_225",
+      "source": "backend_app_services_cv_tailor_template_compiler_rationale_227",
       "target": "backend_app_services_cv_tailor_template_compiler_cvtemplatecompiler_parse_bullets",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/services/cv_tailor/template_compiler.py",
-      "source_location": "L225",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -93981,5 +93985,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "883260a37386407839aab741740f74c30199f676"
+  "built_at_commit": "a24451c076ca38e39f70c4d32c839ed1e6690934"
 }

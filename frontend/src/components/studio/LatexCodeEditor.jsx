@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
+import React, { useMemo, useRef, useImperativeHandle, forwardRef, useCallback, useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { stex } from '@codemirror/legacy-modes/mode/stex';
@@ -22,6 +22,7 @@ const obsidianDarkTheme = EditorView.theme(
     '.cm-scroller': {
       fontFamily: 'inherit',
       lineHeight: '1.6',
+      overflow: 'auto',
     },
     '.cm-content': {
       padding: '16px 0',
@@ -91,6 +92,7 @@ const cyberLightTheme = EditorView.theme(
     '.cm-scroller': {
       fontFamily: 'inherit',
       lineHeight: '1.6',
+      overflow: 'auto',
     },
     '.cm-content': {
       padding: '16px 0',
@@ -148,14 +150,41 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
     value,
     onChange,
     onCompile,
-    themeMode = 'dark',
+    themeMode = 'auto',
     readOnly = false,
     placeholder = '% Enter Overleaf LaTeX source code...',
     extraActions = null,
+    hideSubtoolbar = false,
+    filename = 'main.tex',
   },
   ref
 ) {
   const editorViewRef = useRef(null);
+
+  // Dynamic theme detection (auto-syncs with html[data-theme] in real-time)
+  const [resolvedTheme, setResolvedTheme] = useState(() => {
+    if (themeMode && themeMode !== 'auto') return themeMode;
+    if (typeof document !== 'undefined') {
+      return document.documentElement.getAttribute('data-theme') || 'dark';
+    }
+    return 'dark';
+  });
+
+  useEffect(() => {
+    if (themeMode && themeMode !== 'auto') {
+      setResolvedTheme(themeMode);
+      return;
+    }
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => {
+      const active = document.documentElement.getAttribute('data-theme') || 'dark';
+      setResolvedTheme(active);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, [themeMode]);
+
+  const activeTheme = resolvedTheme === 'light' ? 'light' : 'dark';
 
   // Expose imperative API for jump-to-line navigation
   useImperativeHandle(ref, () => ({
@@ -257,7 +286,7 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
       EditorView.lineWrapping,
       bracketMatching(),
       closeBrackets(),
-      themeMode === 'light' ? cyberLightTheme : obsidianDarkTheme,
+      activeTheme === 'light' ? cyberLightTheme : obsidianDarkTheme,
     ];
 
     if (onCompile) {
@@ -275,52 +304,54 @@ const LatexCodeEditor = forwardRef(function LatexCodeEditor(
     }
 
     return baseExtensions;
-  }, [themeMode, onCompile]);
+  }, [activeTheme, onCompile]);
 
   // Document stats
   const lineCount = (value || '').split(/\r?\n/).length;
   const wordCount = (value || '').trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <div className={`latex-code-editor-container theme-${themeMode}`}>
+    <div className={`latex-code-editor-container theme-${activeTheme}`}>
       {/* Editor Sub-Header Toolbar */}
-      <div className="editor-subtoolbar">
-        <div className="editor-file-info">
-          <FileCode size={14} className="text-emerald-400" />
-          <span className="editor-filename">main.tex</span>
-          <span className="editor-stat-pill">{lineCount} lines</span>
-          <span className="editor-stat-pill">{wordCount} words</span>
-        </div>
+      {!hideSubtoolbar && (
+        <div className="editor-subtoolbar">
+          <div className="editor-file-info">
+            <FileCode size={14} className="text-emerald-400" />
+            <span className="editor-filename">{filename}</span>
+            <span className="editor-stat-pill">{lineCount} lines</span>
+            <span className="editor-stat-pill">{wordCount} words</span>
+          </div>
 
-        <div className="editor-action-tools">
-          <button
-            type="button"
-            className="editor-tool-btn"
-            onClick={handleWrapBold}
-            title="Bold: \textbf{...}"
-          >
-            <Bold size={13} />
-          </button>
-          <button
-            type="button"
-            className="editor-tool-btn"
-            onClick={handleInsertBullet}
-            title="Bullet Item: \item"
-          >
-            <List size={13} />
-          </button>
-          <button
-            type="button"
-            className="editor-tool-btn"
-            onClick={handleInsertSection}
-            title="New Section: \section{...}"
-          >
-            <Hash size={13} />
-          </button>
+          <div className="editor-action-tools">
+            <button
+              type="button"
+              className="editor-tool-btn"
+              onClick={handleWrapBold}
+              title="Bold: \textbf{...}"
+            >
+              <Bold size={13} />
+            </button>
+            <button
+              type="button"
+              className="editor-tool-btn"
+              onClick={handleInsertBullet}
+              title="Bullet Item: \item"
+            >
+              <List size={13} />
+            </button>
+            <button
+              type="button"
+              className="editor-tool-btn"
+              onClick={handleInsertSection}
+              title="New Section: \section{...}"
+            >
+              <Hash size={13} />
+            </button>
 
-          {extraActions}
+            {extraActions}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CodeMirror 6 Active Workspace */}
       <div className="codemirror-wrapper">

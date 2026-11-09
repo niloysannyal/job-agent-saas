@@ -144,6 +144,33 @@ export function cleanLatexInline(text) {
     str = str.slice(0, m.index) + linkHtml + str.slice(m.index + m.length);
   }
 
+  // Strip itemize / list environment wrappers
+  str = str.replace(/\\begin\{(?:itemize|enumerate|center|flushleft|flushright)\}(?:\[[^\]]*\])?/gi, ' ');
+  str = str.replace(/\\end\{(?:itemize|enumerate|center|flushleft|flushright)\}/gi, ' ');
+  str = str.replace(/\\resume(?:HeadingList|ItemList)(?:Start|End)\b(?:\{\})?/gi, ' ');
+  str = str.replace(/\\item\b(?:\s*\[[^\]]*\])?/gi, ' ');
+
+  // Parse raw JSON dictionaries if present (e.g. {"field": "Impact", "detail": "..."})
+  if (str.includes('{"') || str.includes('{&quot;') || str.includes("{'")) {
+    str = str.replace(/\{[^{}]*?(?:&quot;|"|')(?:field|detail|text|bullet)(?:&quot;|"|')[^{}]*?\}/g, (jsonMatch) => {
+      try {
+        const normalized = jsonMatch.replace(/&quot;/g, '"').replace(/'/g, '"');
+        const parsed = JSON.parse(normalized);
+        const detail = parsed.detail || parsed.text || parsed.bullet || parsed.value;
+        const field = parsed.field;
+        if (detail && field) return `<strong>${field}:</strong> ${detail}`;
+        if (detail) return detail;
+      } catch (e) {
+        // Fallback: regex extraction
+        const detailMatch = jsonMatch.match(/(?:&quot;|"|')detail(?:&quot;|"|')\s*:\s*(?:&quot;|"|')(.*?)(?:&quot;|"|')/);
+        const fieldMatch = jsonMatch.match(/(?:&quot;|"|')field(?:&quot;|"|')\s*:\s*(?:&quot;|"|')(.*?)(?:&quot;|"|')/);
+        if (detailMatch && fieldMatch) return `<strong>${fieldMatch[1]}:</strong> ${detailMatch[1]}`;
+        if (detailMatch) return detailMatch[1];
+      }
+      return jsonMatch;
+    });
+  }
+
   // Convert font style wrappers (looping to handle nested braces cleanly)
   let prevStr = '';
   let maxIters = 10;
@@ -492,6 +519,26 @@ export function parseLatexDocument(latexSource) {
         plainText: latexToPlainText(rawItem),
         links: extractLinksFromLatex(rawItem),
       });
+    }
+
+    // Also match standard LaTeX \item entries if any
+    const standardItemRegex = /\\item(?:\s*\[[^\]]*\])?\s*([^\\]+?)(?=(?:\\item|\\end\{itemize\}|\\end\{enumerate\}|\\resumeItemListEnd|$))/gs;
+    let sItemMatch;
+    while ((sItemMatch = standardItemRegex.exec(sBody)) !== null) {
+      const sItemIndex = sItemMatch.index;
+      const alreadyCaptured = itemMatches.some((m) => Math.abs(m.index - sItemIndex) < 20);
+      if (!alreadyCaptured) {
+        const rawContent = sItemMatch[1].trim();
+        if (rawContent) {
+          rawItems.push({
+            type: 'bullet',
+            index: sItemIndex,
+            contentHtml: cleanLatexInline(rawContent),
+            plainText: latexToPlainText(rawContent),
+            links: extractLinksFromLatex(rawContent),
+          });
+        }
+      }
     }
 
     // Sort items by index to preserve exact chronological document order

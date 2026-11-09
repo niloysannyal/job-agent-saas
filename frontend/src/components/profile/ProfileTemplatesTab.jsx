@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Check,
   Copy,
@@ -9,7 +9,11 @@ import {
   ChevronDown,
   FileText,
   FileCode,
-  Code2,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  Eye,
 } from 'lucide-react';
 import LatexCodeEditor from '../studio/LatexCodeEditor';
 import CompilerDiagnosticsDrawer from '../studio/CompilerDiagnosticsDrawer';
@@ -33,8 +37,31 @@ export default function ProfileTemplatesTab({
   profileForm,
 }) {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(70);
+  const [activePage, setActivePage] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const downloadRef = useRef(null);
   const editorRef = useRef(null);
+  const previewScrollRef = useRef(null);
+
+  // Auto calculate fit width based on container width
+  const calculateFitWidth = useCallback(() => {
+    if (!previewScrollRef.current) return 70;
+    const availableWidth = previewScrollRef.current.clientWidth - 48;
+    const fit = Math.min(130, Math.max(50, Math.round((availableWidth / 794) * 100)));
+    return fit;
+  }, []);
+
+  useEffect(() => {
+    if (previewMode === 'split') {
+      const timer = setTimeout(() => {
+        setZoomLevel(calculateFitWidth());
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setZoomLevel(100);
+    }
+  }, [previewMode, calculateFitWidth]);
 
   const diagnostics = useMemo(() => {
     return analyzeLatexDiagnostics({
@@ -83,7 +110,15 @@ export default function ProfileTemplatesTab({
   };
   const renderA4Pages = () => {
     return (
-      <div className="overleaf-multi-page-container">
+      <div
+        className="overleaf-multi-page-container"
+        style={{
+          width: `${Math.round(794 * (zoomLevel / 100))}px`,
+          transform: `scale(${zoomLevel / 100})`,
+          transformOrigin: 'top left',
+          margin: '0 auto',
+        }}
+      >
         {paginatedPages.map((page, pIdx) => (
           <div key={pIdx} className="overleaf-a4-page-card" id={`profile-page-${page.pageNumber}`}>
             <div className="a4-page-top-badge">Page {page.pageNumber} of {paginatedPages.length}</div>
@@ -255,7 +290,7 @@ export default function ProfileTemplatesTab({
   };
 
   return (
-    <div className="panel-card cv-template-panel-card">
+    <div className={`panel-card cv-template-panel-card ${isFullscreen ? 'overleaf-fullscreen-mode' : ''}`}>
       <div className="panel-header cv-panel-header">
         <div className="panel-header-title-box">
           <h3 className="cv-panel-title">CV Template &amp; Preview</h3>
@@ -367,6 +402,16 @@ export default function ProfileTemplatesTab({
               </div>
             )}
           </div>
+
+          {/* Fullscreen Toggle */}
+          <button
+            type="button"
+            className="action-btn-secondary cv-toolbar-btn"
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+          >
+            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
         </div>
       </div>
 
@@ -395,7 +440,7 @@ export default function ProfileTemplatesTab({
 
       {/* DEFAULT MODE: Authentic Full-Page A4 Document Preview */}
       {previewMode === 'preview' && (
-        <div className="cv-full-preview-container">
+        <div className="cv-full-preview-container overleaf-viewer-bg" ref={previewScrollRef}>
           {renderA4Pages()}
         </div>
       )}
@@ -411,14 +456,32 @@ export default function ProfileTemplatesTab({
               onChange={setEditedLatex}
               onCompile={() => handleFetchPreview()}
               extraActions={
-                <button
-                  type="button"
-                  className="editor-tool-btn"
-                  onClick={() => setEditedLatex(previewLatex || '')}
-                  title="Reset edits to server compiled source"
-                >
-                  Reset
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={() => setEditedLatex(previewLatex || '')}
+                    title="Reset edits to server compiled source"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={handleCopyLatex}
+                    title="Copy LaTeX source"
+                  >
+                    {isCopied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={() => setIsFullscreen((prev) => !prev)}
+                    title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+                  >
+                    {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                  </button>
+                </>
               }
             />
             <CompilerDiagnosticsDrawer
@@ -428,8 +491,113 @@ export default function ProfileTemplatesTab({
           </div>
 
           {/* Right Column: Live Compiled A4 Preview */}
-          <div className="cv-preview-col">
-            {renderA4Pages()}
+          <div className="cv-preview-col overleaf-preview-column">
+            {/* Integrated Overleaf Preview Toolbar */}
+            <div className="column-toolbar overleaf-toolbar">
+              <div className="overleaf-toolbar-left">
+                <button
+                  type="button"
+                  className={`overleaf-compile-btn ${isLoadingPreview ? 'loading' : ''}`}
+                  onClick={() => handleFetchPreview()}
+                  disabled={isLoadingPreview}
+                  title="Re-compile LaTeX from profile data (Ctrl+Enter)"
+                >
+                  <RefreshCw size={13} className={isLoadingPreview ? 'icon-spin' : ''} />
+                  <span>{isLoadingPreview ? 'Compiling...' : 'Recompile'}</span>
+                  <kbd className="overleaf-kbd">Ctrl+↵</kbd>
+                </button>
+              </div>
+
+              <div className="overleaf-toolbar-right">
+                {/* Zoom Controls */}
+                <div className="zoom-controls-group">
+                  <button
+                    type="button"
+                    className="zoom-btn"
+                    onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={12} />
+                  </button>
+                  <select
+                    className="zoom-dropdown-select"
+                    value={zoomLevel}
+                    onChange={(e) => {
+                      if (e.target.value === 'fit') {
+                        setZoomLevel(calculateFitWidth());
+                      } else {
+                        setZoomLevel(Number(e.target.value));
+                      }
+                    }}
+                    title="Zoom Preset"
+                  >
+                    <option value="fit">Fit Width</option>
+                    <option value={50}>50%</option>
+                    <option value={60}>60%</option>
+                    <option value={70}>70%</option>
+                    <option value={80}>80%</option>
+                    <option value={100}>100%</option>
+                    <option value={120}>120%</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="zoom-btn"
+                    onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={12} />
+                  </button>
+                </div>
+
+                {/* Page Stepper Navigation */}
+                {paginatedPages.length > 1 && (
+                  <div className="page-stepper-group">
+                    <button
+                      type="button"
+                      className="page-step-btn"
+                      onClick={() => {
+                        const prev = Math.max(1, activePage - 1);
+                        setActivePage(prev);
+                        document.getElementById(`profile-page-${prev}`)?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      disabled={activePage <= 1}
+                      title="Previous Page"
+                    >
+                      ◀
+                    </button>
+                    <span className="page-step-indicator">
+                      Page {activePage} / {paginatedPages.length}
+                    </span>
+                    <button
+                      type="button"
+                      className="page-step-btn"
+                      onClick={() => {
+                        const next = Math.min(paginatedPages.length, activePage + 1);
+                        setActivePage(next);
+                        document.getElementById(`profile-page-${next}`)?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      disabled={activePage >= paginatedPages.length}
+                      title="Next Page"
+                    >
+                      ▶
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="action-btn-xs"
+                  onClick={() => setIsFullscreen((prev) => !prev)}
+                  title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+                >
+                  {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="preview-sheet-wrapper overleaf-viewer-bg" ref={previewScrollRef}>
+              {renderA4Pages()}
+            </div>
           </div>
         </div>
       )}

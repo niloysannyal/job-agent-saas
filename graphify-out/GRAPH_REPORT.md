@@ -1,7 +1,7 @@
 # Graph Report - job-agent-saas  (2026-11-09)
 
 ## Corpus Check
-- 236 files · ~155,203 words
+- 236 files · ~156,188 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `883260a3`
+- Built from commit: `a24451c0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -518,9 +518,9 @@ Nodes (3): db_session(), fixture, In-memory SQLite session with all multi-tenant
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Account` connect `Account` to `tailor_service.py`, `JobPosting`, `TestClient`, `models/__init__.py`, `test_interview.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `worker.py`, `test_jobs.py`, `test_matching.py`, `main.py`, `integrations.py`, `api/profile.py`, `resolve_tenant_id`, `test_admin.py`, `api/agent.py`, `admin.py`, `account.py`, `Architecture — Job Application Agent SaaS`, `trigger_ingestion`, `typing`, `Job`, `chat_with_agent`, `AgentMessage`, `test_profile.py`, `Base`, `test_agent.py`, `test_form_qa_api.py`?**
-  _High betweenness centrality (0.150) - this node is a cross-community bridge._
+  _High betweenness centrality (0.151) - this node is a cross-community bridge._
 - **Why does `Job` connect `Job` to `tailor_service.py`, `JobPosting`, `models/__init__.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `worker.py`, `test_jobs.py`, `test_matching.py`, `main.py`, `StarStory`, `integrations.py`, `api/profile.py`, `engine.py`, `test_admin.py`, `admin.py`, `account.py`, `trigger_ingestion`, `AgentEngine`, `typing`, `.role`, `Base`, `test_agent.py`, `Account`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
 - **Why does `JobPosting` connect `JobPosting` to `run_posting_guard`, `JobSourceHTTPError`, `models/__init__.py`, `get_available_sources`, `GreenhouseJobSource`, `FreehireJobSource`, `JobSearchQuery`, `Job`, `LeverJobSource`, `RemotiveJobSource`, `test_jobs.py`, `Base`, `AdzunaJobSource`?**
   _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Are the 119 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**
