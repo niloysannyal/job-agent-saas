@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Check,
   Copy,
@@ -11,6 +11,9 @@ import {
   FileCode,
   Code2,
 } from 'lucide-react';
+import LatexCodeEditor from '../studio/LatexCodeEditor';
+import CompilerDiagnosticsDrawer from '../studio/CompilerDiagnosticsDrawer';
+import { analyzeLatexDiagnostics } from '../../utils/latexLogParser';
 
 export default function ProfileTemplatesTab({
   previewTemplateName,
@@ -31,6 +34,30 @@ export default function ProfileTemplatesTab({
 }) {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const downloadRef = useRef(null);
+  const editorRef = useRef(null);
+
+  const diagnostics = useMemo(() => {
+    return analyzeLatexDiagnostics({
+      latexSource: editedLatex || previewLatex || '',
+      targetPages: 2,
+      actualPages: paginatedPages.length,
+    });
+  }, [editedLatex, previewLatex, paginatedPages.length]);
+
+  // Click to locate section in editor
+  const handleLocateSection = (sectionTitle) => {
+    if (!sectionTitle || !editorRef.current) return;
+    const source = editedLatex || previewLatex || '';
+    const lines = source.split(/\r?\n/);
+    const searchTarget = sectionTitle.toLowerCase().trim();
+    const lineIdx = lines.findIndex((l) =>
+      l.toLowerCase().includes(`\\section{${searchTarget}}`) ||
+      l.toLowerCase().includes(searchTarget)
+    );
+    if (lineIdx >= 0) {
+      editorRef.current.jumpToLine(lineIdx + 1);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -128,7 +155,11 @@ export default function ProfileTemplatesTab({
               return (
                 <div key={secIdx} className="cv-section-container">
                   {showTitle && (
-                    <div className="cv-section-title-wrap">
+                    <div
+                      className="cv-section-title-wrap cv-locateable-section"
+                      onDoubleClick={() => handleLocateSection(cleanTitle)}
+                      title="Double-click to locate section in LaTeX editor"
+                    >
                       <h3 className="cv-section-heading">{cleanTitle}</h3>
                       <div className="cv-section-rule" />
                     </div>
@@ -372,38 +403,27 @@ export default function ProfileTemplatesTab({
       {/* SPLIT MODE: Side-by-Side Editor (Left) + Live Preview (Right) */}
       {previewMode === 'split' && (
         <div className="cv-preview-split-layout">
-          {/* Left Column: Code Editor */}
+          {/* Left Column: Overleaf-Grade Code Editor */}
           <div className="cv-editor-col">
-            <div className="split-editor-toolbar">
-              <div className="split-editor-title">
-                <Code2 size={14} className="text-emerald-400" />
-                <span>LaTeX Source Editor</span>
-              </div>
-              <div className="card-actions">
+            <LatexCodeEditor
+              ref={editorRef}
+              value={editedLatex}
+              onChange={setEditedLatex}
+              onCompile={() => handleFetchPreview()}
+              extraActions={
                 <button
                   type="button"
-                  className="btn-liveness-check"
+                  className="editor-tool-btn"
                   onClick={() => setEditedLatex(previewLatex || '')}
                   title="Reset edits to server compiled source"
                 >
                   Reset
                 </button>
-                <button
-                  type="button"
-                  className="btn-liveness-check"
-                  onClick={handleCopyLatex}
-                  title="Copy code"
-                >
-                  <Copy size={11} /> Copy
-                </button>
-              </div>
-            </div>
-            <textarea
-              className="split-code-textarea"
-              value={editedLatex}
-              onChange={(e) => setEditedLatex(e.target.value)}
-              placeholder="% Enter or edit your LaTeX document source here..."
-              spellCheck="false"
+              }
+            />
+            <CompilerDiagnosticsDrawer
+              diagnostics={diagnostics}
+              onJumpToLine={(line) => editorRef.current?.jumpToLine(line)}
             />
           </div>
 

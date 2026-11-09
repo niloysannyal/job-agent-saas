@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1794197465.2327034,
-    "seen": 1794202725.6759555,
-    "ast_hash": "230dafa6ac00ee05eb594f0271f91245",
+    "mtime": 1794212989.3851714,
+    "seen": 1794213234.3846352,
+    "ast_hash": "ee63ce76cf9162f2e6211b95bee03916",
     "semantic_hash": ""
   },
   "backend/app/core/__init__.py": {
@@ -462,9 +462,9 @@
     "semantic_hash": ""
   },
   "frontend/package.json": {
-    "mtime": 1793763302.344571,
-    "seen": 1793768162.965083,
-    "ast_hash": "ad1735fb7739b4c35975c6aabde0dca7",
+    "mtime": 1794212429.4511335,
+    "seen": 1794213234.3848822,
+    "ast_hash": "79e24d43142b934302c5904afb76b53b",
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
@@ -546,8 +546,8 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/latexCompiler.js": {
-    "mtime": 1794209488.8755617,
-    "seen": 1794209601.8230307,
+    "mtime": 1794210620.3409894,
+    "seen": 1794213234.384965,
     "ast_hash": "1ca1fe62207b05ebdf58203ed74f9fa9",
     "semantic_hash": ""
   },
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794209510.686317,
-    "seen": 1794209601.8230102,
-    "ast_hash": "fd6a16364cf6e961d916743b804ae461",
+    "mtime": 1794212724.7921813,
+    "seen": 1794213234.3849437,
+    "ast_hash": "fa914811ff3a2a0b3f54883f1ed4299d",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {
@@ -1398,9 +1398,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794209536.8575773,
-    "seen": 1794209601.8230152,
-    "ast_hash": "b9b897b53d394eebef1fb868c53d2423",
+    "mtime": 1794212913.8587306,
+    "seen": 1794213234.3849502,
+    "ast_hash": "1cd22051fb5bfe6619a78880b4125968",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioFactAuditBadge.jsx": {
@@ -1443,6 +1443,36 @@
     "mtime": 1793855609.7834392,
     "seen": 1793857841.357861,
     "ast_hash": "39e8854298099c058cf0fe96551e2af4",
+    "semantic_hash": ""
+  },
+  "backend/app/services/cv_tailor/texlive_compiler.py": {
+    "mtime": 1794213037.9181228,
+    "seen": 1794213234.3847435,
+    "ast_hash": "4f2143ac490a9594b524dbcac8a3cb6c",
+    "semantic_hash": ""
+  },
+  "backend/tests/api/test_profile_compile_texlive.py": {
+    "mtime": 1794213081.4710011,
+    "seen": 1794213234.38484,
+    "ast_hash": "dd9a35b6c2d2127e0fd420081c5d30ec",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/CompilerDiagnosticsDrawer.jsx": {
+    "mtime": 1794213082.0281146,
+    "seen": 1794213234.3849452,
+    "ast_hash": "710524155e9cb87b03c4953cf91bf583",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/LatexCodeEditor.jsx": {
+    "mtime": 1794213082.1540377,
+    "seen": 1794213234.3849466,
+    "ast_hash": "4185f164ab03d0a0fb98162761b03c27",
+    "semantic_hash": ""
+  },
+  "frontend/src/utils/latexLogParser.js": {
+    "mtime": 1794213082.572247,
+    "seen": 1794213234.3849664,
+    "ast_hash": "1e5ea0911676f444af862125d9531ba5",
     "semantic_hash": ""
   }
 }

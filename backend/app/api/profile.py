@@ -6,6 +6,7 @@ Project, Certification, plus CV auto-parsing and template compilation.
 All endpoints are scoped to account_id (multi-tenant, Phase 0 trusted parameter —
 see ARCHITECTURE.md §13 for the Phase 3 auth migration plan).
 """
+import base64
 import json
 from typing import Any, Dict, List, Optional
 
@@ -18,6 +19,7 @@ from app.db.session import get_db
 from app.models.account import Account
 from app.models.cv_template import CvTemplate
 from app.services.cv_tailor.template_compiler import CVTemplateCompiler
+from app.services.cv_tailor.texlive_compiler import TeXLiveCompilerService
 from app.services.llm.service import LLMService
 from app.services.matching.experience_reflector import ExperienceReflector
 from app.services.profile.cv_parser import CVParserService
@@ -1308,6 +1310,32 @@ def preview_cv(
         "template_id": t_id,
         "template_name": t_name,
         "latex_source": compiled,
+    }
+
+
+@router.post(
+    "/compile-texlive",
+    summary="Compile raw LaTeX into PDF using server TeX Live engine (Overleaf CLSI pattern)",
+)
+def compile_texlive(
+    payload: Dict[str, Any] = Body(...),
+) -> Dict[str, Any]:
+    latex_source = payload.get("latex_source", "")
+    account_id = payload.get("account_id", "anon")
+    compiler = payload.get("compiler", "pdflatex")
+
+    result = TeXLiveCompilerService.compile_latex(
+        latex_source=latex_source,
+        account_id=account_id,
+        compiler=compiler,
+    )
+
+    pdf_bytes = result.pop("pdf_bytes", None)
+    pdf_base64 = base64.b64encode(pdf_bytes).decode("ascii") if pdf_bytes else None
+
+    return {
+        **result,
+        "pdf_base64": pdf_base64,
     }
 
 

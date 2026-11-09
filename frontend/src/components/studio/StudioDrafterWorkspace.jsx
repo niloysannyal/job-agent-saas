@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
   Terminal,
   FileText,
@@ -23,6 +23,9 @@ import {
 import StudioFactAuditBadge from './StudioFactAuditBadge';
 import { StudioFormQAEditor, StudioFormQADispatchHub } from './StudioFormQAWorkspace';
 import { decodeHtmlEntities } from '../../utils/latexCompiler';
+import LatexCodeEditor from './LatexCodeEditor';
+import CompilerDiagnosticsDrawer from './CompilerDiagnosticsDrawer';
+import { analyzeLatexDiagnostics } from '../../utils/latexLogParser';
 
 export default function StudioDrafterWorkspace({
   activeDraftTab,
@@ -70,6 +73,62 @@ export default function StudioDrafterWorkspace({
   paginatedPages = [],
   parsedDoc,
 }) {
+  const editorRef = useRef(null);
+  const [splitRatio, setSplitRatio] = useState(48);
+  const [activePage, setActivePage] = useState(1);
+  const isDraggingSplitter = useRef(false);
+
+  const diagnostics = useMemo(() => {
+    return analyzeLatexDiagnostics({
+      latexSource: editedLatex || '',
+      targetPages: 2,
+      actualPages: paginatedPages.length,
+    });
+  }, [editedLatex, paginatedPages.length]);
+
+  const handleSplitterMouseDown = useCallback((e) => {
+    e.preventDefault();
+    isDraggingSplitter.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleMouseMove = (moveEvent) => {
+      if (!isDraggingSplitter.current) return;
+      const container = document.querySelector('.split-editor-grid');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      if (newRatio >= 28 && newRatio <= 72) {
+        setSplitRatio(Math.round(newRatio));
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDraggingSplitter.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  const handleLocateSection = useCallback((sectionTitle) => {
+    if (!sectionTitle || !editorRef.current) return;
+    const source = editedLatex || '';
+    const lines = source.split(/\r?\n/);
+    const searchTarget = sectionTitle.toLowerCase().trim();
+    const lineIdx = lines.findIndex((l) =>
+      l.toLowerCase().includes(`\\section{${searchTarget}}`) ||
+      l.toLowerCase().includes(searchTarget)
+    );
+    if (lineIdx >= 0) {
+      editorRef.current.jumpToLine(lineIdx + 1);
+    }
+  }, [editedLatex]);
+
   return (
     <div className="split-workspace-panel panel-card overleaf-workspace">
       {/* Workspace Subheader Navigation */}
@@ -109,7 +168,14 @@ export default function StudioDrafterWorkspace({
       </div>
 
       {/* 2-COLUMN SPLIT CONTAINER (OR 1-COLUMN FOR OUTREACH EMAIL) */}
-      <div className={`split-editor-grid overleaf-grid ${activeDraftTab === 'outreach' ? 'outreach-single-column' : ''}`}>
+      <div
+        className={`split-editor-grid overleaf-grid ${activeDraftTab === 'outreach' ? 'outreach-single-column' : ''}`}
+        style={
+          activeDraftTab !== 'outreach'
+            ? { gridTemplateColumns: `${splitRatio}% 10px calc(${100 - splitRatio}% - 10px)` }
+            : {}
+        }
+      >
         {/* LEFT COLUMN: CODE EDITOR */}
         <div className="editor-column overleaf-editor-column">
           <div className="column-toolbar overleaf-editor-toolbar">
@@ -313,15 +379,18 @@ export default function StudioDrafterWorkspace({
             )}
 
             {activeDraftTab === 'latex' && (
-              <textarea
-                rows={20}
-                className="code-textarea font-mono overleaf-textarea"
-                value={editedLatex}
-                onChange={(e) => setEditedLatex(e.target.value)}
-                onKeyDown={handleKeyDown}
-                spellCheck={false}
-                placeholder="\documentclass[a4paper,11pt]{article}..."
-              />
+              <div className="overleaf-editor-wrapper" style={{ height: '640px', display: 'flex', flexDirection: 'column' }}>
+                <LatexCodeEditor
+                  ref={editorRef}
+                  value={editedLatex}
+                  onChange={setEditedLatex}
+                  onCompile={handleCompile}
+                />
+                <CompilerDiagnosticsDrawer
+                  diagnostics={diagnostics}
+                  onJumpToLine={(line) => editorRef.current?.jumpToLine(line)}
+                />
+              </div>
             )}
 
             {activeDraftTab === 'form_qa' && (
@@ -342,6 +411,18 @@ export default function StudioDrafterWorkspace({
             )}
           </div>
         </div>
+
+        {/* DRAGGABLE OVERLEAF SPLITTER GUTTER */}
+        {activeDraftTab !== 'outreach' && (
+          <div
+            className="overleaf-splitter-gutter"
+            onMouseDown={handleSplitterMouseDown}
+            onDoubleClick={() => setSplitRatio(48)}
+            title="Drag to resize split view (Double-click to reset 50/50)"
+          >
+            <div className="splitter-handle-bar" />
+          </div>
+        )}
 
         {/* RIGHT COLUMN: PREVIEW (FOR LATEX / COVER / FORM_QA) */}
         {activeDraftTab !== 'outreach' && (
@@ -380,24 +461,71 @@ export default function StudioDrafterWorkspace({
                   </div>
 
                   <div className="overleaf-toolbar-right">
-                    {/* Overleaf Zoom Controls */}
+                    {/* Overleaf Zoom Controls with Presets */}
                     <div className="zoom-controls-group">
                       <button
                         className="zoom-btn"
-                        onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
+                        onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
                         title="Zoom Out"
                       >
                         <ZoomOut className="icon-xxs" />
                       </button>
-                      <span className="zoom-label">{zoomLevel}%</span>
+                      <select
+                        className="zoom-dropdown-select"
+                        value={zoomLevel}
+                        onChange={(e) => setZoomLevel(Number(e.target.value))}
+                        title="Zoom Preset"
+                      >
+                        <option value={60}>60%</option>
+                        <option value={75}>75%</option>
+                        <option value={85}>85%</option>
+                        <option value={100}>100%</option>
+                        <option value={115}>115%</option>
+                        <option value={130}>130%</option>
+                      </select>
                       <button
                         className="zoom-btn"
-                        onClick={() => setZoomLevel((z) => Math.min(130, z + 10))}
+                        onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
                         title="Zoom In"
                       >
                         <ZoomIn className="icon-xxs" />
                       </button>
                     </div>
+
+                    {/* Page Stepper Navigation */}
+                    {paginatedPages.length > 1 && (
+                      <div className="page-stepper-group">
+                        <button
+                          type="button"
+                          className="page-step-btn"
+                          onClick={() => {
+                            const prev = Math.max(1, activePage - 1);
+                            setActivePage(prev);
+                            document.getElementById(`overleaf-page-${prev}`)?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          disabled={activePage <= 1}
+                          title="Previous Page"
+                        >
+                          ◀
+                        </button>
+                        <span className="page-step-indicator">
+                          Page {activePage} / {paginatedPages.length}
+                        </span>
+                        <button
+                          type="button"
+                          className="page-step-btn"
+                          onClick={() => {
+                            const next = Math.min(paginatedPages.length, activePage + 1);
+                            setActivePage(next);
+                            document.getElementById(`overleaf-page-${next}`)?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          disabled={activePage >= paginatedPages.length}
+                          title="Next Page"
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    )}
 
                     <button
                       className="action-btn-xs action-btn-pdf"
@@ -498,7 +626,11 @@ export default function StudioDrafterWorkspace({
                             return (
                               <div key={secIdx} className="cv-section-container">
                                 {showTitle && (
-                                  <div className="cv-section-title-wrap">
+                                  <div
+                                    className="cv-section-title-wrap cv-locateable-section"
+                                    onDoubleClick={() => handleLocateSection(cleanTitle)}
+                                    title="Double-click to locate section in LaTeX editor"
+                                  >
                                     <h3 className="cv-section-heading">{cleanTitle}</h3>
                                     <div className="cv-section-rule" />
                                   </div>
