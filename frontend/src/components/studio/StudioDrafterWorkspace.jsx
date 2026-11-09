@@ -2,12 +2,14 @@ import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import {
   Terminal,
   FileText,
+  FileCode,
   Mail,
   CheckSquare,
   Bookmark,
   Zap,
   Copy,
   Download,
+  ChevronDown,
   Scissors,
   HelpCircle,
   Compass,
@@ -79,7 +81,24 @@ export default function StudioDrafterWorkspace({
   const [splitRatio, setSplitRatio] = useState(48);
   const [activePage, setActivePage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const downloadRef = useRef(null);
   const isDraggingSplitter = useRef(false);
+
+  // Close download dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (downloadRef.current && !downloadRef.current.contains(event.target)) {
+        setIsDownloadOpen(false);
+      }
+    }
+    if (isDownloadOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDownloadOpen]);
 
   // Auto fit width calculation helper
   const calculateFitWidth = useCallback(() => {
@@ -476,18 +495,18 @@ export default function StudioDrafterWorkspace({
                   <div className="overleaf-toolbar-left">
                     {activeDraftTab === 'latex' ? (
                       <button
+                        type="button"
                         className={`overleaf-compile-btn ${isCompiling ? 'loading' : ''}`}
                         onClick={handleCompile}
                         disabled={isCompiling}
                         title="Compile LaTeX source code (Ctrl + Enter)"
                       >
                         {isCompiling ? (
-                          <RefreshCw className="btn-icon-xs icon-spin" />
+                          <RefreshCw size={13} className="icon-spin" />
                         ) : (
-                          <Eye className="btn-icon-xs" />
+                          <Eye size={13} />
                         )}
                         <span>{isCompiling ? 'Compiling...' : 'Recompile'}</span>
-                        <kbd className="overleaf-kbd">Ctrl+↵</kbd>
                       </button>
                     ) : (
                       <div className="column-title">
@@ -572,31 +591,75 @@ export default function StudioDrafterWorkspace({
                       </div>
                     )}
 
-                    <button
-                      className="action-btn-xs action-btn-pdf"
-                      onClick={handleDownloadPdf}
-                      title="Generate and download compiled PDF document"
-                    >
-                      <Download className="btn-icon-xxs" />
-                      <span>Download PDF</span>
-                    </button>
+                    {/* Overleaf Download Dropdown (PDF & LaTeX) */}
+                    <div className="cv-download-dropdown-wrapper" ref={downloadRef}>
+                      <button
+                        type="button"
+                        className="overleaf-toolbar-btn overleaf-toolbar-btn-download"
+                        onClick={() => setIsDownloadOpen((prev) => !prev)}
+                        aria-haspopup="true"
+                        aria-expanded={isDownloadOpen}
+                        title="Download CV as PDF or LaTeX"
+                      >
+                        <Download size={13} />
+                        <span>Download</span>
+                        <ChevronDown size={11} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
+                      </button>
+                      {isDownloadOpen && (
+                        <div className="cv-download-dropdown-menu">
+                          <button
+                            type="button"
+                            className="cv-dropdown-item"
+                            onClick={() => {
+                              setIsDownloadOpen(false);
+                              handleDownloadPdf?.();
+                            }}
+                          >
+                            <div className="cv-dropdown-icon-box pdf-badge">
+                              <FileText size={14} />
+                            </div>
+                            <div className="cv-dropdown-text-box">
+                              <span className="cv-dropdown-item-title">Download PDF</span>
+                              <span className="cv-dropdown-item-desc">Pixel-perfect Overleaf PDF (.pdf)</span>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            className="cv-dropdown-item"
+                            onClick={() => {
+                              setIsDownloadOpen(false);
+                              handleDownloadLatex?.();
+                            }}
+                          >
+                            <div className="cv-dropdown-icon-box tex-badge">
+                              <FileCode size={14} />
+                            </div>
+                            <div className="cv-dropdown-text-box">
+                              <span className="cv-dropdown-item-title">Download LaTeX</span>
+                              <span className="cv-dropdown-item-desc">Raw Overleaf TeX source (.tex)</span>
+                            </div>
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     <button
-                      className="action-btn-xs"
+                      type="button"
+                      className="overleaf-toolbar-btn"
                       onClick={handlePrint}
                       title="Print or Save via browser dialog"
                     >
-                      <Printer className="btn-icon-xxs" />
+                      <Printer size={13} />
                       <span>Print</span>
                     </button>
 
                     <button
                       type="button"
-                      className="action-btn-xs"
+                      className="overleaf-toolbar-btn overleaf-toolbar-icon-btn"
                       onClick={() => setIsFullscreen((prev) => !prev)}
                       title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
                     >
-                      {isFullscreen ? <Minimize2 className="btn-icon-xxs" /> : <Maximize2 className="btn-icon-xxs" />}
+                      {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                     </button>
                   </div>
                 </div>

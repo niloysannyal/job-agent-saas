@@ -534,7 +534,6 @@ export default function ProfileTemplatesTab({
                 >
                   <RefreshCw size={13} className={isLoadingPreview ? 'icon-spin' : ''} />
                   <span>{isLoadingPreview ? 'Compiling...' : 'Recompile'}</span>
-                  <kbd className="overleaf-kbd">Ctrl+↵</kbd>
                 </button>
               </div>
 
@@ -616,11 +615,11 @@ export default function ProfileTemplatesTab({
 
                 <button
                   type="button"
-                  className="action-btn-xs"
+                  className="overleaf-toolbar-btn overleaf-toolbar-icon-btn"
                   onClick={() => setIsFullscreen((prev) => !prev)}
                   title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
                 >
-                  {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                  {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                 </button>
               </div>
             </div>

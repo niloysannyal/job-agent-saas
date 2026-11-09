@@ -4171,6 +4171,8 @@
   background: var(--surface-card);
   border-bottom: 1px solid var(--border-subtle);
   padding: 8px 16px;
+  position: relative;
+  z-index: 10;
 }
 
 [data-theme="dark"] .overleaf-toolbar {
@@ -4349,33 +4351,95 @@
 .overleaf-compile-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
   background: linear-gradient(135deg, #059669, #10b981);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-sm);
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3);
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .overleaf-compile-btn:hover {
   background: linear-gradient(135deg, #047857, #059669);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.45);
 }
 
 .overleaf-compile-btn:active {
-  transform: translateY(0);
+  transform: translateY(1px);
 }
 
 .overleaf-compile-btn.loading {
   background: #047857;
-  opacity: 0.9;
+  opacity: 0.85;
   cursor: wait;
+}
+
+/* Overleaf Unified Toolbar Actions */
+.overleaf-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.overleaf-toolbar-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.overleaf-toolbar-btn:active {
+  transform: translateY(1px);
+}
+
+.overleaf-toolbar-icon-btn {
+  width: 28px;
+  padding: 0;
+}
+
+.overleaf-toolbar-btn-download {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--emerald-400);
+}
+
+.overleaf-toolbar-btn-download:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--emerald-300);
+}
+
+[data-theme="light"] .overleaf-toolbar-btn-download {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+[data-theme="light"] .overleaf-toolbar-btn-download:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #047857;
 }
 
 .overleaf-kbd {
@@ -4424,6 +4488,8 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 1px;
+  height: 28px;
+  box-sizing: border-box;
 }
 
 .zoom-btn {
@@ -14589,7 +14655,9 @@
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs, 4px);
-  padding: 2px 4px;
+  padding: 0 6px;
+  height: 28px;
+  box-sizing: border-box;
 }
 
 .page-step-btn {
