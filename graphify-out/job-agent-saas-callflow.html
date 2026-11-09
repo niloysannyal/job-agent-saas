@@ -60,7 +60,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
 <div class="container">
 
 <h1>job-agent-saas — Complete Call Flow &amp; Architecture Documentation</h1>
-<p class="subtitle">Generated from graphify knowledge graph: 2130 nodes, 5734 edges, 112 communities. Commit: efa67f2</p>
+<p class="subtitle">Generated from graphify knowledge graph: 2130 nodes, 5740 edges, 116 communities. Commit: 29fbe22</p>
 
 <div class="nav">
     <a href="#overview">Architecture Overview</a>
@@ -96,15 +96,15 @@ flowchart LR
     class ANALYSIS_CLUSTERING_C79796DA module;
     OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>9 nodes</small>")
     class OUTPUTS_DOCS_ED82387C module;
-    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>371 nodes</small>")
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>368 nodes</small>")
     class CLI_SKILLS_9964CBB8 module;
-    INGEST_CACHE_UPDATE_FF457338("Ingestion &amp; Updates<br/><small>26 nodes</small>")
+    INGEST_CACHE_UPDATE_FF457338("Ingestion &amp; Updates<br/><small>30 nodes</small>")
     class INGEST_CACHE_UPDATE_FF457338 module;
-    SERVE_API_35EC8E86("Serving API<br/><small>350 nodes</small>")
+    SERVE_API_35EC8E86("Serving API<br/><small>287 nodes</small>")
     class SERVE_API_35EC8E86 module;
     SECURITY_GLOBAL_5B9C6A04("Security &amp; Global Graph<br/><small>6 nodes</small>")
     class SECURITY_GLOBAL_5B9C6A04 module;
-    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>991 nodes</small>")
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>1059 nodes</small>")
     class TESTS_FIXTURES_B84B1DCC module;
     APP_JSX_9B389801("App.jsx<br/><small>31 nodes</small>")
     class APP_JSX_9B389801 module;
@@ -116,20 +116,20 @@ flowchart LR
     class USER_PROFILE_NILOY_SANNYAL_57E57F30 module;
     GENERATE_9E59D425(".generate<br/><small>11 nodes</small>")
     class GENERATE_9E59D425 module;
-    OTHER_D0941E68("Other<br/><small>122 nodes</small>")
+    OTHER_D0941E68("Other<br/><small>116 nodes</small>")
     class OTHER_D0941E68 module;
-    TESTS_FIXTURES_B84B1DCC -->|imports x280| SERVE_API_35EC8E86
-    SERVE_API_35EC8E86 -->|imports x234| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|imports x89| CLI_SKILLS_9964CBB8
-    CLI_SKILLS_9964CBB8 -->|imports x87| TESTS_FIXTURES_B84B1DCC
-    EXTRACT_PIPELINE_5F350230 -->|imports x72| TESTS_FIXTURES_B84B1DCC
-    TESTS_FIXTURES_B84B1DCC -->|imports x71| EXTRACT_PIPELINE_5F350230
-    CLI_SKILLS_9964CBB8 -->|uses x46| SERVE_API_35EC8E86
-    SERVE_API_35EC8E86 -->|imports x32| OTHER_D0941E68
-    SERVE_API_35EC8E86 -->|imports x24| CLI_SKILLS_9964CBB8
-    TESTS_FIXTURES_B84B1DCC -->|imports x21| OTHER_D0941E68
-    OTHER_D0941E68 -->|imports x21| TESTS_FIXTURES_B84B1DCC
-    SERVE_API_35EC8E86 -->|imports x16| EXTRACT_PIPELINE_5F350230
+    TESTS_FIXTURES_B84B1DCC -->|imports x255| SERVE_API_35EC8E86
+    SERVE_API_35EC8E86 -->|imports x226| TESTS_FIXTURES_B84B1DCC
+    CLI_SKILLS_9964CBB8 -->|imports x95| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x87| CLI_SKILLS_9964CBB8
+    EXTRACT_PIPELINE_5F350230 -->|imports x81| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x73| EXTRACT_PIPELINE_5F350230
+    CLI_SKILLS_9964CBB8 -->|uses x41| SERVE_API_35EC8E86
+    SERVE_API_35EC8E86 -->|imports x28| CLI_SKILLS_9964CBB8
+    TESTS_FIXTURES_B84B1DCC -->|contains x23| OTHER_D0941E68
+    APP_JSX_9B389801 -->|imports x15| CLI_SKILLS_9964CBB8
+    SERVE_API_35EC8E86 -->|imports x14| OTHER_D0941E68
+    SERVE_API_35EC8E86 -->|imports x14| EXTRACT_PIPELINE_5F350230
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -146,19 +146,19 @@ flowchart LR
     <h4>Architecture Layers</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
-      <tr><td>Extraction Pipeline</td><td>86</td><td><code>51, 81, 53, 101</code></td></tr><tr><td>Graph Build</td><td>43</td><td><code>16, 34, 68</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>13</td><td><code>30, 63</code></td></tr><tr><td>Outputs &amp; Docs</td><td>9</td><td><code>61</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>371</td><td><code>32, 25, 31, 24, 14, 48, 41, 59, 67, 84, 114, 97, 47, 49, 50, 52, 73, 85, 99, 86, 65, 72, 54</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>26</td><td><code>93, 64, 66, 69</code></td></tr><tr><td>Serving API</td><td>350</td><td><code>28, 13, 44, 45, 23, 26, 55, 70, 42, 104, 36</code></td></tr><tr><td>Security &amp; Global Graph</td><td>6</td><td><code>88</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>991</td><td><code>0, 2, 20, 79, 10, 108, 29, 6, 92, 17, 3, 15, 12, 22, 11, 18, 60, 95, 7, 5, 9, 19, 35, 40, 105, 74, 8, 4, 83, 94, 102, 91, 38, 39</code></td></tr><tr><td>App.jsx</td><td>31</td><td><code>1</code></td></tr><tr><td>react</td><td>29</td><td><code>21</code></td></tr><tr><td>ApplicationStudio.jsx</td><td>25</td><td><code>62</code></td></tr><tr><td>User Profile — Niloy Sannyal</td><td>17</td><td><code>33</code></td></tr><tr><td>.generate</td><td>11</td><td><code>90</code></td></tr><tr><td>Other</td><td>122</td><td><code>27, 43, 46, 71, 96, 98, 75, 82, 100, 113, 80, 103, 58, 87, 107, 106, 111, 56, 57, 76, 77, 78, 37, 89</code></td></tr>
+      <tr><td>Extraction Pipeline</td><td>86</td><td><code>51, 81, 53, 101</code></td></tr><tr><td>Graph Build</td><td>43</td><td><code>16, 34, 68</code></td></tr><tr><td>Analysis &amp; Clustering</td><td>13</td><td><code>30, 63</code></td></tr><tr><td>Outputs &amp; Docs</td><td>9</td><td><code>61</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>368</td><td><code>32, 25, 31, 24, 14, 48, 41, 67, 59, 84, 114, 97, 47, 49, 50, 52, 73, 85, 99, 86, 65, 72, 54</code></td></tr><tr><td>Ingestion &amp; Updates</td><td>30</td><td><code>93, 109, 64, 66, 69</code></td></tr><tr><td>Serving API</td><td>287</td><td><code>28, 44, 13, 26, 7, 19, 42, 55, 70, 104, 36</code></td></tr><tr><td>Security &amp; Global Graph</td><td>6</td><td><code>88</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>1059</td><td><code>0, 23, 2, 45, 20, 10, 108, 29, 6, 17, 3, 92, 15, 12, 11, 18, 22, 35, 79, 60, 95, 5, 4, 40, 105, 9, 74, 8, 83, 94, 102, 91, 98, 110, 38, 39</code></td></tr><tr><td>App.jsx</td><td>31</td><td><code>1</code></td></tr><tr><td>react</td><td>29</td><td><code>21</code></td></tr><tr><td>ApplicationStudio.jsx</td><td>25</td><td><code>62</code></td></tr><tr><td>User Profile — Niloy Sannyal</td><td>17</td><td><code>33</code></td></tr><tr><td>.generate</td><td>11</td><td><code>90</code></td></tr><tr><td>Other</td><td>116</td><td><code>43, 27, 46, 71, 96, 75, 82, 100, 113, 80, 103, 58, 87, 107, 106, 111, 112, 115, 56, 57, 76, 77, 78, 37, 89</code></td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Core Flow</h4>
-    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Serving API -&gt; Other -&gt; CLI &amp; Skill Installers -&gt; react</div>
+    <div class="arrow-chain">Outputs &amp; Docs -&gt; Extraction Pipeline -&gt; Tests &amp; Fixtures -&gt; Serving API -&gt; CLI &amp; Skill Installers -&gt; react -&gt; ApplicationStudio.jsx</div>
   </div>
 </div>
 <div class="grid">
   <div class="card">
     <h4>Graph Report Highlights</h4>
     <ul>
-      <li>2130 nodes · 5734 edges · 112 communities (96 shown, 16 thin omitted)</li>
+      <li>2130 nodes · 5740 edges · 116 communities (98 shown, 18 thin omitted)</li>
       <li>Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 744 edges (avg confidence: 0.94)</li>
       <li>Token cost: 0 input · 0 output</li>
       <li>1. `Account` - 186 edges</li>
@@ -1206,12 +1206,12 @@ flowchart LR
 
 <!-- ====== 6. CLI & Skill Installers ====== -->
 <h2 id="cli-skills">6. CLI &amp; Skill Installers</h2>
-<p>CLI &amp; Skill Installers groups implementation around backend, app, agent, services, mostly in skills/graphify/SKILL.md, app/api/agent.py, services/agent/engine.py. This section covers 371 nodes and 667 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>CLI &amp; Skill Installers groups implementation around backend, app, agent, services, mostly in skills/graphify/SKILL.md, app/api/agent.py, services/agent/engine.py. This section covers 368 nodes and 663 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: CLI &amp; Skill Installers (371 nodes, 667 edges)
+    %% Section: CLI &amp; Skill Installers (368 nodes, 663 edges)
     subgraph cli_skills_agent_tools_stage_proposal_tool_py_5b3cd762["agent/tools/stage_proposal_tool.py"]
         backend_app_services_agent_tools_stage_proposal_80af25d6("stage_proposal_tool.py")
         backend_app_services_agent_tools_stage_proposal_a18cd63b("StageApplicationProposalTool<br/><small>agent/tools/stage_proposal_tool.py</small>")
@@ -1268,7 +1268,7 @@ flowchart LR
     backend_app_services_agent_engine_agentengine_db1bef6e -->|uses| backend_app_services_agent_tools_search_jobs_too_ae60df5d
     backend_app_services_agent_engine_agentengine_db1bef6e -->|uses| backend_app_services_agent_tools_stage_proposal_a18cd63b
     backend_app_services_agent_engine_agentengine_db1bef6e -->|uses| backend_app_services_agent_tools_track_lifecycle_bc59508c
-    %% Omitted for readability: 353 nodes, 2 edges
+    %% Omitted for readability: 350 nodes, 2 edges
     class backend_app_services_agent_tools_stage_proposal_80af25d6 module;
     class backend_app_services_agent_tools_stage_proposal_a18cd63b klass;
     class backend_app_services_agent_tools_stage_proposal_87911e64 function;
@@ -1558,7 +1558,7 @@ flowchart LR
       <tr><td><code>skills/graphify/SKILL.md</code></td><td>25 nodes</td></tr>
 <tr><td><code>app/api/agent.py</code></td><td>20 nodes</td></tr>
 <tr><td><code>services/agent/engine.py</code></td><td>19 nodes</td></tr>
-<tr><td><code>docs/ARCHITECTURE.md</code></td><td>18 nodes</td></tr>
+<tr><td><code>docs/ARCHITECTURE.md</code></td><td>17 nodes</td></tr>
 <tr><td><code>app/models/agent.py</code></td><td>12 nodes</td></tr>
 <tr><td><code>DEVELOPMENT.md</code></td><td>10 nodes</td></tr>
 <tr><td><code>services/agent/event_bus.py</code></td><td>10 nodes</td></tr>
@@ -1567,19 +1567,19 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x192, imports x92, imports x84, references x69. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x191, imports x92, imports x84, references x67. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 7. Ingestion & Updates ====== -->
 <h2 id="ingest-cache-update">7. Ingestion &amp; Updates</h2>
-<p>Ingestion &amp; Updates groups implementation around graphify, backend, app, integrations, mostly in services/integrations/google_service.py, graphify/references/add-watch.md, graphify/references/update.md. This section covers 26 nodes and 25 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Ingestion &amp; Updates groups implementation around backend, app, graphify, integrations, mostly in services/integrations/google_service.py, graphify/references/add-watch.md, graphify/references/update.md. This section covers 30 nodes and 28 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Ingestion &amp; Updates (26 nodes, 25 edges)
+    %% Section: Ingestion &amp; Updates (30 nodes, 28 edges)
     subgraph ingest_cache_update_services_integrations_google_6a1fba23["services/integrations/google_service.py"]
         backend_app_services_integrations_google_service_2c44655a("GoogleIntegrationService<br/><small>services/integrations/google_service.py</small>")
         backend_app_services_integrations_google_service_c56e8688("create_gmail_draft()<br/><small>services/integrations/google_service.py</small>")
@@ -1593,18 +1593,20 @@ flowchart LR
         agents_skills_graphify_references_add_watch_eebf74bd("add-watch.md")
         agents_skills_graphify_references_add_watch_grap_49dc5116("graphify reference: add a URL and watch...<br/><small>graphify/references/add-watch.md</small>")
     end
+    subgraph ingest_cache_update_app_api_applications_py_e49988e7["app/api/applications.py"]
+        backend_app_api_applications_statusupdaterequest_08585b42("StatusUpdateRequest<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_update_application_04febfee("update_application_status()<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_rationale_804_d8dcca84("Module 3 (Monitor): Update application...<br/><small>app/api/applications.py</small>")
+    end
     subgraph ingest_cache_update_app_api_integrations_py_b8685e82["app/api/integrations.py"]
         backend_app_api_integrations_create_gmail_draft_ee2ca044("create_gmail_draft()<br/><small>app/api/integrations.py</small>")
         backend_app_api_integrations_creategmaildraftres_ccc7d507("CreateGmailDraftResponse<br/><small>app/api/integrations.py</small>")
         backend_app_api_integrations_rationale_176_cbc67f3d("Create a Draft in the user's Gmail box....<br/><small>app/api/integrations.py</small>")
     end
-    subgraph ingest_cache_update_graphify_references_transcri_94aa8e73["graphify/references/transcribe.md"]
-        agents_skills_graphify_references_transcribe_ste_8f84ef22("Step 2.5 - Transcribe video / audio fil...<br/><small>graphify/references/transcribe.md</small>")
-        agents_skills_graphify_references_transcribe_gra_17cbda34("graphify reference: transcribe video an...<br/><small>graphify/references/transcribe.md</small>")
-        agents_skills_graphify_references_transcribe_aad9b7f9("transcribe.md")
+    subgraph ingest_cache_update_External_generated_9d67cab5["External / generated"]
+        backend_app_services_integrations_google_service_2998ef44("Any")
+        backend_app_api_applications_py_patch_e3a2e1cc("patch")
     end
-    backend_app_services_integrations_google_service_2998ef44("Any")
-    agents_skills_graphify_references_update_for_clu_baa08a41("For --cluster-only<br/><small>graphify/references/update.md</small>")
     backend_app_services_integrations_init_973a26ee("__init__.py")
     backend_app_services_integrations_google_service_2c44655a -->|method| backend_app_services_integrations_google_service_c56e8688
     backend_app_services_integrations_google_service_2c44655a -->|method| backend_app_services_integrations_google_service_d678bb04
@@ -1615,7 +1617,7 @@ flowchart LR
     backend_app_api_integrations_create_gmail_draft_ee2ca044 -->|calls| backend_app_api_integrations_creategmaildraftres_ccc7d507
     backend_app_services_integrations_init_973a26ee -->|imports| backend_app_services_integrations_google_service_2c44655a
     backend_app_api_integrations_create_gmail_draft_ee2ca044 -->|uses| backend_app_services_integrations_google_service_2c44655a
-    %% Omitted for readability: 8 nodes, 0 edges
+    %% Omitted for readability: 12 nodes, 0 edges
     class backend_app_services_integrations_google_service_2c44655a klass;
     class backend_app_services_integrations_google_service_c56e8688 function;
     class backend_app_services_integrations_google_service_d678bb04 function;
@@ -1625,14 +1627,14 @@ flowchart LR
     class agents_skills_graphify_references_add_watch_for_5ebb2a18 concept;
     class agents_skills_graphify_references_add_watch_eebf74bd concept;
     class agents_skills_graphify_references_add_watch_grap_49dc5116 concept;
+    class backend_app_api_applications_statusupdaterequest_08585b42 klass;
+    class backend_app_api_applications_update_application_04febfee function;
+    class backend_app_api_applications_rationale_804_d8dcca84 concept;
     class backend_app_api_integrations_create_gmail_draft_ee2ca044 function;
     class backend_app_api_integrations_creategmaildraftres_ccc7d507 klass;
     class backend_app_api_integrations_rationale_176_cbc67f3d concept;
-    class agents_skills_graphify_references_transcribe_ste_8f84ef22 concept;
-    class agents_skills_graphify_references_transcribe_gra_17cbda34 concept;
-    class agents_skills_graphify_references_transcribe_aad9b7f9 concept;
     class backend_app_services_integrations_google_service_2998ef44 klass;
-    class agents_skills_graphify_references_update_for_clu_baa08a41 concept;
+    class backend_app_api_applications_py_patch_e3a2e1cc function;
     class backend_app_services_integrations_init_973a26ee module;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -1777,6 +1779,38 @@ flowchart LR
 </tr>
 <tr>
   <td>16</td>
+  <td><code>StatusUpdateRequest</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>StatusUpdateRequest node in app/api/applications.py.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>update_application_status()</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Application</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td>update_application_status() node in app/api/applications.py.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>patch</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>patch node in project.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>Module 3 (Monitor): Update application status across pipeline stages: draft -&gt;…</code><br><small style="color:var(--muted)">app/api/applications.py</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Design note for Module 3 (Monitor): Update application status across pipeline stages: draft -&gt;….</td>
+</tr>
+<tr>
+  <td>20</td>
   <td><code>add-watch.md</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1784,7 +1818,7 @@ flowchart LR
   <td>Documentation node describing add-watch.md.</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>21</td>
   <td><code>For /graphify add</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1792,7 +1826,7 @@ flowchart LR
   <td>Documentation node describing For /graphify add.</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>22</td>
   <td><code>For --watch</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1800,7 +1834,7 @@ flowchart LR
   <td>Documentation node describing For --watch.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>23</td>
   <td><code>graphify reference: add a URL and watch a folder</code><br><small style="color:var(--muted)">graphify/references/add-watch.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1808,7 +1842,7 @@ flowchart LR
   <td>Documentation node describing graphify reference: add a URL and watch a folder.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>24</td>
   <td><code>update.md</code><br><small style="color:var(--muted)">graphify/references/update.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1816,7 +1850,7 @@ flowchart LR
   <td>Documentation node describing update.md.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>25</td>
   <td><code>For --cluster-only</code><br><small style="color:var(--muted)">graphify/references/update.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1824,7 +1858,7 @@ flowchart LR
   <td>Documentation node describing For --cluster-only.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>26</td>
   <td><code>For --update (incremental re-extraction)</code><br><small style="color:var(--muted)">graphify/references/update.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1832,7 +1866,7 @@ flowchart LR
   <td>Documentation node describing For --update (incremental re-extraction).</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>27</td>
   <td><code>graphify reference: incremental update and cluster-only</code><br><small style="color:var(--muted)">graphify/references/update.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1840,7 +1874,7 @@ flowchart LR
   <td>Documentation node describing graphify reference: incremental update and cluster-only.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>28</td>
   <td><code>transcribe.md</code><br><small style="color:var(--muted)">graphify/references/transcribe.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1848,7 +1882,7 @@ flowchart LR
   <td>Documentation node describing transcribe.md.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>29</td>
   <td><code>graphify reference: transcribe video and audio</code><br><small style="color:var(--muted)">graphify/references/transcribe.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1856,7 +1890,7 @@ flowchart LR
   <td>Documentation node describing graphify reference: transcribe video and audio.</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>30</td>
   <td><code>Step 2.5 - Transcribe video / audio files (only if video files detected)</code><br><small style="color:var(--muted)">graphify/references/transcribe.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -1874,89 +1908,84 @@ flowchart LR
 <tr><td><code>graphify/references/add-watch.md</code></td><td>4 nodes</td></tr>
 <tr><td><code>graphify/references/update.md</code></td><td>4 nodes</td></tr>
 <tr><td><code>graphify/references/transcribe.md</code></td><td>3 nodes</td></tr>
+<tr><td><code>app/api/applications.py</code></td><td>3 nodes</td></tr>
 <tr><td><code>app/api/integrations.py</code></td><td>3 nodes</td></tr>
 <tr><td><code>services/integrations/__init__.py</code></td><td>1 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x8, explains x6, method x4, calls x3. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x8, explains x7, method x4, references x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
 
 <!-- ====== 8. Serving API ====== -->
 <h2 id="serve-api">8. Serving API</h2>
-<p>Serving API groups implementation around backend, app, api, profilepy, mostly in app/models/profile.py, app/api/profile.py, app/api/applications.py. This section covers 350 nodes and 1001 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Serving API groups implementation around backend, app, api, profilepy, mostly in app/models/profile.py, app/api/profile.py, app/api/applications.py. This section covers 287 nodes and 855 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Serving API (350 nodes, 1001 edges)
+    %% Section: Serving API (287 nodes, 855 edges)
     subgraph serve_api_app_api_applications_py_cd3a0658["app/api/applications.py"]
         backend_app_api_applications_10be8324("applications.py")
+        backend_app_api_applications_evaluate_job_fit_43588ba9("evaluate_job_fit()<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_fitdimension_f4e00379("FitDimension<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_fitevaluationrespon_234846aa("FitEvaluationResponse<br/><small>app/api/applications.py</small>")
         backend_app_api_applications_create_email_draft_955b071c("create_email_draft()<br/><small>app/api/applications.py</small>")
         backend_app_api_applications_draftemailresponse_2b17e5c3("DraftEmailResponse<br/><small>app/api/applications.py</small>")
         backend_app_api_applications_detect_apply_channe_57e3bafe("detect_apply_channel()<br/><small>app/api/applications.py</small>")
         backend_app_api_applications_formquestionmodel_bef4f369("FormQuestionModel<br/><small>app/api/applications.py</small>")
-    end
-    subgraph serve_api_app_models_application_py_29488642["app/models/application.py"]
-        backend_app_models_application_application_27bcf1c3("Application<br/><small>app/models/application.py</small>")
-        backend_app_models_application_application_job_c_540ffa41("job_company()<br/><small>app/models/application.py</small>")
-        backend_app_models_application_application_job_r_e894f06b("job_role()<br/><small>app/models/application.py</small>")
-        backend_app_models_application_application_compa_2f8a6688("company()<br/><small>app/models/application.py</small>")
-        backend_app_models_application_application_title_47b7caba("title()<br/><small>app/models/application.py</small>")
+        backend_app_api_applications_detectchannelrespon_1bb99d8d("DetectChannelResponse<br/><small>app/api/applications.py</small>")
+        backend_app_api_applications_generate_form_answe_cacdb969("generate_form_answers()<br/><small>app/api/applications.py</small>")
     end
     subgraph serve_api_app_models_account_py_d807a2f7["app/models/account.py"]
         backend_app_models_account_account_c057cac9("Account<br/><small>app/models/account.py</small>")
         backend_app_models_account_account_set_password_e7329831("set_password()<br/><small>app/models/account.py</small>")
         backend_app_models_account_account_verify_passwo_d3e61241("verify_password()<br/><small>app/models/account.py</small>")
     end
-    subgraph serve_api_app_api_auth_py_a0082cbd["app/api/auth.py"]
-        backend_app_api_auth_f0b24c22("auth.py")
-        backend_app_api_auth_send_signup_otp_1a03e0dc("send_signup_otp()<br/><small>app/api/auth.py</small>")
+    subgraph serve_api_app_api_profile_py_91641961["app/api/profile.py"]
+        backend_app_api_profile_4d5a6aad("profile.py")
+        backend_app_api_profile_apply_parsed_cv_6ea823bb("apply_parsed_cv()<br/><small>app/api/profile.py</small>")
     end
     backend_app_api_admin_54fbb6da("admin.py")
-    backend_app_api_profile_4d5a6aad("profile.py")
     backend_app_models_init_7b837b4c("__init__.py")
+    backend_tests_services_cv_tailor_test_cv_tailor_25f74afa("with structured profile()<br/><small>services/cv_tailor/test_cv_tailor.py</small>")
     backend_app_models_account_account_c057cac9 -->|method| backend_app_models_account_account_set_password_e7329831
     backend_app_models_account_account_c057cac9 -->|method| backend_app_models_account_account_verify_passwo_d3e61241
-    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_job_c_540ffa41
-    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_job_r_e894f06b
-    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_compa_2f8a6688
-    backend_app_models_application_application_27bcf1c3 -->|method| backend_app_models_application_application_title_47b7caba
+    backend_app_api_applications_evaluate_job_fit_43588ba9 -->|calls| backend_app_api_applications_fitdimension_f4e00379
+    backend_app_api_applications_evaluate_job_fit_43588ba9 -->|calls| backend_app_api_applications_fitevaluationrespon_234846aa
     backend_app_api_applications_create_email_draft_955b071c -->|calls| backend_app_api_applications_draftemailresponse_2b17e5c3
     backend_app_api_applications_detect_apply_channe_57e3bafe -->|calls| backend_app_api_applications_formquestionmodel_bef4f369
+    backend_app_api_applications_detect_apply_channe_57e3bafe -->|calls| backend_app_api_applications_detectchannelrespon_1bb99d8d
     backend_app_api_applications_10be8324 -->|imports| backend_app_models_account_account_c057cac9
-    backend_app_api_applications_10be8324 -->|imports| backend_app_models_application_application_27bcf1c3
     backend_app_api_profile_4d5a6aad -->|imports| backend_app_models_account_account_c057cac9
     backend_app_models_init_7b837b4c -->|imports| backend_app_models_account_account_c057cac9
-    backend_app_models_init_7b837b4c -->|imports| backend_app_models_application_application_27bcf1c3
     backend_app_api_admin_54fbb6da -->|imports| backend_app_models_account_account_c057cac9
-    backend_app_api_admin_54fbb6da -->|imports| backend_app_models_application_application_27bcf1c3
-    backend_app_api_auth_f0b24c22 -->|imports| backend_app_models_account_account_c057cac9
     backend_app_api_applications_create_email_draft_955b071c -->|uses| backend_app_models_account_account_c057cac9
     backend_app_api_applications_detect_apply_channe_57e3bafe -->|uses| backend_app_models_account_account_c057cac9
-    backend_app_api_auth_send_signup_otp_1a03e0dc -->|uses| backend_app_models_account_account_c057cac9
-    %% Omitted for readability: 332 nodes, 0 edges
+    backend_app_api_applications_generate_form_answe_cacdb969 -->|uses| backend_app_models_account_account_c057cac9
+    backend_tests_services_cv_tailor_test_cv_tailor_25f74afa -->|uses| backend_app_models_account_account_c057cac9
+    %% Omitted for readability: 269 nodes, 0 edges
     class backend_app_api_applications_10be8324 module;
+    class backend_app_api_applications_evaluate_job_fit_43588ba9 function;
+    class backend_app_api_applications_fitdimension_f4e00379 klass;
+    class backend_app_api_applications_fitevaluationrespon_234846aa klass;
     class backend_app_api_applications_create_email_draft_955b071c function;
     class backend_app_api_applications_draftemailresponse_2b17e5c3 klass;
     class backend_app_api_applications_detect_apply_channe_57e3bafe function;
     class backend_app_api_applications_formquestionmodel_bef4f369 klass;
-    class backend_app_models_application_application_27bcf1c3 klass;
-    class backend_app_models_application_application_job_c_540ffa41 function;
-    class backend_app_models_application_application_job_r_e894f06b function;
-    class backend_app_models_application_application_compa_2f8a6688 function;
-    class backend_app_models_application_application_title_47b7caba function;
+    class backend_app_api_applications_detectchannelrespon_1bb99d8d klass;
+    class backend_app_api_applications_generate_form_answe_cacdb969 function;
     class backend_app_models_account_account_c057cac9 klass;
     class backend_app_models_account_account_set_password_e7329831 function;
     class backend_app_models_account_account_verify_passwo_d3e61241 function;
-    class backend_app_api_auth_f0b24c22 api;
-    class backend_app_api_auth_send_signup_otp_1a03e0dc function;
-    class backend_app_api_admin_54fbb6da module;
     class backend_app_api_profile_4d5a6aad api;
+    class backend_app_api_profile_apply_parsed_cv_6ea823bb function;
+    class backend_app_api_admin_54fbb6da module;
     class backend_app_models_init_7b837b4c module;
+    class backend_tests_services_cv_tailor_test_cv_tailor_25f74afa test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
     classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
@@ -2227,17 +2256,17 @@ flowchart LR
       <tr><th>File</th><th>Coverage</th></tr>
       <tr><td><code>app/models/profile.py</code></td><td>58 nodes</td></tr>
 <tr><td><code>app/api/profile.py</code></td><td>48 nodes</td></tr>
-<tr><td><code>app/api/applications.py</code></td><td>42 nodes</td></tr>
+<tr><td><code>app/api/applications.py</code></td><td>39 nodes</td></tr>
 <tr><td><code>app/api/admin.py</code></td><td>35 nodes</td></tr>
-<tr><td><code>app/models/account.py</code></td><td>19 nodes</td></tr>
 <tr><td><code>app/api/integrations.py</code></td><td>16 nodes</td></tr>
-<tr><td><code>app/api/interview.py</code></td><td>15 nodes</td></tr>
-<tr><td><code>app/api/auth.py</code></td><td>11 nodes</td></tr>
+<tr><td><code>docs/RESEARCH.md</code></td><td>11 nodes</td></tr>
+<tr><td><code>app/core/auth.py</code></td><td>9 nodes</td></tr>
+<tr><td><code>app/models/account.py</code></td><td>6 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: references x219, uses x201, contains x200, imports x148. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: references x195, uses x174, contains x172, imports x121. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -2355,12 +2384,12 @@ flowchart LR
 
 <!-- ====== 10. Tests & Fixtures ====== -->
 <h2 id="tests-fixtures">10. Tests &amp; Fixtures</h2>
-<p>Tests &amp; Fixtures groups implementation around backend, test, services, tests, mostly in tests/services/test_posting_guard.py, tests/api/test_jobs.py, tests/api/test_profile.py. This section covers 991 nodes and 2356 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Tests &amp; Fixtures groups implementation around backend, test, services, tests, mostly in tests/services/test_posting_guard.py, tests/api/test_jobs.py, tests/api/test_profile.py. This section covers 1059 nodes and 2597 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Tests &amp; Fixtures (991 nodes, 2356 edges)
+    %% Section: Tests &amp; Fixtures (1059 nodes, 2597 edges)
     subgraph tests_fixtures_tests_services_test_posting_guard_1589fa04["tests/services/test_posting_guard.py"]
         backend_tests_services_test_posting_guard_testin_67c06538("TestInstructionDetection<br/><small>tests/services/test_posting_guard.py</small>")
         backend_tests_services_test_posting_guard_testcl_38351383("TestCleanPosting<br/><small>tests/services/test_posting_guard.py</small>")
@@ -2380,8 +2409,8 @@ flowchart LR
     end
     backend_app_services_cv_tailor_tailor_service_5b2ce8c3("tailor_service.py")
     backend_tests_services_cv_tailor_test_cv_tailor_0afc2d70("test_cv_tailor.py")
-    backend_tests_api_test_admin_27db90a3("test_admin.py")
     backend_tests_api_test_agent_fb1999a0("test_agent.py")
+    backend_tests_api_test_applications_a93737df("test_applications.py")
     backend_tests_models_test_models_b2c49973("test_models.py")
     backend_app_services_posting_guard_gateresult_0c402df2 -->|method| backend_app_services_posting_guard_gateresult_pa_4cd1cd43
     backend_tests_services_test_posting_guard_testcl_38351383 -->|method| backend_tests_services_test_posting_guard_testcl_83ced90d
@@ -2395,7 +2424,7 @@ flowchart LR
     backend_tests_services_cv_tailor_test_cv_tailor_0afc2d70 -->|imports| backend_app_services_cv_tailor_tailor_service_5b2ce8c3
     backend_tests_services_test_posting_guard_testcl_38351383 -->|uses| backend_app_services_posting_guard_gateresult_0c402df2
     backend_tests_services_test_posting_guard_testin_67c06538 -->|uses| backend_app_services_posting_guard_gateresult_0c402df2
-    %% Omitted for readability: 973 nodes, 0 edges
+    %% Omitted for readability: 1041 nodes, 0 edges
     class backend_tests_services_test_posting_guard_testin_67c06538 test;
     class backend_tests_services_test_posting_guard_testcl_38351383 test;
     class backend_tests_services_test_posting_guard_testcl_83ced90d test;
@@ -2411,8 +2440,8 @@ flowchart LR
     class backend_app_services_posting_guard_gateresult_pa_4cd1cd43 async;
     class backend_app_services_cv_tailor_tailor_service_5b2ce8c3 module;
     class backend_tests_services_cv_tailor_test_cv_tailor_0afc2d70 test;
-    class backend_tests_api_test_admin_27db90a3 test;
     class backend_tests_api_test_agent_fb1999a0 test;
+    class backend_tests_api_test_applications_a93737df test;
     class backend_tests_models_test_models_b2c49973 test;
     classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
     classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
@@ -2694,7 +2723,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: imports x376, contains x360, references x345, imports x295. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: imports x417, contains x397, references x370, imports x341. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -3357,7 +3386,7 @@ flowchart LR
   <td><code>ProfileView.jsx</code><br><small style="color:var(--muted)">src/components/ProfileView.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">frontend/src/App.jsx</small></td>
-  <td><code>latexCompiler.js</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>lucide-react</code><br><small style="color:var(--muted)">frontend/package.json</small><br><code>paginateParsedDocument()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br>+22 more</td>
+  <td><code>compileParsedLatexToPdf()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>latexCompiler.js</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>lucide-react</code><br><small style="color:var(--muted)">frontend/package.json</small><br>+23 more</td>
   <td>ProfileView.jsx node in src/components/ProfileView.jsx.</td>
 </tr>
 <tr>
@@ -3418,12 +3447,12 @@ flowchart LR
 
 <!-- ====== 13. ApplicationStudio.jsx ====== -->
 <h2 id="applicationstudio-jsx">13. ApplicationStudio.jsx</h2>
-<p>ApplicationStudio.jsx groups implementation around frontend, latexcompilerjs, utils, components, mostly in src/utils/latexCompiler.js, components/studio/studioExportUtils.js, src/components/ApplicationStudio.jsx. This section covers 25 nodes and 58 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>ApplicationStudio.jsx groups implementation around frontend, latexcompilerjs, utils, components, mostly in src/utils/latexCompiler.js, components/studio/studioExportUtils.js, src/components/ApplicationStudio.jsx. This section covers 25 nodes and 59 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: ApplicationStudio.jsx (25 nodes, 58 edges)
+    %% Section: ApplicationStudio.jsx (25 nodes, 59 edges)
     subgraph applicationstudio_jsx_src_utils_latexCompiler_js_73af3710["src/utils/latexCompiler.js"]
         frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7("parseLatexDocument()<br/><small>src/utils/latexCompiler.js</small>")
         frontend_src_utils_latexcompiler_compactlatextot_d53fde3c("compactLatexToTwoPages()<br/><small>src/utils/latexCompiler.js</small>")
@@ -3458,6 +3487,7 @@ flowchart LR
     frontend_src_components_applicationstudio_applic_e2df2ec2 -->|calls| frontend_src_utils_latexcompiler_decodehtmlentit_09750215
     frontend_src_components_profileview_profileview_3445dc5f -->|calls| frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7
     frontend_src_components_profileview_profileview_3445dc5f -->|calls| frontend_src_utils_latexcompiler_paginateparsedd_bfbcdfff
+    frontend_src_components_profileview_profileview_3445dc5f -->|calls| frontend_src_utils_latexcompiler_compileparsedla_96e3e317
     frontend_src_components_studio_studiodrafterwork_fa66449c -->|calls| frontend_src_utils_latexcompiler_decodehtmlentit_09750215
     frontend_src_components_studio_studioexportutils_1b2ab932 -->|calls| frontend_src_components_studio_studioexportutils_5b9e060a
     frontend_src_components_studio_studioexportutils_5fc99bb2 -->|calls| frontend_src_components_studio_studioexportutils_5b9e060a
@@ -3471,8 +3501,7 @@ flowchart LR
     frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7 -->|calls| frontend_src_utils_latexcompiler_cleanlatexinlin_a1684447
     frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7 -->|calls| frontend_src_utils_latexcompiler_extractmacroarg_027ce28e
     frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7 -->|calls| frontend_src_utils_latexcompiler_latextoplaintex_8bfe64f6
-    frontend_src_components_applicationstudio_4b611ab5 -->|imports| frontend_src_components_studio_studiodrafterwork_fa66449c
-    %% Omitted for readability: 7 nodes, 8 edges
+    %% Omitted for readability: 7 nodes, 9 edges
     class frontend_src_utils_latexcompiler_parselatexdocum_2b6814d7 function;
     class frontend_src_utils_latexcompiler_compactlatextot_d53fde3c function;
     class frontend_src_utils_latexcompiler_compactlatex_9999918b function;
@@ -3525,7 +3554,7 @@ flowchart LR
   <td><code>ProfileView()</code><br><small style="color:var(--muted)">src/components/ProfileView.jsx</small></td>
   <td><span class="tag tag-hook">UI</span></td>
   <td><code>App.jsx</code><br><small style="color:var(--muted)">frontend/src/App.jsx</small></td>
-  <td><code>paginateParsedDocument()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>parseLatexDocument()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small></td>
+  <td><code>compileParsedLatexToPdf()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>paginateParsedDocument()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small><br><code>parseLatexDocument()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small></td>
   <td>ProfileView() node in src/components/ProfileView.jsx.</td>
 </tr>
 <tr>
@@ -3604,7 +3633,7 @@ flowchart LR
   <td>12</td>
   <td><code>compileParsedLatexToPdf()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small></td>
   <td><span class="tag tag-func">Function</span></td>
-  <td><code>ApplicationStudio()</code><br><small style="color:var(--muted)">src/components/ApplicationStudio.jsx</small><br><code>downloadPdfDocument()</code><br><small style="color:var(--muted)">components/studio/studioExportUtils.js</small><br><code>studioExportUtils.js</code><br><small style="color:var(--muted)">components/studio/studioExportUtils.js</small></td>
+  <td><code>ApplicationStudio()</code><br><small style="color:var(--muted)">src/components/ApplicationStudio.jsx</small><br><code>downloadPdfDocument()</code><br><small style="color:var(--muted)">components/studio/studioExportUtils.js</small><br><code>ProfileView()</code><br><small style="color:var(--muted)">src/components/ProfileView.jsx</small><br>+2 more</td>
   <td><code>latexToPlainText()</code><br><small style="color:var(--muted)">src/utils/latexCompiler.js</small></td>
   <td>compileParsedLatexToPdf() node in src/utils/latexCompiler.js.</td>
 </tr>
@@ -3730,7 +3759,7 @@ flowchart LR
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: calls x25, contains x18, imports x10, imports x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x26, contains x18, imports x10, imports x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -4132,12 +4161,12 @@ flowchart LR
 
 <!-- ====== 16. Other ====== -->
 <h2 id="other">16. Other</h2>
-<p>Other groups implementation around agents, frontend, rules, backend, mostly in app/models/application.py, frontend/README.md, README.md. This section covers 122 nodes and 124 internal edges; the diagram shows only representative relationships to stay readable.</p>
+<p>Other groups implementation around agents, frontend, rules, backend, mostly in frontend/README.md, app/models/application.py, README.md. This section covers 116 nodes and 104 internal edges; the diagram shows only representative relationships to stay readable.</p>
 
 <div class="mermaid">
 %%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
 flowchart LR
-    %% Section: Other (122 nodes, 124 edges)
+    %% Section: Other (116 nodes, 104 edges)
     subgraph other_src_utils_theme_js_1dc28f3a["src/utils/theme.js"]
         frontend_src_utils_theme_usetheme_cf80f4fe("useTheme()<br/><small>src/utils/theme.js</small>")
         frontend_src_utils_theme_gettheme_de6eb26b("getTheme<br/><small>src/utils/theme.js</small>")
@@ -4181,7 +4210,7 @@ flowchart LR
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_gettheme_de6eb26b
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_settheme_29bc4253
     frontend_src_components_landingpageview_3ff37151 -->|imports| frontend_src_utils_theme_dc30391e
-    %% Omitted for readability: 104 nodes, 0 edges
+    %% Omitted for readability: 98 nodes, 0 edges
     class frontend_src_utils_theme_usetheme_cf80f4fe ui;
     class frontend_src_utils_theme_gettheme_de6eb26b function;
     class frontend_src_utils_theme_settheme_29bc4253 function;
@@ -4223,86 +4252,6 @@ flowchart LR
 </tr>
 <tr>
   <td>1</td>
-  <td><code>ApplicationBase</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationBase node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>2</td>
-  <td><code>ApplicationCreate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>test_models.py</code><br><small style="color:var(--muted)">tests/models/test_models.py</small><br><code>test_pydantic_schemas()</code><br><small style="color:var(--muted)">tests/models/test_models.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationCreate node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>3</td>
-  <td><code>ApplicationCvVersionRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationCvVersionRead node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>4</td>
-  <td><code>ApplicationFormAnswerBase</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationFormAnswerBase node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>5</td>
-  <td><code>ApplicationFormAnswerCreate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationFormAnswerCreate node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>6</td>
-  <td><code>ApplicationFormAnswerRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationFormAnswerRead node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>7</td>
-  <td><code>ApplicationJobRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationJobRead node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>8</td>
-  <td><code>ApplicationUpdate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
-  <td>No direct outbound edge</td>
-  <td>ApplicationUpdate node in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>9</td>
-  <td><code>application.py</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
-  <td><span class="tag tag-class">Module</span></td>
-  <td><code>account.py</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>admin.py</code><br><small style="color:var(--muted)">app/api/admin.py</small><br><code>applications.py</code><br><small style="color:var(--muted)">app/api/applications.py</small><br>+13 more</td>
-  <td><code>Account</code><br><small style="color:var(--muted)">app/models/account.py</small><br><code>AccountCvVersion</code><br><small style="color:var(--muted)">app/models/cv_template.py</small><br><code>Base</code><br><small style="color:var(--muted)">app/db/base.py</small><br>+10 more</td>
-  <td>Module file in app/models/application.py.</td>
-</tr>
-<tr>
-  <td>10</td>
-  <td><code>BaseModel</code><br><small style="color:var(--muted)"></small></td>
-  <td><span class="tag tag-class">Class</span></td>
-  <td>External entry / no inbound edge</td>
-  <td>No direct outbound edge</td>
-  <td>BaseModel node in project.</td>
-</tr>
-<tr>
-  <td>11</td>
   <td><code>frontend/README.md</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4310,7 +4259,7 @@ flowchart LR
   <td>Documentation node describing frontend/README.md.</td>
 </tr>
 <tr>
-  <td>12</td>
+  <td>2</td>
   <td><code>1. Dashboard (`DashboardView.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4318,7 +4267,7 @@ flowchart LR
   <td>Documentation node describing 1. Dashboard (`DashboardView.jsx`).</td>
 </tr>
 <tr>
-  <td>13</td>
+  <td>3</td>
   <td><code>2. Jobs Queue (`JobsView.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4326,7 +4275,7 @@ flowchart LR
   <td>Documentation node describing 2. Jobs Queue (`JobsView.jsx`).</td>
 </tr>
 <tr>
-  <td>14</td>
+  <td>4</td>
   <td><code>3. Application Studio (`ApplicationStudio.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4334,7 +4283,7 @@ flowchart LR
   <td>Documentation node describing 3. Application Studio (`ApplicationStudio.jsx`).</td>
 </tr>
 <tr>
-  <td>15</td>
+  <td>5</td>
   <td><code>4. Pipeline Application Monitor (`PipelineView.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4342,7 +4291,7 @@ flowchart LR
   <td>Documentation node describing 4. Pipeline Application Monitor (`PipelineView.jsx`).</td>
 </tr>
 <tr>
-  <td>16</td>
+  <td>6</td>
   <td><code>5. STAR Interview Coach (`InterviewCoachView.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4350,7 +4299,7 @@ flowchart LR
   <td>Documentation node describing 5. STAR Interview Coach (`InterviewCoachView.jsx`).</td>
 </tr>
 <tr>
-  <td>17</td>
+  <td>7</td>
   <td><code>6. Profile &amp; Dealbreakers (`ProfileView.jsx`)</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4358,7 +4307,7 @@ flowchart LR
   <td>Documentation node describing 6. Profile &amp; Dealbreakers (`ProfileView.jsx`).</td>
 </tr>
 <tr>
-  <td>18</td>
+  <td>8</td>
   <td><code>Development Setup</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4366,7 +4315,7 @@ flowchart LR
   <td>Documentation node describing Development Setup.</td>
 </tr>
 <tr>
-  <td>19</td>
+  <td>9</td>
   <td><code>Features &amp; Views</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4374,7 +4323,7 @@ flowchart LR
   <td>Documentation node describing Features &amp; Views.</td>
 </tr>
 <tr>
-  <td>20</td>
+  <td>10</td>
   <td><code>Job Agent SaaS — Frontend</code><br><small style="color:var(--muted)">frontend/README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4382,7 +4331,79 @@ flowchart LR
   <td>Documentation node describing Job Agent SaaS — Frontend.</td>
 </tr>
 <tr>
-  <td>21</td>
+  <td>11</td>
+  <td><code>ApplicationBase</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationBase node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>ApplicationCreate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small><br><code>test_models.py</code><br><small style="color:var(--muted)">tests/models/test_models.py</small><br><code>test_pydantic_schemas()</code><br><small style="color:var(--muted)">tests/models/test_models.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationCreate node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>ApplicationCvVersionRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationCvVersionRead node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>ApplicationFormAnswerBase</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationFormAnswerBase node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>ApplicationFormAnswerCreate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationFormAnswerCreate node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>ApplicationFormAnswerRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationFormAnswerRead node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>ApplicationJobRead</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationJobRead node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>ApplicationUpdate</code><br><small style="color:var(--muted)">app/models/application.py</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>__init__.py</code><br><small style="color:var(--muted)">app/models/__init__.py</small></td>
+  <td>No direct outbound edge</td>
+  <td>ApplicationUpdate node in app/models/application.py.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>BaseModel</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BaseModel node in project.</td>
+</tr>
+<tr>
+  <td>20</td>
   <td><code>README.md</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4390,7 +4411,7 @@ flowchart LR
   <td>Documentation node describing README.md.</td>
 </tr>
 <tr>
-  <td>22</td>
+  <td>21</td>
   <td><code>1. Backend Setup</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4398,7 +4419,7 @@ flowchart LR
   <td>Documentation node describing 1. Backend Setup.</td>
 </tr>
 <tr>
-  <td>23</td>
+  <td>22</td>
   <td><code>2. Frontend Setup</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4406,7 +4427,7 @@ flowchart LR
   <td>Documentation node describing 2. Frontend Setup.</td>
 </tr>
 <tr>
-  <td>24</td>
+  <td>23</td>
   <td><code>3. Tests</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4414,7 +4435,7 @@ flowchart LR
   <td>Documentation node describing 3. Tests.</td>
 </tr>
 <tr>
-  <td>25</td>
+  <td>24</td>
   <td><code>4. Codebase Knowledge Graph (Graphify)</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4422,7 +4443,7 @@ flowchart LR
   <td>Documentation node describing 4. Codebase Knowledge Graph (Graphify).</td>
 </tr>
 <tr>
-  <td>26</td>
+  <td>25</td>
   <td><code>Current status</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4430,7 +4451,7 @@ flowchart LR
   <td>Documentation node describing Current status.</td>
 </tr>
 <tr>
-  <td>27</td>
+  <td>26</td>
   <td><code>Docs index</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4438,7 +4459,7 @@ flowchart LR
   <td>Documentation node describing Docs index.</td>
 </tr>
 <tr>
-  <td>28</td>
+  <td>27</td>
   <td><code>Job Application Agent SaaS</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4446,7 +4467,7 @@ flowchart LR
   <td>Documentation node describing Job Application Agent SaaS.</td>
 </tr>
 <tr>
-  <td>29</td>
+  <td>28</td>
   <td><code>Local setup</code><br><small style="color:var(--muted)">README.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
@@ -4454,12 +4475,20 @@ flowchart LR
   <td>Documentation node describing Local setup.</td>
 </tr>
 <tr>
-  <td>30</td>
+  <td>29</td>
   <td><code>review.md</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
   <td><span class="tag tag-func">Concept</span></td>
   <td>External entry / no inbound edge</td>
   <td>No direct outbound edge</td>
   <td>Documentation node describing review.md.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>1. Multi-Tenant Data Isolation (Critical)</code><br><small style="color:var(--muted)">contexts/review.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Multi-Tenant Data Isolation (Critical).</td>
 </tr>
 </table>
 
@@ -4468,19 +4497,19 @@ flowchart LR
     <h4>Key Files</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><th>File</th><th>Coverage</th></tr>
-      <tr><td><code>app/models/application.py</code></td><td>10 nodes</td></tr>
-<tr><td><code>frontend/README.md</code></td><td>10 nodes</td></tr>
+      <tr><td><code>frontend/README.md</code></td><td>10 nodes</td></tr>
 <tr><td><code>README.md</code></td><td>9 nodes</td></tr>
+<tr><td><code>app/models/application.py</code></td><td>9 nodes</td></tr>
 <tr><td><code>contexts/review.md</code></td><td>9 nodes</td></tr>
-<tr><td><code>app/models/subscription.py</code></td><td>8 nodes</td></tr>
 <tr><td><code>contexts/qa.md</code></td><td>8 nodes</td></tr>
 <tr><td><code>app/models/job.py</code></td><td>7 nodes</td></tr>
 <tr><td><code>.agents/rules/fastapi-backend.md</code></td><td>6 nodes</td></tr>
+<tr><td><code>.agents/rules/react-frontend.md</code></td><td>6 nodes</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Design Notes</h4>
-    <p>This section comes from graphify community clustering. Relationship summary: contains x81, inherits x18, calls x9, references x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x66, inherits x11, calls x9, references x6. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
   </div>
 </div>
 <hr>
@@ -4492,16 +4521,16 @@ flowchart LR
     <h4>Graph</h4>
     <table style="width:100%;font-size:0.85rem;">
       <tr><td>Nodes</td><td>2130</td></tr>
-      <tr><td>Edges</td><td>5734</td></tr>
+      <tr><td>Edges</td><td>5740</td></tr>
       <tr><td>Hyperedges</td><td>0</td></tr>
-      <tr><td>Communities</td><td>112</td></tr>
+      <tr><td>Communities</td><td>116</td></tr>
       <tr><td>Documented Sections</td><td>15</td></tr>
     </table>
   </div>
   <div class="card">
     <h4>Edge Confidence</h4>
     <table style="width:100%;font-size:0.85rem;">
-      <tr><td>EXTRACTED</td><td>4990</td></tr>
+      <tr><td>EXTRACTED</td><td>4996</td></tr>
       <tr><td>INFERRED</td><td>744</td></tr>
       <tr><td>AMBIGUOUS</td><td>0</td></tr>
     </table>
@@ -4510,7 +4539,7 @@ flowchart LR
 
 <div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
   <p>job-agent-saas — Architecture Documentation</p>
-  <p>Generated: 2026-11-08 07:30 UTC · graphify callflow-html</p>
+  <p>Generated: 2026-11-09 04:02 UTC · graphify callflow-html</p>
 </div>
 
 </div><!-- .container -->

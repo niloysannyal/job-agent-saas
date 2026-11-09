@@ -10,7 +10,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.auth import get_current_account
@@ -1220,7 +1220,17 @@ def preview_cv(
     target_template_id = template_id or profile.active_template_id
     template = None
     if target_template_id:
-        template = db.scalars(select(CvTemplate).where(CvTemplate.id == target_template_id)).first()
+        template = db.scalars(
+            select(CvTemplate).where(
+                or_(
+                    CvTemplate.id == target_template_id,
+                    CvTemplate.name == target_template_id,
+                )
+            )
+        ).first()
+        if template and template_id:
+            profile.active_template_id = template.id
+            db.commit()
     if not template:
         template = db.scalars(select(CvTemplate).where(CvTemplate.is_admin_default == True)).first()
     if not template:

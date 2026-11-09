@@ -9,7 +9,7 @@ import {
   FileCode,
   Upload,
 } from 'lucide-react';
-import { parseLatexDocument, paginateParsedDocument } from '../utils/latexCompiler';
+import { parseLatexDocument, paginateParsedDocument, compileParsedLatexToPdf } from '../utils/latexCompiler';
 import ProfileIdentityTab from './profile/ProfileIdentityTab';
 import ProfileExperienceTab from './profile/ProfileExperienceTab';
 import ProfileEducationTab from './profile/ProfileEducationTab';
@@ -404,6 +404,9 @@ export default function ProfileView({
   // --- Preview & Compile LaTeX ---
   const handleFetchPreview = async (templateId = null) => {
     try {
+      if (templateId) {
+        setPreviewTemplateName(templateId);
+      }
       setIsLoadingPreview(true);
       const url = templateId
         ? `/api/v1/profile/preview-cv?account_id=${accountId}&template_id=${templateId}`
@@ -442,10 +445,28 @@ export default function ProfileView({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${previewTemplateName || 'TAILORED_CV'}.tex`;
+    const candidateName = (profileForm?.full_name || profile?.full_name || 'Candidate').replace(/\s+/g, '_');
+    link.download = `${candidateName}_${previewTemplateName || 'TAILORED_CV'}.tex`;
     link.click();
     URL.revokeObjectURL(url);
     showToast?.('Downloaded LaTeX source file.');
+  };
+
+  const handleDownloadPdf = () => {
+    try {
+      if (!parsedDoc) {
+        showToast?.('No compiled document available to export.');
+        return;
+      }
+      const candidateName = (profileForm?.full_name || profile?.full_name || 'Candidate').replace(/\s+/g, '_');
+      const filename = `${candidateName}_${previewTemplateName || 'CV'}.pdf`;
+      const doc = compileParsedLatexToPdf(parsedDoc, filename);
+      doc.save(filename);
+      showToast?.(`Downloaded ${filename}!`);
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+      showToast?.('Failed to generate PDF. You can download .tex source instead.');
+    }
   };
 
   return (
@@ -628,6 +649,7 @@ export default function ProfileView({
           previewMode={previewMode}
           setPreviewMode={setPreviewMode}
           handleDownloadLatex={handleDownloadLatex}
+          handleDownloadPdf={handleDownloadPdf}
           parsedDoc={parsedDoc}
           paginatedPages={paginatedPages}
           profileForm={profileForm}

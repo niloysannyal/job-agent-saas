@@ -30,9 +30,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1794121787.6731603,
-    "seen": 1794123045.5710435,
-    "ast_hash": "253b39554b77e588e0d5716558aef2e2",
+    "mtime": 1794195959.0561943,
+    "seen": 1794196945.1061082,
+    "ast_hash": "230dafa6ac00ee05eb594f0271f91245",
     "semantic_hash": ""
   },
   "backend/app/core/__init__.py": {
@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_profile.py": {
-    "mtime": 1793768757.1291547,
-    "seen": 1793769497.3057427,
-    "ast_hash": "7cabb43524e23f5014d44407d518dd12",
+    "mtime": 1794196368.8147542,
+    "seen": 1794196945.1065066,
+    "ast_hash": "7813898345bb1bccbe59831d22c71ccb",
     "semantic_hash": ""
   },
   "backend/tests/conftest.py": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1793779199.3556662,
-    "seen": 1793788486.302316,
-    "ast_hash": "3255735652705fcf926dadda7c1a38e9",
+    "mtime": 1794195994.6915746,
+    "seen": 1794196945.106606,
+    "ast_hash": "64de709a7e151d528d12b9df932401b8",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "frontend/src/context/AgentContext.jsx": {
-    "mtime": 1794122652.5513277,
-    "seen": 1794123045.5713706,
+    "mtime": 1794195147.5606349,
+    "seen": 1794196945.1066718,
     "ast_hash": "eda1f3fc1a8bad2a55c5fc815468ec86",
     "semantic_hash": ""
   },
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1793777953.0648985,
-    "seen": 1793778131.449851,
-    "ast_hash": "016fe0a964ecfef7d4b0ca6f2090b8ef",
+    "mtime": 1794196110.4703834,
+    "seen": 1794196945.1066546,
+    "ast_hash": "0779bc66544cc4fd8cb1c26ed1d3c2d5",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {

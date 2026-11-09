@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Check,
   Copy,
   Layout,
   Columns,
-  Sparkles,
+  RefreshCw,
   Download,
+  ChevronDown,
+  FileText,
+  FileCode,
   Code2,
 } from 'lucide-react';
 
@@ -21,10 +24,36 @@ export default function ProfileTemplatesTab({
   previewMode,
   setPreviewMode,
   handleDownloadLatex,
+  handleDownloadPdf,
   parsedDoc,
   paginatedPages = [],
   profileForm,
 }) {
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const downloadRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (downloadRef.current && !downloadRef.current.contains(event.target)) {
+        setIsDownloadOpen(false);
+      }
+    };
+    if (isDownloadOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDownloadOpen]);
+
+  const isTemplateActive = (tmplId) => {
+    if (!previewTemplateName) return tmplId === '01_MODERN_TECH';
+    return (
+      previewTemplateName === tmplId ||
+      previewTemplateName.toLowerCase() === tmplId.toLowerCase() ||
+      previewTemplateName.includes(tmplId)
+    );
+  };
   const renderA4Pages = () => {
     return (
       <div className="overleaf-multi-page-container">
@@ -177,75 +206,142 @@ export default function ProfileTemplatesTab({
   };
 
   return (
-    <div className="panel-card">
-      <div className="panel-header">
-        <div>
-          <h3>Admin-Curated CV Template & Live Preview</h3>
-          <p className="subtext">
-            Your profile data compiles into pixel-perfect Overleaf LaTeX instantly with live side-by-side editing.
+    <div className="panel-card cv-template-panel-card">
+      <div className="panel-header cv-panel-header">
+        <div className="panel-header-title-box">
+          <h3 className="cv-panel-title">CV Template &amp; Preview</h3>
+          <p className="subtext cv-panel-subtext">
+            Compiled Overleaf LaTeX preview with dual-format export.
           </p>
         </div>
-        <div className="header-actions">
+
+        <div className="cv-header-actions-toolbar">
+          {/* View Mode Segmented Control */}
+          <div className="cv-segmented-group" role="tablist" aria-label="Preview Mode">
+            <button
+              type="button"
+              className={`cv-segmented-btn ${previewMode === 'preview' ? 'active' : ''}`}
+              onClick={() => setPreviewMode('preview')}
+              title="Full Page A4 Preview"
+            >
+              <Layout size={14} />
+              <span>Full Preview</span>
+            </button>
+            <button
+              type="button"
+              className={`cv-segmented-btn ${previewMode === 'split' ? 'active' : ''}`}
+              onClick={() => setPreviewMode('split')}
+              title="Edit LaTeX & View Side-by-Side"
+            >
+              <Columns size={14} />
+              <span>Split View</span>
+            </button>
+          </div>
+
+          <div className="cv-toolbar-divider" />
+
+          {/* Re-compile button */}
+          <button
+            type="button"
+            className="action-btn-secondary cv-toolbar-btn"
+            onClick={() => handleFetchPreview()}
+            disabled={isLoadingPreview}
+            title="Re-compile LaTeX from profile data"
+          >
+            <RefreshCw size={14} className={isLoadingPreview ? 'icon-spin' : ''} />
+            <span>{isLoadingPreview ? 'Compiling...' : 'Re-compile'}</span>
+          </button>
+
           {/* Copy LaTeX button */}
           <button
-            className="action-btn-secondary"
+            type="button"
+            className="action-btn-secondary cv-toolbar-btn"
             onClick={handleCopyLatex}
             disabled={!previewLatex && !editedLatex}
             title="Copy full LaTeX source to clipboard"
           >
-            {isCopied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+            {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
             <span>{isCopied ? 'Copied!' : 'Copy LaTeX'}</span>
           </button>
 
-          {/* Toggle Split Side-by-Side Mode */}
-          <button
-            className={previewMode === 'split' ? 'action-btn-primary' : 'action-btn-secondary'}
-            onClick={() => setPreviewMode((prev) => (prev === 'split' ? 'preview' : 'split'))}
-            title={previewMode === 'split' ? 'Switch to Full Page Preview' : 'Edit LaTeX & View Side-by-Side'}
-          >
-            {previewMode === 'split' ? <Layout size={16} /> : <Columns size={16} />}
-            <span>{previewMode === 'split' ? 'Full Preview' : 'Edit LaTeX & Split View'}</span>
-          </button>
+          {/* Download Dropdown */}
+          <div className="cv-download-dropdown-wrapper" ref={downloadRef}>
+            <button
+              type="button"
+              className="action-btn-primary cv-download-btn"
+              onClick={() => setIsDownloadOpen((prev) => !prev)}
+              disabled={!previewLatex && !editedLatex}
+              aria-haspopup="true"
+              aria-expanded={isDownloadOpen}
+              title="Download CV as PDF or LaTeX"
+            >
+              <Download size={14} />
+              <span>Download</span>
+              <ChevronDown size={13} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
+            </button>
 
-          <button
-            className="action-btn-secondary"
-            onClick={() => handleFetchPreview()}
-            disabled={isLoadingPreview}
-          >
-            <Sparkles size={16} /> Re-compile
-          </button>
+            {isDownloadOpen && (
+              <div className="cv-download-dropdown-menu">
+                <button
+                  type="button"
+                  className="cv-dropdown-item"
+                  onClick={() => {
+                    setIsDownloadOpen(false);
+                    handleDownloadPdf?.();
+                  }}
+                >
+                  <div className="cv-dropdown-icon-box pdf-badge">
+                    <FileText size={15} />
+                  </div>
+                  <div className="cv-dropdown-text-box">
+                    <span className="cv-dropdown-item-title">Download PDF</span>
+                    <span className="cv-dropdown-item-desc">Pixel-perfect Overleaf PDF (.pdf)</span>
+                  </div>
+                </button>
 
-          <button
-            className="action-btn-primary"
-            onClick={handleDownloadLatex}
-            disabled={!previewLatex && !editedLatex}
-          >
-            <Download size={16} /> Download .tex
-          </button>
+                <button
+                  type="button"
+                  className="cv-dropdown-item"
+                  onClick={() => {
+                    setIsDownloadOpen(false);
+                    handleDownloadLatex?.();
+                  }}
+                >
+                  <div className="cv-dropdown-icon-box tex-badge">
+                    <FileCode size={15} />
+                  </div>
+                  <div className="cv-dropdown-text-box">
+                    <span className="cv-dropdown-item-title">Download LaTeX</span>
+                    <span className="cv-dropdown-item-desc">Raw Overleaf TeX file (.tex)</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Template Switcher Buttons */}
-      <div className="template-pills-row">
+      <div className="template-pills-row cv-template-pills-row">
         <span className="pills-label">Active Template:</span>
-        <button
-          className={`pill-btn ${previewTemplateName === '01_MODERN_TECH' ? 'active' : ''}`}
-          onClick={() => handleFetchPreview('01_MODERN_TECH')}
-        >
-          01_MODERN_TECH (Default)
-        </button>
-        <button
-          className={`pill-btn ${previewTemplateName === '02_CLASSIC_CORPORATE' ? 'active' : ''}`}
-          onClick={() => handleFetchPreview('02_CLASSIC_CORPORATE')}
-        >
-          02_CLASSIC_CORPORATE
-        </button>
-        <button
-          className={`pill-btn ${previewTemplateName === '03_MINIMALIST_COMPACT' ? 'active' : ''}`}
-          onClick={() => handleFetchPreview('03_MINIMALIST_COMPACT')}
-        >
-          03_MINIMALIST_COMPACT
-        </button>
+        {[
+          { id: '01_MODERN_TECH', label: '01_MODERN_TECH (Default)' },
+          { id: '02_CLASSIC_CORPORATE', label: '02_CLASSIC_CORPORATE' },
+          { id: '03_MINIMALIST_COMPACT', label: '03_MINIMALIST_COMPACT' },
+        ].map((tmpl) => {
+          const isSelected = isTemplateActive(tmpl.id);
+          return (
+            <button
+              key={tmpl.id}
+              type="button"
+              className={`pill-btn cv-template-pill ${isSelected ? 'active' : ''}`}
+              onClick={() => handleFetchPreview(tmpl.id)}
+            >
+              {isSelected && <Check size={13} className="cv-pill-check-icon text-emerald-400" />}
+              <span>{tmpl.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* DEFAULT MODE: Authentic Full-Page A4 Document Preview */}
