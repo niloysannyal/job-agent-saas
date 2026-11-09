@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1794195959.0561943,
-    "seen": 1794196945.1061082,
+    "mtime": 1794197465.2327034,
+    "seen": 1794202725.6759555,
     "ast_hash": "230dafa6ac00ee05eb594f0271f91245",
     "semantic_hash": ""
   },
@@ -522,8 +522,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1794195994.6915746,
-    "seen": 1794196945.106606,
+    "mtime": 1794197465.927127,
+    "seen": 1794202725.6762173,
     "ast_hash": "64de709a7e151d528d12b9df932401b8",
     "semantic_hash": ""
   },
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/latexCompiler.js": {
-    "mtime": 1793098015.3506162,
-    "seen": 1793162601.7275019,
-    "ast_hash": "a5138655c805c8bbe9c0b6e02c1ecb6b",
+    "mtime": 1794209488.8755617,
+    "seen": 1794209601.8230307,
+    "ast_hash": "1ca1fe62207b05ebdf58203ed74f9fa9",
     "semantic_hash": ""
   },
   "frontend/vite.config.js": {
@@ -1386,9 +1386,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794196110.4703834,
-    "seen": 1794196945.1066546,
-    "ast_hash": "0779bc66544cc4fd8cb1c26ed1d3c2d5",
+    "mtime": 1794209510.686317,
+    "seen": 1794209601.8230102,
+    "ast_hash": "fd6a16364cf6e961d916743b804ae461",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {
@@ -1398,9 +1398,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1793779199.750036,
-    "seen": 1793788486.3023655,
-    "ast_hash": "3c787ce078120625b474dfacb3f0841a",
+    "mtime": 1794209536.8575773,
+    "seen": 1794209601.8230152,
+    "ast_hash": "b9b897b53d394eebef1fb868c53d2423",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioFactAuditBadge.jsx": {
