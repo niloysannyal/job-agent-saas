@@ -1,33 +1,33 @@
-# Graph Report - job-agent-saas  (2026-11-09)
+# Graph Report - job-agent-saas  (2026-11-10)
 
 ## Corpus Check
-- 236 files · ~156,503 words
+- 236 files · ~157,623 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
 ## Summary
-- 2204 nodes · 5873 edges · 126 communities (107 shown, 19 thin omitted)
+- 2210 nodes · 5883 edges · 128 communities (107 shown, 21 thin omitted)
 - Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 746 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `37e14758`
+- Built from commit: `e289df2e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - run_posting_guard
 - App.jsx
-- test_cv_tailor.py
-- JobPosting
+- tailor_service.py
+- JobIngestionService
 - LatexLogParser
-- TestClient
+- test_profile.py
 - dispatch_service.py
 - models/__init__.py
-- TestClient
-- test_bookmarklet_generation_with_job_and_star_answers
-- greenhouse.py
-- FreehireJobSource
+- test_interview.py
+- job.py
+- GreenhouseJobSource
+- test_freehire_bearer_auth
 - RemoteOKJobSource
 - applications.py
 - env.py
@@ -36,25 +36,25 @@
 - LeverJobSource
 - RemotiveJobSource
 - TestClient
-- matching/__init__.py
+- test_matching.py
 - ProfileView.jsx
-- Base
-- StarStory
+- account.py
+- StarStoryRead
 - What You Must Do When Invoked
-- alembic
+- typing
 - create_gmail_draft
 - test_pydantic_schemas
 - api/profile.py
-- JobSourceHTTPError
-- config.py
-- typing
-- AgentConversation
+- JobSearchQuery
+- Settings
+- engine.py
+- api/agent.py
 - User Profile — Niloy Sannyal
 - .oxlintrc.json
-- tenant_client
+- Job
 - tests/api/__init__.py
-- pytest
-- api/agent.py
+- JobPosting
+- detective.py
 - Research — Competitors, APIs, and Legal Notes
 - Features & Views
 - admin.py
@@ -64,7 +64,7 @@
 - lucide-react
 - Job Application Agent — Original Idea (transcribed from notebook)
 - Non-Negotiable Rules
-- .reflect_for_account
+- matching/service.py
 - Project: Job Application Agent SaaS
 - cv_parser.py
 - Multi-Tenant SaaS Auditor
@@ -73,7 +73,7 @@
 - human-in-the-loop.md
 - Config & Assertion Protection Standard (adapted from ECC)
 - Architecture — Job Application Agent SaaS
-- resolve_tenant_id
+- trigger_ingestion
 - graphify reference: extra exports and benchmark
 - ApplicationStudio.jsx
 - graphify reference: query, path, explain
@@ -92,52 +92,54 @@
 - rules/graphify.md
 - extraction-spec.md
 - workflows/graphify.md
-- Application
+- StarStory
 - React Frontend Development Standards (adapted from ECC)
-- list_jobs
-- test_matching.py
-- chat_with_agent
-- Session
+- event_bus.py
+- LanguageGate
+- file_extractor.py
+- test_agent.py
 - Cycle: Red -> Green -> Refactor
 - Verification Loop Skill — Job Application Agent SaaS
 - Running Verification
-- test_educations_skills_and_preview
+- generate_interview_prep
 - devDependencies
-- MockQdrantClient
-- Job
-- UserProfile
+- .fetch
+- Base
+- tasks.py
 - FastAPI Backend Development Standards (adapted from ECC)
-- google_service.py
-- JobSearchQuery
+- config.py
+- JobBase
 - Product Development Environment Guide — Job Application Agent SaaS
-- test_generate_form_answers_api_endpoint
+- Account
 - Roadmap — Job Application Agent SaaS
 - JobsView.jsx
-- react
+- StudioDrafterWorkspace.jsx
 - GoogleIntegrationService
 - test_matching_service_score_and_gate_clean_jobs
 - .parse_from_db
-- encrypt_secret
+- Security & Tenancy Policy (adapted from ECC AgentShield)
 - deploy.sh
 - .generate
-- Account
-- .score_and_gate_jobs
-- Project
+- AgentToolRegistry
+- MatchingService
+- ApplicationBase
 - bug-workflow.md
-- SpokenLanguage
-- get_current_account
-- run_ats_text_layer_check
-- MockEmbeddingClient
-- UserProfileRead
+- TargetDesignation
+- session.py
+- .to_dict
+- TeXLiveCompilerService
+- theme.js
 - db_session
-- Education
-- WorkExperience
-- json
-- client
+- _get_or_create_profile
+- plan_relevance_cuts
+- texlive_compiler.py
+- set_compensation
 - test_profile_compile_texlive.py
 - test_cv_tailor_service_with_structured_profile
 - client
 - prune_and_budget_latex
+- test_star_coach_tool
+- .__init__
 
 ## God Nodes (most connected - your core abstractions)
 1. `Account` - 186 edges
@@ -152,149 +154,149 @@
 10. `lucide-react` - 39 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `7.1 Superadmin Control Center & Impersonation Engine (built 2026-10-27)` --references--> `require_superadmin()`  [INFERRED]
-  docs/ARCHITECTURE.md → backend/app/core/auth.py
+- `2. Secrets & Encryption` --references--> `encrypt_secret()`  [INFERRED]
+  .agents/rules/security-and-tenancy.md → backend/app/core/crypto.py
 - `3. Dependency Injection` --references--> `SessionLocal()`  [INFERRED]
   .agents/rules/fastapi-backend.md → backend/app/db/session.py
 - `Interfaces to honor, not bypass` --references--> `JobSource`  [INFERRED]
   AGENTS.md → backend/app/services/job_sources/base.py
-- `2. Secrets & Encryption` --references--> `encrypt_secret()`  [INFERRED]
-  .agents/rules/security-and-tenancy.md → backend/app/core/crypto.py
-- `4. Pydantic Schemas & Security` --references--> `LLMProviderRead`  [INFERRED]
-  .agents/rules/fastapi-backend.md → backend/app/models/llm_provider.py
+- `13. SaaS-only concerns still ahead (Phase 3+)` --references--> `get_current_account()`  [INFERRED]
+  docs/ARCHITECTURE.md → backend/app/core/auth.py
+- `7.1 Superadmin Control Center & Impersonation Engine (built 2026-10-27)` --references--> `require_superadmin()`  [INFERRED]
+  docs/ARCHITECTURE.md → backend/app/core/auth.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (126 total, 19 thin omitted)
+## Communities (128 total, 21 thin omitted)
 
 ### Community 0 - "run_posting_guard"
 Cohesion: 0.05
 Nodes (29): Environment & Commands, Pipeline Verification Checklist, SaaS Pipeline Runner, FlagKind, GateResult, IntegrityFlag, _is_invisible(), _line_looks_like_instruction() (+21 more)
 
 ### Community 1 - "App.jsx"
-Cohesion: 0.10
-Nodes (24): CareerAppInner(), AdminView(), CommandPalette(), DashboardView(), FollowUpModal(), InterviewCoachView(), LandingPageView(), LoginModal() (+16 more)
-
-### Community 2 - "test_cv_tailor.py"
 Cohesion: 0.11
-Nodes (26): audit_fact_integrity(), FactAuditResult, Audits tailored LaTeX text against the Verified Fact Ledger. Ensures no…, check_brace_balance(), escape_latex_special_chars(), extract_preamble_and_body(), Strips lines starting with %% (agent control notes) while preserving actual…, Escapes LaTeX special characters (% & $ # _) if they are not already escaped.… (+18 more)
+Nodes (22): App(), CareerAppInner(), AdminView(), CommandPalette(), DashboardView(), FollowUpModal(), InterviewCoachView(), LoginModal() (+14 more)
 
-### Community 3 - "JobPosting"
-Cohesion: 0.08
-Nodes (43): Integration Checklist, Job Source Integrator, JobPosting, Standardized JobPosting DTO returned by all JobSource.fetch implementations.…, IngestionResult, JobIngestionService, Any, Session (+35 more)
+### Community 2 - "tailor_service.py"
+Cohesion: 0.11
+Nodes (27): ATSCheckResult, Simulates ATS parser text-layer inspection: 1. Verifies contact header fields…, run_ats_text_layer_check(), audit_fact_integrity(), FactAuditResult, Audits tailored LaTeX text against the Verified Fact Ledger. Ensures no…, check_brace_balance(), escape_latex_special_chars() (+19 more)
 
-### Community 5 - "TestClient"
+### Community 3 - "JobIngestionService"
+Cohesion: 0.11
+Nodes (29): IngestionResult, JobIngestionService, Any, Orchestrate fetching, integrity verification, and persistence of jobs. Args:…, Summary metrics of a job ingestion run., Job ingestion orchestration service matching ARCHITECTURE.md §4 and §7.…, db_session(), MockGeneralSource (+21 more)
+
+### Community 5 - "test_profile.py"
 Cohesion: 0.10
-Nodes (21): TestClient, PATCH /api/v1/profile updates fields partially., CRUD operations on target designations., CRUD operations on target locations., GET and PUT on compensation expectations., CRUD operations on spoken languages., Verify complete isolation between tenants A and B for profile and related…, Test full CRUD cycle for work experiences. (+13 more)
+Nodes (29): account_a(), account_b(), api_test_db(), client(), fixture, Session, TestClient, PATCH /api/v1/profile updates fields partially. (+21 more)
 
 ### Community 6 - "dispatch_service.py"
-Cohesion: 0.18
-Nodes (15): EmailDispatchService, EmailDraftProvider, EmailDraftResult, Enum, str, Creates an email draft. If OAuth token is provided, creates a draft in user's…, Result of an email draft creation operation., Minimal-effort draft dispatch service. Enforces Strict Human-in-the-Loop on… (+7 more)
+Cohesion: 0.16
+Nodes (16): EmailDispatchService, EmailDraftProvider, EmailDraftResult, Enum, str, Creates an email draft. If OAuth token is provided, creates a draft in user's…, Result of an email draft creation operation., Minimal-effort draft dispatch service. Enforces Strict Human-in-the-Loop on… (+8 more)
 
 ### Community 7 - "models/__init__.py"
-Cohesion: 0.11
-Nodes (41): set_compensation(), AccountCvVersionBase, AccountCvVersionCreate, AccountCvVersionUpdate, CvTemplateBase, CvTemplateCreate, CvTemplateUpdate, BaseModel (+33 more)
+Cohesion: 0.13
+Nodes (37): add_certification(), add_project(), create_profile(), Create a user profile for an account (one per account)., OAuthConnectionBase, OAuthConnectionCreate, OAuthConnectionRead, BaseModel (+29 more)
 
-### Community 8 - "TestClient"
+### Community 8 - "test_interview.py"
+Cohesion: 0.14
+Nodes (19): account_a(), account_b(), api_test_db(), client(), fixture, Session, TestClient, Test filtering STAR stories by tag and verified_only flag. (+11 more)
+
+### Community 9 - "job.py"
 Cohesion: 0.15
-Nodes (13): TestClient, Test filtering STAR stories by tag and verified_only flag., GET /api/v1/interview/tags returns deduplicated sorted tags., Verify tenant isolation on STAR stories., GET /api/v1/interview/stories returns empty list when none exist., POST /api/v1/interview/stories creates STAR story and GET retrieves it., PATCH and DELETE endpoints for STAR stories., test_create_and_get_story() (+5 more)
+Nodes (25): _detect_location_type(), Infer location type (remote, hybrid, on-site) using centralized classifier., classify_location_type(), JobSource, ABC, Plugin interface for all job sourcing integrations per ARCHITECTURE.md §4:…, Robust location classifier prioritizing: 1. Explicit work mode if provided…, JobSourceConfigError (+17 more)
 
-### Community 9 - "test_bookmarklet_generation_with_job_and_star_answers"
-Cohesion: 0.16
-Nodes (13): api_test_db(), client(), fixture, Session, TestClient, Verify bookmarklet JS generation uses candidate profile facts., Verify bookmarklet JS generation bundles custom STAR answers when job_id is…, Verify GET /api/v1/integrations/google/auth-url returns a valid Google consent… (+5 more)
-
-### Community 10 - "greenhouse.py"
-Cohesion: 0.07
+### Community 10 - "GreenhouseJobSource"
+Cohesion: 0.06
 Nodes (33): _clean_html(), _detect_location_type(), GreenhouseJobSource, _do_fetch(), _parse_iso_date(), Any, AsyncClient, datetime (+25 more)
 
-### Community 11 - "FreehireJobSource"
-Cohesion: 0.09
-Nodes (25): _clean_html(), _detect_location_type(), FreehireJobSource, _parse_iso_date(), Any, AsyncClient, datetime, Strip HTML tags and normalize whitespace. (+17 more)
+### Community 11 - "test_freehire_bearer_auth"
+Cohesion: 0.16
+Nodes (12): asyncio, Verify that Authorization Bearer header is sent when api_key is set, and…, Verify offset is omitted for page 1 and correctly calculated as (page - 1) *…, Verify country and salary_min query filters serialization., Non-200 responses raise JobSourceHTTPError., Verify field mapping and HTML cleaning from realistic freehire response., test_freehire_bearer_auth(), test_freehire_fetch_data_normalization() (+4 more)
 
 ### Community 12 - "RemoteOKJobSource"
-Cohesion: 0.09
-Nodes (26): _clean_html(), _format_salary(), _parse_date(), Any, AsyncClient, datetime, Asynchronously fetch remote job postings from RemoteOK matching the query. Maps…, Strip HTML tags and normalize whitespace. (+18 more)
+Cohesion: 0.08
+Nodes (28): _clean_html(), _format_salary(), _parse_date(), Any, AsyncClient, datetime, Asynchronously fetch remote job postings from RemoteOK matching the query. Maps…, Strip HTML tags and normalize whitespace. (+20 more)
 
 ### Community 13 - "applications.py"
-Cohesion: 0.05
-Nodes (72): create_email_draft(), detect_apply_channel(), DetectChannelRequest, DetectChannelResponse, draft_follow_up(), DraftEmailRequest, DraftEmailResponse, evaluate_job_fit() (+64 more)
+Cohesion: 0.09
+Nodes (47): create_email_draft(), detect_apply_channel(), DetectChannelRequest, DetectChannelResponse, draft_follow_up(), DraftEmailRequest, DraftEmailResponse, evaluate_job_fit() (+39 more)
 
 ### Community 14 - "env.py"
-Cohesion: 0.06
-Nodes (34): get_database_url(), Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline(), run_migrations_online(), get_engine(), normalize_db_url(), Normalize database URL for driver compatibility. (+26 more)
+Cohesion: 0.09
+Nodes (24): get_database_url(), Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline(), run_migrations_online(), normalize_db_url(), Normalize database URL for driver compatibility., logging_config (+16 more)
 
 ### Community 15 - "worker.py"
 Cohesion: 0.13
 Nodes (12): arq, arq_connections, parse_redis_settings(), Parse a redis connection URL into an arq RedisSettings instance., Arq Worker settings configuration., WorkerSettings, Verify URL parsing for Arq Redis connection settings., Verify Arq WorkerSettings has expected functions, crons, and timeouts. (+4 more)
 
 ### Community 16 - "package.json"
-Cohesion: 0.06
-Nodes (32): name, private, scripts, build, dev, lint, preview, type (+24 more)
+Cohesion: 0.07
+Nodes (28): name, private, scripts, build, dev, lint, preview, type (+20 more)
 
 ### Community 17 - "LeverJobSource"
-Cohesion: 0.07
-Nodes (33): _detect_location_type(), Infer location type (remote, hybrid, on-site) using centralized classifier., classify_location_type(), Robust location classifier prioritizing: 1. Explicit work mode if provided…, _clean_html(), _detect_location_type(), LeverJobSource, _do_fetch() (+25 more)
+Cohesion: 0.08
+Nodes (27): _clean_html(), LeverJobSource, _do_fetch(), _parse_created_at(), Any, AsyncClient, datetime, Strip HTML tags and normalize whitespace. (+19 more)
 
 ### Community 18 - "RemotiveJobSource"
 Cohesion: 0.10
 Nodes (22): _clean_html(), _parse_publication_date(), Any, AsyncClient, datetime, Asynchronously fetch remote job postings from Remotive matching the query. Maps…, Strip HTML tags and normalize whitespace., Parse ISO-ish publication_date from Remotive (no TZ suffix — treat as UTC). (+14 more)
 
 ### Community 19 - "TestClient"
-Cohesion: 0.07
-Nodes (31): client(), fixture, Session, TestClient, In-memory SQLite database session with static pool for testing., Default request must exclude vetoed=True and integrity_status='flagged'…, Verify returned jobs are ordered by match_score descending, with unscored…, include_vetoed=True must include vetoed postings (unless also flagged). (+23 more)
+Cohesion: 0.11
+Nodes (19): TestClient, Default request must exclude vetoed=True and integrity_status='flagged'…, Verify returned jobs are ordered by match_score descending, with unscored…, include_vetoed=True must include vetoed postings (unless also flagged)., include_flagged=True must include flagged postings (unless also vetoed)., show_all=True must include all jobs (both vetoed and flagged) for human review., Verify company, role, match_score, vetoed, veto_reason, integrity_status, and…, Verify limit and offset pagination parameters work correctly. (+11 more)
 
-### Community 20 - "matching/__init__.py"
-Cohesion: 0.15
-Nodes (12): EmbeddingClient, get_embedding_client(), OpenAIEmbeddingClient, ABC, Factory returning OpenAIEmbeddingClient if API key is provided and valid,…, Abstract interface for text embedding generation., Generate embedding vector for a single text string., Generate embeddings for a list of text strings. (+4 more)
+### Community 20 - "test_matching.py"
+Cohesion: 0.09
+Nodes (22): compute_cosine_similarity(), EmbeddingClient, get_embedding_client(), MockEmbeddingClient, OpenAIEmbeddingClient, ABC, Deterministic mock embedding client for testing without network or GPU.…, Compute cosine similarity between two numeric vectors: dot(a, b) / (norm(a) *… (+14 more)
 
 ### Community 21 - "ProfileView.jsx"
-Cohesion: 0.13
-Nodes (14): ProfileEducationModal(), ProfileEducationTab(), ProfileExperienceModal(), ProfileExperienceTab(), ProfileIdentityTab(), ProfileProjectModal(), ProfileProjectsTab(), ProfileSkillsTab() (+6 more)
-
-### Community 22 - "Base"
 Cohesion: 0.15
-Nodes (30): Base, Base SQLAlchemy declarative model., get_db(), FastAPI dependency that yields a SQLAlchemy database session., create_app(), lifespan(), Create and configure FastAPI application., ApplicationFormAnswer (+22 more)
+Nodes (10): ProfileEducationModal(), ProfileEducationTab(), ProfileExperienceModal(), ProfileExperienceTab(), ProfileIdentityTab(), ProfileProjectModal(), ProfileProjectsTab(), ProfileSkillsTab() (+2 more)
 
-### Community 23 - "StarStory"
-Cohesion: 0.19
-Nodes (21): create_story(), delete_story(), get_story(), list_stories(), list_tags(), delete, get, patch (+13 more)
+### Community 22 - "account.py"
+Cohesion: 0.08
+Nodes (39): BookmarkletResponse, get_autofill_bookmarklet(), Generate an intelligent JavaScript bookmarklet code tailored to the current…, downgrade(), Create universal career entities, add profile fields, and job date/status…, Revert universal career entities, profile fields, and job date columns., upgrade(), Application (+31 more)
+
+### Community 23 - "StarStoryRead"
+Cohesion: 0.16
+Nodes (18): create_story(), delete_story(), get_story(), list_stories(), list_tags(), delete, get, patch (+10 more)
 
 ### Community 24 - "What You Must Do When Invoked"
 Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
-### Community 25 - "alembic"
-Cohesion: 0.04
-Nodes (22): alembic, downgrade(), Create agent action proposals, conversations, and messages tables., Drop agent tables in reverse order., upgrade(), downgrade(), Add is_pinned column to agent_conversations., Drop is_pinned column from agent_conversations. (+14 more)
+### Community 25 - "typing"
+Cohesion: 0.05
+Nodes (23): alembic, downgrade(), Create agent action proposals, conversations, and messages tables., Drop agent tables in reverse order., upgrade(), downgrade(), Add is_pinned column to agent_conversations., Drop is_pinned column from agent_conversations. (+15 more)
 
 ### Community 26 - "create_gmail_draft"
-Cohesion: 0.15
-Nodes (19): BookmarkletResponse, create_gmail_draft(), CreateGmailDraftRequest, CreateGmailDraftResponse, disconnect_google(), get_autofill_bookmarklet(), get_google_status(), google_oauth_callback() (+11 more)
+Cohesion: 0.19
+Nodes (15): create_gmail_draft(), CreateGmailDraftRequest, CreateGmailDraftResponse, disconnect_google(), get_google_status(), google_oauth_callback(), GoogleCallbackRequest, IntegrationStatusResponse (+7 more)
 
 ### Community 27 - "test_pydantic_schemas"
-Cohesion: 0.11
-Nodes (20): ApplicationBase, ApplicationCreate, ApplicationCvVersionRead, ApplicationFormAnswerBase, ApplicationFormAnswerCreate, ApplicationFormAnswerRead, ApplicationJobRead, ApplicationUpdate (+12 more)
+Cohesion: 0.10
+Nodes (22): 4. Pydantic Schemas & Security, AccountCvVersionBase, AccountCvVersionUpdate, CvTemplateBase, CvTemplateCreate, CvTemplateUpdate, BaseModel, LLMProviderBase (+14 more)
 
 ### Community 28 - "api/profile.py"
-Cohesion: 0.12
-Nodes (47): add_certification(), add_designation(), add_language(), add_location(), add_skill(), apply_parsed_cv(), bulk_skills(), compile_texlive() (+39 more)
+Cohesion: 0.11
+Nodes (43): compile_texlive(), delete_certification(), delete_designation(), delete_education(), delete_language(), delete_location(), delete_project(), delete_skill() (+35 more)
 
-### Community 29 - "JobSourceHTTPError"
-Cohesion: 0.10
-Nodes (27): AdzunaJobSource, _parse_created_date(), AsyncClient, datetime, Parse ISO formatted creation date from Adzuna response., Adzuna API implementation of the JobSource interface (ARCHITECTURE.md §4).…, JobSourceConfigError, JobSourceError (+19 more)
+### Community 29 - "JobSearchQuery"
+Cohesion: 0.07
+Nodes (29): JobSearchQuery, Normalized query parameters for searching across job sources., AdzunaJobSource, _clean_text(), _format_salary(), _parse_created_date(), Any, AsyncClient (+21 more)
 
-### Community 30 - "config.py"
-Cohesion: 0.22
-Nodes (6): Path, Resolve the Master CV path from explicit, local, or repository root paths., Resolve the User Profile path from explicit, local, or repository root paths., Settings, BaseSettings, pydantic_settings
+### Community 30 - "Settings"
+Cohesion: 0.33
+Nodes (5): Path, Resolve the Master CV path from explicit, local, or repository root paths., Resolve the User Profile path from explicit, local, or repository root paths., Settings, BaseSettings
 
-### Community 31 - "typing"
-Cohesion: 0.08
-Nodes (57): asyncio, BaseAgentTool, GenerativeUIWidget, ABC, BaseModel, Enum, str, Standardized Hexagonal Agent Tool Port. All external or internal autonomous… (+49 more)
+### Community 31 - "engine.py"
+Cohesion: 0.16
+Nodes (29): BaseAgentTool, GenerativeUIWidget, ABC, BaseModel, Enum, str, Standardized Hexagonal Agent Tool Port. All external or internal autonomous…, Executes the autonomous tool action and returns structured data along with an… (+21 more)
 
-### Community 32 - "AgentConversation"
-Cohesion: 0.17
-Nodes (16): delete_conversation(), get_conversation(), list_action_proposals(), list_conversations(), delete, get, patch, Session (+8 more)
+### Community 32 - "api/agent.py"
+Cohesion: 0.11
+Nodes (36): approve_proposal(), chat_with_agent(), delete_conversation(), get_conversation(), list_action_proposals(), list_conversations(), delete, get (+28 more)
 
 ### Community 33 - "User Profile — Niloy Sannyal"
 Cohesion: 0.12
@@ -304,17 +306,17 @@ Nodes (16): Adaptability, Basic info, Facts that require confirmation before use
 Cohesion: 0.33
 Nodes (5): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema
 
-### Community 35 - "tenant_client"
-Cohesion: 0.15
-Nodes (18): admin_client(), override_current_account(), override_get_db(), fixture, Session, TestClient, regular_tenant_account(), superadmin_account() (+10 more)
+### Community 35 - "Job"
+Cohesion: 0.07
+Nodes (49): Job, Multi-tenant Job model matching ARCHITECTURE.md §7: (account_id, company, role,…, admin_client(), override_current_account(), override_get_db(), admin_test_db(), fixture, Session (+41 more)
 
-### Community 40 - "pytest"
-Cohesion: 0.13
-Nodes (13): LinkedInJobSource, Any, AsyncClient, Strip HTML tags and normalize whitespace., LinkedIn public guest API implementation of the JobSource interface…, _strip_tags(), asyncio, test_linkedin_job_source_parser() (+5 more)
+### Community 40 - "JobPosting"
+Cohesion: 0.10
+Nodes (18): Integration Checklist, Job Source Integrator, JobPosting, Standardized JobPosting DTO returned by all JobSource.fetch implementations.…, LinkedInJobSource, Any, AsyncClient, Strip HTML tags and normalize whitespace. (+10 more)
 
-### Community 41 - "api/agent.py"
-Cohesion: 0.27
-Nodes (13): AgentActionProposal, AgentActionProposalBase, AgentActionProposalRead, AgentChatRequest, AgentConversationRead, AgentConversationUpdate, AgentMessage, AgentMessageRead (+5 more)
+### Community 41 - "detective.py"
+Cohesion: 0.20
+Nodes (15): ApplyChannelType, FormDetectiveService, FormInspectionResult, Enum, str, Extract valid recruiter or hiring email from apply URL or posting text., Identify ATS platform name from hostname or path., Extract explicit form questions found in the posting text, or synthesize the… (+7 more)
 
 ### Community 42 - "Research — Competitors, APIs, and Legal Notes"
 Cohesion: 0.18
@@ -325,8 +327,8 @@ Cohesion: 0.20
 Nodes (9): 1. Dashboard (`DashboardView.jsx`), 2. Jobs Queue (`JobsView.jsx`), 3. Application Studio (`ApplicationStudio.jsx`), 4. Pipeline Application Monitor (`PipelineView.jsx`), 5. STAR Interview Coach (`InterviewCoachView.jsx`), 6. Profile & Dealbreakers (`ProfileView.jsx`), Development Setup, Features & Views (+1 more)
 
 ### Community 44 - "admin.py"
-Cohesion: 0.16
-Nodes (29): _build_provider_read(), create_admin_template(), create_llm_provider(), get_platform_metrics(), list_llm_providers(), list_tenants(), LLMProviderInput, LLMProviderReorderInput (+21 more)
+Cohesion: 0.12
+Nodes (45): _build_provider_read(), create_admin_template(), create_llm_provider(), create_tenant(), delete_admin_template(), delete_job(), delete_llm_provider(), delete_tenant() (+37 more)
 
 ### Community 45 - "test_auth.py"
 Cohesion: 0.06
@@ -341,8 +343,8 @@ Cohesion: 0.22
 Nodes (8): Agent Behavior Rules — Job Application Agent SaaS, Bug workflow, Code conventions, Database & migrations, Folder structure — put new code in the right place, Interfaces to honor, not bypass, What NOT to build without being asked, When to stop and ask instead of proceeding
 
 ### Community 48 - "lucide-react"
-Cohesion: 0.21
-Nodes (13): CareerCopilotView(), FAST_CHIPS, STARTER_PROMPTS, FunnelInsight(), JobRadarCarousel(), SendApprovalGate(), STARStoryMatch(), TailorDiffReview() (+5 more)
+Cohesion: 0.18
+Nodes (15): CareerCopilotView(), FAST_CHIPS, formatInlineMarkdown(), STARTER_PROMPTS, TurnMarkdownContent(), FunnelInsight(), JobRadarCarousel(), SendApprovalGate() (+7 more)
 
 ### Community 49 - "Job Application Agent — Original Idea (transcribed from notebook)"
 Cohesion: 0.25
@@ -352,9 +354,9 @@ Nodes (7): General flow (manual, today), Job Application Agent — Original Idea
 Cohesion: 0.29
 Nodes (6): 1. Never Invent Facts, 2. LaTeX Syntax & Preamble Preservation, 3. Relevance-Weighted Trimming & Page Budget, 4. PDF Verification & ATS Text-Layer Check, CV Tailoring Guard, Non-Negotiable Rules
 
-### Community 51 - ".reflect_for_account"
-Cohesion: 0.40
-Nodes (3): ChannelStat, ExperienceInsights, Analyze all applications for an account and compute actionable insights,…
+### Community 51 - "matching/service.py"
+Cohesion: 0.16
+Nodes (13): ChannelStat, ExperienceInsights, ExperienceReflector, Session, Harness² Experiential Reflector: Analyzes historical application trajectories…, Analyze all applications for an account and compute actionable insights,…, ProfileParser, Parses cv_templates/01_MASTER_CV.tex and docs/USER_PROFILE.md. KNOWN FORMAT… (+5 more)
 
 ### Community 52 - "Project: Job Application Agent SaaS"
 Cohesion: 0.29
@@ -373,20 +375,20 @@ Cohesion: 0.50
 Nodes (3): Config & Assertion Protection Standard (adapted from ECC), Principle: Fix the Code, Never Weaken the Guardrail, Protected Targets & Non-Weakening Rules:
 
 ### Community 59 - "Architecture — Job Application Agent SaaS"
-Cohesion: 0.07
-Nodes (28): generate_interview_prep(), InterviewPrepRequest, InterviewPrepResponse, PrepQuestion, BaseModel, post, Generate tailored interview prep questions for a specific role or job posting,…, Any (+20 more)
+Cohesion: 0.11
+Nodes (19): Ensure the caller has superadmin role privileges., require_superadmin(), 0. Design principle: "missing puzzle piece", 10. Hosting (OPEN — still genuinely undecided), 11. LLM provider strategy (confirmed), 12. Payments (research complete — decision still yours to make), 13. SaaS-only concerns still ahead (Phase 3+), 1. Scope & rollout (+11 more)
 
-### Community 60 - "resolve_tenant_id"
-Cohesion: 0.21
-Nodes (12): check_job_liveness(), IngestionRequest, IngestionResponse, BaseModel, post, Session, Payload for triggering a job ingestion run., Summary metrics of an executed ingestion and matching run. (+4 more)
+### Community 60 - "trigger_ingestion"
+Cohesion: 0.18
+Nodes (13): check_job_liveness(), IngestionRequest, IngestionResponse, list_jobs(), BaseModel, get, post, Session (+5 more)
 
 ### Community 61 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 62 - "ApplicationStudio.jsx"
-Cohesion: 0.21
-Nodes (17): ApplicationStudio(), StudioApprovalGate(), downloadLatexSource(), downloadPdfDocument(), sanitizeFileName(), StudioJobContext(), cleanLatexInline(), compactLatex() (+9 more)
+Cohesion: 0.18
+Nodes (22): ApplicationStudio(), ProfileView(), StudioApprovalGate(), StudioDrafterWorkspace(), downloadLatexSource(), downloadPdfDocument(), sanitizeFileName(), StudioJobContext() (+14 more)
 
 ### Community 63 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -405,8 +407,8 @@ Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
 ### Community 67 - "AgentEngine"
-Cohesion: 0.19
-Nodes (9): AgentEngine, Any, Processes candidate prompt and yields typed SSE frames in real time: - {"type":…, Determines the conversation title per rules: - If a specific job is…, Fast-track common one-click prompt chips and unambiguous commands., Robustly extracts JSON payload from LLM responses even if wrapped in backticks., Executes human-in-the-loop approval of an action proposal. Enforces tenant…, Core Autonomous Agent Orchestrator. Manages conversations, SSE streaming,… (+1 more)
+Cohesion: 0.17
+Nodes (10): AgentMessage, Individual turn within an agent conversation, preserving thought traces, tool…, AgentEngine, Any, Processes candidate prompt and yields typed SSE frames in real time: - {"type":…, Determines the conversation title per rules: - If a specific job is…, Fast-track common one-click prompt chips and unambiguous commands., Enforce strict SaaS scope boundary: The Career Copilot agent is dedicated… (+2 more)
 
 ### Community 70 - "dependencies"
 Cohesion: 0.15
@@ -425,36 +427,36 @@ Cohesion: 0.29
 Nodes (6): 1. Bare `except:` or Empty Catch Blocks, 2. Dangerous Fallbacks in LLM & Ingestion, 3. Missing Transaction Rollbacks, 4. Frontend Unhandled Promise Rejections, Hunt Targets, Silent Failure Hunter Skill — Job Application Agent SaaS
 
 ### Community 74 - "LLMService"
-Cohesion: 0.12
-Nodes (20): Session, Session, LLMProvider, ABC, Abstract LLM provider interface matching ARCHITECTURE.md §11 & AGENTS.md. Every…, MockLLMProvider, Any, Deterministic mock provider for unit testing and offline development. Can… (+12 more)
+Cohesion: 0.14
+Nodes (18): LLMProvider, ABC, Abstract LLM provider interface matching ARCHITECTURE.md §11 & AGENTS.md. Every…, MockLLMProvider, Any, Deterministic mock provider for unit testing and offline development. Can…, OpenAIProvider, Any (+10 more)
 
 ### Community 75 - "Validation Scenarios"
 Cohesion: 0.25
 Nodes (7): 1. SuperAdmin Ops Center & Tenant Management, 2. Job Radar Ingestion & Integrity Shield, 3. Dynamic LLM Failover Engine & Priority Ordering, 4. Application Pipeline & Lifecycle Tracker, 5. CV Tailoring & Application Studio, QA & Validation Context — Job Application Agent SaaS, Validation Scenarios
 
-### Community 79 - "Application"
-Cohesion: 0.12
-Nodes (19): Application, Multi-tenant Application model matching ARCHITECTURE.md §6 & §7: (job_id,…, AccountCvVersion, Tailored CV version model matching ARCHITECTURE.md §7: (which tailored CV went…, CVTailorResult, Session, TestClient, Verify that Account B cannot read, tailor, or send Account A's applications. (+11 more)
+### Community 79 - "StarStory"
+Cohesion: 0.25
+Nodes (12): A single STAR-format interview story. Matches USER_PROFILE.md §"Interview story…, StarStory, FormFieldQuestion, Represents a specific question field extracted from an application form or…, FormFieldAnswer, FormQAGenerator, FormQAResult, A tailored answer for a single form questionnaire field. (+4 more)
 
 ### Community 80 - "React Frontend Development Standards (adapted from ECC)"
 Cohesion: 0.33
 Nodes (5): 1. Anti-Template Quality & Design System, 2. Modal Backdrops & Glassmorphism, 3. Component Architecture & State, 4. Accessibility & Responsiveness, React Frontend Development Standards (adapted from ECC)
 
-### Community 81 - "list_jobs"
+### Community 81 - "event_bus.py"
+Cohesion: 0.17
+Nodes (11): asyncio, Executes human-in-the-loop approval of an action proposal. Enforces tenant…, ApplicationTailoredEvent, DomainEvent, JobIngestedEvent, ProposalApprovedEvent, ProposalCreatedEvent, BaseModel (+3 more)
+
+### Community 82 - "LanguageGate"
+Cohesion: 0.17
+Nodes (10): LanguageGate, Evaluate description against declared languages. Returns: (is_vetoed,…, Evaluates whether a job description requires a spoken language not declared in…, Detect any language explicitly marked as required or mandatory., English-only posting is not vetoed., Posting requiring German is vetoed if German is not declared., If user declared German, German requirement is not vetoed., test_language_gate_declared_language_allowed() (+2 more)
+
+### Community 83 - "file_extractor.py"
 Cohesion: 0.22
-Nodes (9): get_job_sources(), JobSourceInfo, list_admin_templates(), list_flagged_jobs(), get, list_jobs(), get, Fetch jobs for an account ordered by match_score descending. Excludes vetoed… (+1 more)
+Nodes (8): UploadFile, Accepts arbitrary user files (images, pdf, xlsx, txt, mp3, code, etc.),…, upload_files_for_agent(), extract_file_content(), Any, Extracts text, structured data, and metadata from arbitrary user-uploaded…, csv, io
 
-### Community 82 - "test_matching.py"
-Cohesion: 0.14
-Nodes (13): LanguageGate, Evaluate description against declared languages. Returns: (is_vetoed,…, Evaluates whether a job description requires a spoken language not declared in…, Detect any language explicitly marked as required or mandatory., English-only posting is not vetoed., Posting requiring German is vetoed if German is not declared., If user declared German, German requirement is not vetoed., Test get_embedding_client factory switches between Mock and OpenAI based on key. (+5 more)
-
-### Community 83 - "chat_with_agent"
-Cohesion: 0.14
-Nodes (13): approve_proposal(), chat_with_agent(), post, UploadFile, Accepts arbitrary user files (images, pdf, xlsx, txt, mp3, code, etc.),…, Human-in-the-Loop Approval Gate: Validates candidate authorization, marks…, Candidate rejection or request for revision of a staged proposal., Real-time streaming agent conversation endpoint. Emits Server-Sent Events (SSE)… (+5 more)
-
-### Community 84 - "Session"
-Cohesion: 0.14
-Nodes (15): account_a(), account_b(), client(), fixture, Session, TestClient, Test SSE streaming response from /api/v1/agent/chat., Test listing, fetching, and deleting agent conversations with isolation. (+7 more)
+### Community 84 - "test_agent.py"
+Cohesion: 0.10
+Nodes (26): create_app(), Create and configure FastAPI application., BaseModel, StageProposalInput, account_a(), account_b(), api_test_db(), client() (+18 more)
 
 ### Community 85 - "Cycle: Red -> Green -> Refactor"
 Cohesion: 0.33
@@ -468,45 +470,45 @@ Nodes (4): Execution, Phases Checked, Verification Loop Skill — Job Applicatio
 Cohesion: 0.50
 Nodes (3): Protocol Guidelines:, Running Verification, Verification Loop Standard (adapted from ECC)
 
-### Community 88 - "test_educations_skills_and_preview"
-Cohesion: 0.32
-Nodes (7): account_a(), account_b(), client(), fixture, Session, Test educations, bulk skills, and preview CV generation., test_educations_skills_and_preview()
+### Community 88 - "generate_interview_prep"
+Cohesion: 0.16
+Nodes (11): generate_interview_prep(), InterviewPrepRequest, InterviewPrepResponse, PrepQuestion, BaseModel, Generate tailored interview prep questions for a specific role or job posting,…, Any, Alias for role to maintain consistency across frontend and APIs. (+3 more)
 
 ### Community 90 - "devDependencies"
 Cohesion: 0.29
 Nodes (7): devDependencies, agentation, oxlint, @types/react, @types/react-dom, vite, @vitejs/plugin-react
 
-### Community 91 - "MockQdrantClient"
-Cohesion: 0.33
-Nodes (3): MockQdrantClient, Any, In-memory mock of QdrantClient for testing without running Qdrant daemon.
+### Community 91 - ".fetch"
+Cohesion: 0.18
+Nodes (9): _clean_html(), _detect_location_type(), _parse_iso_date(), Any, datetime, Strip HTML tags and normalize whitespace., Asynchronously fetch job postings from freehire.me matching the query. Query is…, Parse ISO 8601 date string with timezone. (+1 more)
 
-### Community 92 - "Job"
-Cohesion: 0.11
-Nodes (31): Session, Seed initial multi-tenant defaults matching ARCHITECTURE.md §0, §5, §7, §11: 1.…, seed_initial_data(), get_session_factory(), CvTemplate, LaTeX CV template model matching ARCHITECTURE.md §5 & §7. Admin-curated system…, Job, Multi-tenant Job model matching ARCHITECTURE.md §7: (account_id, company, role,… (+23 more)
+### Community 92 - "Base"
+Cohesion: 0.08
+Nodes (46): Base, Base SQLAlchemy declarative model., Session, Seed initial multi-tenant defaults matching ARCHITECTURE.md §0, §5, §7, §11: 1.…, seed_initial_data(), AccountCvVersionCreate, CvTemplate, LaTeX CV template model matching ARCHITECTURE.md §5 & §7. Admin-curated system… (+38 more)
 
-### Community 93 - "UserProfile"
-Cohesion: 0.09
-Nodes (37): Session, Create a new database session instance outside of FastAPI request lifecycle…, SessionLocal(), Core profile for a user (one-to-one with Account). Stores identity, narrative,…, UserProfile, ExperienceReflector, Session, Harness² Experiential Reflector: Analyzes historical application trajectories… (+29 more)
+### Community 93 - "tasks.py"
+Cohesion: 0.19
+Nodes (15): Create a new database session instance outside of FastAPI request lifecycle…, SessionLocal(), embed_jobs_batch_task(), monitor_followups_task(), Any, Worker task to run Experience Reflector and update learning insights., Background worker task to compute vector embeddings and gate jobs., Cron / periodic worker task to identify applications awaiting response > 7… (+7 more)
 
 ### Community 94 - "FastAPI Backend Development Standards (adapted from ECC)"
-Cohesion: 0.20
-Nodes (10): 1. Architectural Structure, 2. Async Correctness, 3. Dependency Injection, 4. Pydantic Schemas & Security, 5. Testing, FastAPI Backend Development Standards (adapted from ECC), LLMProviderBase, LLMProviderCreate (+2 more)
+Cohesion: 0.33
+Nodes (5): 1. Architectural Structure, 2. Async Correctness, 3. Dependency Injection, 5. Testing, FastAPI Backend Development Standards (adapted from ECC)
 
-### Community 95 - "google_service.py"
+### Community 95 - "config.py"
 Cohesion: 0.14
-Nodes (14): decrypt_secret(), _get_fernet_instance(), Decrypt an encrypted secret at rest. If decryption fails (e.g. key mismatch or…, Derive a deterministic 32-byte URL-safe base64 Fernet key from the…, base64, cryptography_fernet, csv, email (+6 more)
+Nodes (16): decrypt_secret(), encrypt_secret(), _get_fernet_instance(), Encrypt a sensitive plaintext secret (OAuth token, API key) at rest. Returns…, Decrypt an encrypted secret at rest. If decryption fails (e.g. key mismatch or…, Derive a deterministic 32-byte URL-safe base64 Fernet key from the…, Verify secrets are encrypted and decrypted accurately., test_crypto_encryption_roundtrip() (+8 more)
 
-### Community 96 - "JobSearchQuery"
-Cohesion: 0.15
-Nodes (12): JobSearchQuery, BaseModel, Normalized query parameters for searching across job sources., _clean_text(), _format_salary(), Any, Asynchronously fetch job postings matching the query from Adzuna., Strip HTML tags and normalize whitespace. (+4 more)
+### Community 96 - "JobBase"
+Cohesion: 0.50
+Nodes (4): JobBase, JobCreate, JobUpdate, BaseModel
 
 ### Community 97 - "Product Development Environment Guide — Job Application Agent SaaS"
 Cohesion: 0.11
 Nodes (16): Any, Execute generation across the provider chain with automatic fallback., Core Behavioral Principles (from ECC), Development Context — Job Application Agent SaaS, Non-Negotiables & System Boundaries, Standard Verification Step, 1. Fast Start, 2. The 5-Phase Verification Loop (+8 more)
 
-### Community 98 - "test_generate_form_answers_api_endpoint"
-Cohesion: 0.28
-Nodes (8): api_test_db(), client(), fixture, Session, TestClient, test_detect_channel_api_endpoint(), test_draft_email_api_endpoint(), test_generate_form_answers_api_endpoint()
+### Community 98 - "Account"
+Cohesion: 0.13
+Nodes (18): Account, Hash and set account password with bcrypt salt., Verify password against stored bcrypt hash., Multi-tenant Account model matching ARCHITECTURE.md §7. Every tenant has an…, api_test_db(), client(), fixture, Session (+10 more)
 
 ### Community 99 - "Roadmap — Job Application Agent SaaS"
 Cohesion: 0.33
@@ -516,99 +518,99 @@ Nodes (5): Decision log, Phase 1 — Personal validation (the "1 month with my o
 Cohesion: 0.52
 Nodes (5): JobDetailModal(), decodeHtmlEntities(), formatPostingDate(), formatSalary(), JobsView()
 
-### Community 101 - "react"
-Cohesion: 0.23
-Nodes (10): ProfileTemplatesTab(), CompilerDiagnosticsDrawer(), StudioDrafterWorkspace(), StudioFactAuditBadge(), StudioFormQADispatchHub(), StudioFormQAEditor(), analyzeLatexDiagnostics(), lintLatexSource() (+2 more)
+### Community 101 - "StudioDrafterWorkspace.jsx"
+Cohesion: 0.24
+Nodes (9): ProfileTemplatesTab(), CompilerDiagnosticsDrawer(), LatexCodeEditor, StudioFactAuditBadge(), StudioFormQADispatchHub(), StudioFormQAEditor(), analyzeLatexDiagnostics(), lintLatexSource() (+1 more)
 
 ### Community 102 - "GoogleIntegrationService"
-Cohesion: 0.15
-Nodes (10): get_google_auth_url(), GoogleAuthUrlResponse, Generate Google OAuth 2.0 consent URL for Gmail Draft composition. Scope is…, GoogleIntegrationService, Any, Create a Gmail Draft (X-Unsent) via official Gmail API. Never sends the email —…, Manages Google OAuth 2.0 flow and Human-In-The-Loop Gmail Draft creation.…, Generate the Google OAuth 2.0 consent URL requesting offline access and… (+2 more)
+Cohesion: 0.14
+Nodes (11): get_google_auth_url(), GoogleAuthUrlResponse, get, Generate Google OAuth 2.0 consent URL for Gmail Draft composition. Scope is…, GoogleIntegrationService, Any, Create a Gmail Draft (X-Unsent) via official Gmail API. Never sends the email —…, Manages Google OAuth 2.0 flow and Human-In-The-Loop Gmail Draft creation.… (+3 more)
 
 ### Community 103 - "test_matching_service_score_and_gate_clean_jobs"
-Cohesion: 0.14
-Nodes (13): db_session(), asyncio, fixture, Session, Test embedding profile and upserting point into Qdrant., Test that: 1. Clean jobs are embedded and scored. 2. Flagged jobs…, In-memory SQLite session for testing matching., Test OpenAIEmbeddingClient with mocked httpx response. (+5 more)
+Cohesion: 0.10
+Nodes (16): db_session(), MockQdrantClient, Any, asyncio, fixture, Session, Test embedding profile and upserting point into Qdrant., Test that: 1. Clean jobs are embedded and scored. 2. Flagged jobs… (+8 more)
 
 ### Community 104 - ".parse_from_db"
 Cohesion: 0.19
 Nodes (11): ParsedProfile, Any, Path, Structured representation of parsed user profile and CV., Dynamically extracts candidate profile and CV data from database models…, Extract readable text from LaTeX CV, stripping comments and common markup., Path, Test that missing languages section defaults to ['english']. (+3 more)
 
-### Community 105 - "encrypt_secret"
-Cohesion: 0.20
-Nodes (9): 1. Multi-Tenant Partitioning, 2. Secrets & Encryption, 3. Ingestion & Prompt Injection Defense, 4. Human-in-the-Loop on Send, Security & Tenancy Policy (adapted from ECC AgentShield), encrypt_secret(), Encrypt a sensitive plaintext secret (OAuth token, API key) at rest. Returns…, Verify secrets are encrypted and decrypted accurately. (+1 more)
-
-### Community 108 - "Account"
-Cohesion: 0.18
-Nodes (18): create_tenant(), delete_admin_template(), delete_job(), delete_llm_provider(), delete_tenant(), dismiss_job_flag(), impersonate_tenant(), delete (+10 more)
-
-### Community 109 - ".score_and_gate_jobs"
-Cohesion: 0.17
-Nodes (10): compute_cosine_similarity(), Compute cosine similarity between two numeric vectors: dot(a, b) / (norm(a) *…, MatchingResult, Path, Score clean jobs with cosine similarity and apply language/dealbreaker gate.…, Summary of a match scoring run., Derive a deterministic UUID point ID for the account., Embed the Master CV and target-roles section of USER_PROFILE.md, upserting the… (+2 more)
-
-### Community 110 - "Project"
-Cohesion: 0.22
-Nodes (11): add_project(), patch, update_certification(), update_education(), update_project(), update_work_experience(), Project, ProjectBase (+3 more)
-
-### Community 112 - "SpokenLanguage"
-Cohesion: 0.24
-Nodes (11): CompensationExpectation, Target job titles / designations a user is searching for. Per ARCHITECTURE.md…, Target work locations / regions a user is willing to work in. Supports remote /…, Salary / compensation expectations (one per profile). Marked sensitive — never…, Languages the user speaks, with proficiency level. Used by the language gate in…, SpokenLanguage, TargetDesignation, TargetLocation (+3 more)
-
-### Community 113 - "get_current_account"
-Cohesion: 0.22
-Nodes (10): decode_access_token(), get_current_account(), get_optional_account(), Session, Optional authentication resolver for endpoints where account_id may be passed…, Ensure the caller has superadmin role privileges., Decode and validate a JWT access token. Raises HTTPException(401) on expiration…, Resolve the current authenticated account context. 1. Primary: Validates… (+2 more)
-
-### Community 114 - "run_ats_text_layer_check"
-Cohesion: 0.25
-Nodes (6): ATSCheckResult, any, Simulates ATS parser text-layer inspection: 1. Verifies contact header fields…, run_ats_text_layer_check(), Verify ATS parser plain-text inspection and keyword coverage., test_ats_checker()
-
-### Community 115 - "MockEmbeddingClient"
-Cohesion: 0.32
-Nodes (3): MockEmbeddingClient, Deterministic mock embedding client for testing without network or GPU.…, Generate embedding for a single text.
-
-### Community 116 - "UserProfileRead"
+### Community 105 - "Security & Tenancy Policy (adapted from ECC AgentShield)"
 Cohesion: 0.33
-Nodes (7): create_profile(), Create a user profile for an account (one per account)., Partial-update the user profile for an account (auto-creates if missing)., update_profile(), UserProfileBase, UserProfileCreate, UserProfileRead
+Nodes (5): 1. Multi-Tenant Partitioning, 2. Secrets & Encryption, 3. Ingestion & Prompt Injection Defense, 4. Human-in-the-Loop on Send, Security & Tenancy Policy (adapted from ECC AgentShield)
+
+### Community 108 - "AgentToolRegistry"
+Cohesion: 0.20
+Nodes (5): Session, AgentToolRegistry, Any, Central Registry for Autonomous Agent Tools. Enforces the Open-Closed…, Generates standard JSON schema definitions suitable for LLM function calling /…
+
+### Community 109 - "MatchingService"
+Cohesion: 0.19
+Nodes (8): Session, MatchingService, Path, Score clean jobs with cosine similarity and apply language/dealbreaker gate.…, Search for top jobs matching a vector embedding using Supabase pgvector cosine…, Two-layer job match scoring service matching ARCHITECTURE.md §4: Layer 1:…, Derive a deterministic UUID point ID for the account., Embed the Master CV and target-roles section of USER_PROFILE.md, upserting the…
+
+### Community 110 - "ApplicationBase"
+Cohesion: 0.22
+Nodes (9): ApplicationBase, ApplicationCreate, ApplicationCvVersionRead, ApplicationFormAnswerBase, ApplicationFormAnswerCreate, ApplicationFormAnswerRead, ApplicationJobRead, ApplicationUpdate (+1 more)
+
+### Community 112 - "TargetDesignation"
+Cohesion: 0.40
+Nodes (6): add_designation(), Target job titles / designations a user is searching for. Per ARCHITECTURE.md…, TargetDesignation, TargetDesignationBase, TargetDesignationCreate, TargetDesignationRead
+
+### Community 113 - "session.py"
+Cohesion: 0.15
+Nodes (18): STAR Interview Coach API — CRUD for interview stories + tag-based querying. All…, decode_access_token(), get_current_account(), get_optional_account(), Session, Optional authentication resolver for endpoints where account_id may be passed…, Decode and validate a JWT access token. Raises HTTPException(401) on expiration…, Resolve the current authenticated account context. 1. Primary: Validates… (+10 more)
+
+### Community 115 - "TeXLiveCompilerService"
+Cohesion: 0.32
+Nodes (5): Any, Detect available TeX compiler binary on PATH., Return True if a TeX compiler is installed and executable., Compile LaTeX source into PDF using system TeX Live engine. Returns dict with…, TeXLiveCompilerService
+
+### Community 116 - "theme.js"
+Cohesion: 0.50
+Nodes (6): LandingPageView(), applyTheme(), getInitialTheme(), getTheme, setTheme(), useTheme()
 
 ### Community 117 - "db_session"
 Cohesion: 0.67
 Nodes (3): db_session(), fixture, In-memory SQLite session with all multi-tenant tables.
 
-### Community 118 - "Education"
-Cohesion: 0.40
-Nodes (6): add_education(), Education, EducationBase, EducationCreate, EducationRead, Structured education background (degrees, high school, certifications,…
+### Community 118 - "_get_or_create_profile"
+Cohesion: 0.18
+Nodes (19): add_education(), add_language(), add_location(), add_skill(), add_work_experience(), apply_parsed_cv(), bulk_skills(), _get_or_create_profile() (+11 more)
 
-### Community 119 - "WorkExperience"
-Cohesion: 0.40
-Nodes (6): add_work_experience(), Structured work experience entity for candidates across all industries.…, WorkExperience, WorkExperienceBase, WorkExperienceCreate, WorkExperienceRead
+### Community 119 - "plan_relevance_cuts"
+Cohesion: 0.29
+Nodes (7): extract_keywords_from_job(), plan_relevance_cuts(), any, Extracts non-stopword tokens from a job posting for relevance scoring., Applies relevance-weighted line scoring to trim bullets to fit within the…, Verify relevance scoring and trimming plan., test_relevance_scorer_and_cuts()
 
-### Community 120 - "json"
+### Community 120 - "texlive_compiler.py"
 Cohesion: 0.33
-Nodes (5): downgrade(), Create universal career entities, add profile fields, and job date/status…, Revert universal career entities, profile fields, and job date columns., upgrade(), json
+Nodes (5): TeX Live backend compiler service. Adapted from Overleaf CLSI (Common LaTeX…, shutil, subprocess, tempfile, time
 
-### Community 121 - "client"
-Cohesion: 0.47
-Nodes (5): account_a(), account_b(), client(), fixture, Session
+### Community 121 - "set_compensation"
+Cohesion: 0.50
+Nodes (5): set_compensation(), CompensationBase, CompensationCreate, CompensationRead, put
 
 ### Community 122 - "test_profile_compile_texlive.py"
-Cohesion: 0.33
-Nodes (5): Tests for TeX Live compilation service and /compile-texlive endpoint., When TeX Live is not on PATH, the endpoint gracefully returns…, When TeX Live compiles successfully, returns PDF base64 and logs., test_compile_texlive_endpoint_mock_success(), test_compile_texlive_endpoint_when_compiler_unavailable()
+Cohesion: 0.29
+Nodes (6): Tests for TeX Live compilation service and /compile-texlive endpoint., When TeX Live is not on PATH, the endpoint gracefully returns…, When TeX Live compiles successfully, returns PDF base64 and logs., test_compile_texlive_endpoint_mock_success(), test_compile_texlive_endpoint_when_compiler_unavailable(), unittest_mock
 
 ### Community 123 - "test_cv_tailor_service_with_structured_profile"
 Cohesion: 0.40
 Nodes (6): asyncio, Session, Verify complete Drafter + Reviewer pipeline, persistence, and strict human-in-…, Verify CVTailorService with structured career entities (universal profile) and…, test_cv_tailor_service_end_to_end(), test_cv_tailor_service_with_structured_profile()
 
+### Community 126 - "test_star_coach_tool"
+Cohesion: 0.50
+Nodes (4): BaseModel, StarCoachInput, Test STAR interview coach tool aligns story to competency., test_star_coach_tool()
+
 ## Knowledge Gaps
 - **213 isolated node(s):** `$schema`, `plugins`, `react/rules-of-hooks`, `react/only-export-components`, `name` (+208 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 843 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 845 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Account` connect `Account` to `test_cv_tailor.py`, `JobPosting`, `TestClient`, `models/__init__.py`, `TestClient`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `TestClient`, `Base`, `StarStory`, `create_gmail_draft`, `api/profile.py`, `typing`, `AgentConversation`, `tenant_client`, `api/agent.py`, `admin.py`, `test_auth.py`, `resolve_tenant_id`, `Application`, `list_jobs`, `test_matching.py`, `chat_with_agent`, `Session`, `test_educations_skills_and_preview`, `Job`, `UserProfile`, `test_generate_form_answers_api_endpoint`, `GoogleIntegrationService`, `test_matching_service_score_and_gate_clean_jobs`, `SpokenLanguage`, `get_current_account`, `client`, `test_cv_tailor_service_with_structured_profile`?**
-  _High betweenness centrality (0.151) - this node is a cross-community bridge._
-- **Why does `Job` connect `Job` to `test_cv_tailor.py`, `JobPosting`, `models/__init__.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `TestClient`, `Base`, `StarStory`, `typing`, `tenant_client`, `admin.py`, `Architecture — Job Application Agent SaaS`, `resolve_tenant_id`, `AgentEngine`, `Application`, `list_jobs`, `test_matching.py`, `Session`, `UserProfile`, `test_matching_service_score_and_gate_clean_jobs`, `Account`, `.score_and_gate_jobs`, `test_cv_tailor_service_with_structured_profile`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
-- **Why does `JobPosting` connect `JobPosting` to `JobSearchQuery`, `run_posting_guard`, `models/__init__.py`, `pytest`, `greenhouse.py`, `FreehireJobSource`, `RemoteOKJobSource`, `LeverJobSource`, `RemotiveJobSource`, `UserProfile`, `Base`, `test_pydantic_schemas`, `Job`, `JobSourceHTTPError`?**
+- **Why does `Account` connect `Account` to `tailor_service.py`, `JobIngestionService`, `test_profile.py`, `models/__init__.py`, `test_interview.py`, `job.py`, `applications.py`, `test_matching.py`, `account.py`, `create_gmail_draft`, `api/profile.py`, `api/agent.py`, `Job`, `admin.py`, `test_auth.py`, `Architecture — Job Application Agent SaaS`, `trigger_ingestion`, `file_extractor.py`, `test_agent.py`, `Base`, `tasks.py`, `GoogleIntegrationService`, `test_matching_service_score_and_gate_clean_jobs`, `session.py`, `test_cv_tailor_service_with_structured_profile`, `test_star_coach_tool`?**
+  _High betweenness centrality (0.145) - this node is a cross-community bridge._
+- **Why does `JobPosting` connect `JobPosting` to `JobBase`, `run_posting_guard`, `JobIngestionService`, `Job`, `models/__init__.py`, `test_pydantic_schemas`, `job.py`, `GreenhouseJobSource`, `test_freehire_bearer_auth`, `RemoteOKJobSource`, `LeverJobSource`, `RemotiveJobSource`, `.fetch`, `Base`, `JobSearchQuery`?**
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+- **Why does `Job` connect `Job` to `tailor_service.py`, `JobIngestionService`, `models/__init__.py`, `job.py`, `applications.py`, `test_matching.py`, `account.py`, `engine.py`, `admin.py`, `matching/service.py`, `trigger_ingestion`, `AgentEngine`, `test_agent.py`, `generate_interview_prep`, `Base`, `tasks.py`, `Account`, `test_matching_service_score_and_gate_clean_jobs`, `MatchingService`, `session.py`, `test_cv_tailor_service_with_structured_profile`?**
   _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Are the 119 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**
   _`Account` has 119 INFERRED edges - model-reasoned connections that need verification._

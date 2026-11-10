@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
+  Copy,
+  Check,
   Bot,
   Sparkles,
   Send,
@@ -68,6 +70,208 @@ const FAST_CHIPS = [
   { label: '🎙 Practice Interview', prompt: 'Practice technical interview with STAR method for system scalability' },
   { label: '🔍 Reflect Profile', prompt: 'Reflect candidate profile and summarize verified accomplishments' },
 ];
+
+function CodeBlock({ language, code }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="copilot-code-block-wrapper">
+      <div className="copilot-code-header">
+        <span className="copilot-code-lang">{language || 'code'}</span>
+        <button
+          type="button"
+          className="code-copy-btn"
+          onClick={handleCopy}
+          title="Copy code"
+        >
+          {copied ? <Check size={13} className="text-emerald" /> : <Copy size={13} />}
+          <span>{copied ? 'Copied!' : 'Copy'}</span>
+        </button>
+      </div>
+      <pre className="copilot-pre-code">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function formatInlineMarkdown(text) {
+  if (!text) return '';
+
+  const parts = [];
+  const tokenRegex = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = tokenRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('**') && token.endsWith('**')) {
+      parts.push(<strong key={match.index} className="copilot-strong">{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith('`') && token.endsWith('`')) {
+      parts.push(<code key={match.index} className="inline-code-chip">{token.slice(1, -1)}</code>);
+    } else if (token.startsWith('[') && token.includes('](') && token.endsWith(')')) {
+      const linkMatch = token.match(/\[(.*?)\]\((.*?)\)/);
+      if (linkMatch) {
+        parts.push(
+          <a
+            key={match.index}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="copilot-inline-link"
+          >
+            {linkMatch[1]}
+          </a>
+        );
+      } else {
+        parts.push(token);
+      }
+    } else if (token.startsWith('*') && token.endsWith('*')) {
+      parts.push(<em key={match.index}>{token.slice(1, -1)}</em>);
+    } else {
+      parts.push(token);
+    }
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts;
+}
+
+function TurnMarkdownContent({ content }) {
+  if (!content) return null;
+
+  let cleanContent = content;
+  if (cleanContent.includes('\\n') && !cleanContent.includes('\n')) {
+    cleanContent = cleanContent.replace(/\\n/g, '\n');
+  }
+
+  const segments = cleanContent.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="copilot-markdown-rendered">
+      {segments.map((seg, sIdx) => {
+        if (!seg) return null;
+
+        if (seg.startsWith('```') && seg.endsWith('```')) {
+          const inner = seg.slice(3, -3);
+          const firstLineBreak = inner.indexOf('\n');
+          let lang = '';
+          let code = inner;
+          if (firstLineBreak !== -1) {
+            lang = inner.slice(0, firstLineBreak).trim();
+            code = inner.slice(firstLineBreak + 1);
+          }
+          return <CodeBlock key={sIdx} language={lang} code={code.replace(/^\n+|\n+$/g, '')} />;
+        }
+
+        const lines = seg.split('\n');
+        const elements = [];
+        let currentList = [];
+        let listType = null;
+
+        const flushList = (keySuffix) => {
+          if (currentList.length > 0) {
+            if (listType === 'ol') {
+              elements.push(
+                <ol key={`ol-${elements.length}-${keySuffix}`} className="copilot-list copilot-ol">
+                  {currentList.map((item, i) => (
+                    <li key={i}>{formatInlineMarkdown(item)}</li>
+                  ))}
+                </ol>
+              );
+            } else {
+              elements.push(
+                <ul key={`ul-${elements.length}-${keySuffix}`} className="copilot-list copilot-ul">
+                  {currentList.map((item, i) => (
+                    <li key={i}>{formatInlineMarkdown(item)}</li>
+                  ))}
+                </ul>
+              );
+            }
+            currentList = [];
+            listType = null;
+          }
+        };
+
+        lines.forEach((line, lineIdx) => {
+          const trimmed = line.trim();
+
+          if (!trimmed) {
+            flushList(lineIdx);
+            return;
+          }
+
+          const bulletMatch = trimmed.match(/^[-*•]\s+(.*)$/);
+          if (bulletMatch) {
+            if (listType === 'ol') flushList(lineIdx);
+            listType = 'ul';
+            currentList.push(bulletMatch[1]);
+            return;
+          }
+
+          const numMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+          if (numMatch) {
+            if (listType === 'ul') flushList(lineIdx);
+            listType = 'ol';
+            currentList.push(numMatch[1]);
+            return;
+          }
+
+          flushList(lineIdx);
+
+          if (trimmed.startsWith('### ')) {
+            elements.push(
+              <h5 key={`h5-${lineIdx}`} className="copilot-h5">
+                {formatInlineMarkdown(trimmed.replace(/^###\s+/, ''))}
+              </h5>
+            );
+          } else if (trimmed.startsWith('## ')) {
+            elements.push(
+              <h4 key={`h4-${lineIdx}`} className="copilot-h4">
+                {formatInlineMarkdown(trimmed.replace(/^##\s+/, ''))}
+              </h4>
+            );
+          } else if (trimmed.startsWith('# ')) {
+            elements.push(
+              <h3 key={`h3-${lineIdx}`} className="copilot-h3">
+                {formatInlineMarkdown(trimmed.replace(/^#\s+/, ''))}
+              </h3>
+            );
+          } else if (trimmed.startsWith('> ')) {
+            elements.push(
+              <blockquote key={`quote-${lineIdx}`} className="copilot-quote">
+                {formatInlineMarkdown(trimmed.replace(/^>\s+/, ''))}
+              </blockquote>
+            );
+          } else {
+            elements.push(
+              <p key={`p-${lineIdx}`} className="turn-paragraph">
+                {formatInlineMarkdown(line)}
+              </p>
+            );
+          }
+        });
+
+        flushList('end');
+
+        return <React.Fragment key={sIdx}>{elements}</React.Fragment>;
+      })}
+    </div>
+  );
+}
 
 export default function CareerCopilotView({
   activeContext = {},
@@ -435,7 +639,7 @@ export default function CareerCopilotView({
 
                       {msg.content && (
                         <div className="user-message-bubble">
-                          <p>{msg.content}</p>
+                          <p style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</p>
                         </div>
                       )}
                     </div>
@@ -519,7 +723,7 @@ export default function CareerCopilotView({
                     {/* Message Text Content */}
                     {msg.content && (
                       <div className="turn-markdown-box">
-                        <p>{msg.content}</p>
+                        <TurnMarkdownContent content={msg.content} />
                       </div>
                     )}
 

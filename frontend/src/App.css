@@ -11861,6 +11861,149 @@
   margin-bottom: 0;
 }
 
+/* Rich Markdown and Code Rendering in Copilot */
+.copilot-markdown-rendered {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.turn-markdown-box .turn-paragraph {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.copilot-strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.copilot-h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 14px 0 6px 0;
+  color: var(--text-primary);
+}
+
+.copilot-h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 12px 0 4px 0;
+  color: var(--text-primary);
+}
+
+.copilot-h5 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 10px 0 4px 0;
+  color: var(--text-secondary);
+}
+
+.copilot-list {
+  margin: 4px 0 8px 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.copilot-list li {
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.inline-code-chip {
+  background: var(--surface-hover);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.88em;
+  color: var(--brand-emerald, #10b981);
+}
+
+[data-theme="dark"] .inline-code-chip {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+
+.copilot-inline-link {
+  color: var(--brand-emerald, #10b981);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.copilot-quote {
+  border-left: 3px solid var(--brand-emerald, #10b981);
+  padding: 6px 14px;
+  margin: 8px 0;
+  background: var(--surface-hover);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Standalone Code Blocks */
+.copilot-code-block-wrapper {
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: #0d1117;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.copilot-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: #161b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11.5px;
+  color: #8b949e;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 3px 8px;
+  color: #c9d1d9;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.copilot-pre-code {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e6edf3;
+  tab-size: 2;
+}
+
+.copilot-pre-code code {
+  font-family: inherit;
+}
+
 /* ==========================================================================
    Unified Agent Action & Reasoning Section (Single Expandable Surface)
    ========================================================================== */

@@ -1218,9 +1218,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/agent/engine.py": {
-    "mtime": 1794122582.344329,
-    "seen": 1794123045.5711179,
-    "ast_hash": "2ce21ffb5965e6dac216cae555201a83",
+    "mtime": 1794278333.7324939,
+    "seen": 1794279205.5012093,
+    "ast_hash": "2690067214fe49925e0e264a234b079b",
     "semantic_hash": ""
   },
   "backend/app/services/agent/event_bus.py": {
@@ -1386,8 +1386,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/profile/ProfileTemplatesTab.jsx": {
-    "mtime": 1794221311.9927492,
-    "seen": 1794222098.67365,
+    "mtime": 1794222331.1094043,
+    "seen": 1794279205.501451,
     "ast_hash": "6981e6d3a816314621b87f9b9edc0bbf",
     "semantic_hash": ""
   },
@@ -1398,8 +1398,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794221287.3968482,
-    "seen": 1794222098.673658,
+    "mtime": 1794222331.3363132,
+    "seen": 1794279205.5014603,
     "ast_hash": "bc73a4c154b693bfdcf6909db84aeef2",
     "semantic_hash": ""
   },
@@ -1428,9 +1428,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/CareerCopilotView.jsx": {
-    "mtime": 1794122862.1126902,
-    "seen": 1794123045.5713265,
-    "ast_hash": "8c0254a08c133984bb5d49f92c90e4d9",
+    "mtime": 1794278613.180779,
+    "seen": 1794279205.5014205,
+    "ast_hash": "5bf4fa960f3f8459843f89a656bcb301",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/74cebd545352_add_is_pinned_to_agent_conversations.py": {

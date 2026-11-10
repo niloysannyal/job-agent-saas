@@ -27,10 +27,21 @@ AGENT_SYSTEM_PROMPT = """You are JobEazy Career Agent, an autonomous executive c
 YOUR MISSION:
 Autonomously discover matching opportunities, tailor candidate LaTeX CVs with mathematical ATS alignment, verify strict adherence to the Verified Fact Ledger (NEVER hallucinate unrecorded achievements or degrees), prepare compelling outreach, and guide interview preparation.
 
-NON-NEGOTIABLES:
-1. Human-in-the-Loop on Send: You NEVER dispatch external applications or emails automatically. You must always stage an action proposal using the `stage_application_proposal` tool so the candidate can review and click Approve.
-2. Anti-Hallucination Barrier: Only reference facts verified in the candidate's canonical profile.
-3. Decisive Action: When the user asks you to find jobs, tailor a resume, or prepare interview stories, call the appropriate tool.
+NON-NEGOTIABLES & STRICT DOMAIN BOUNDARY:
+1. STRICT PURPOSE & DOMAIN BOUNDARY (NO ARBITRARY CODE GENERATION):
+   - Your sole and exclusive purpose is automating job search, career profiling, CV tailoring, application pipeline management, outreach drafting, and interview coaching.
+   - You MUST REFUSE arbitrary coding tasks, general software engineering assignments, writing standalone code/scripts, data structures & algorithms implementations, homework, or general AI queries unrelated to the candidate's job search or interview prep.
+   - If the candidate asks you to write code (e.g. 'write a python script to...', 'implement a binary search tree', 'create class Node', 'solve this problem in Python'), politely and firmly DECLINE:
+     Explain that your role as JobEazy Career Agent is dedicated solely to finding matching jobs, tailoring resumes, managing applications, and coaching for job interviews. Redirect them to what you can do (e.g., finding relevant engineering roles, tailoring their CV for developer positions, or preparing STAR interview responses).
+   - The ONLY code you may ever discuss or generate is:
+     (a) LaTeX CV code specifically for the user's CV templates.
+     (b) High-level architectural or conceptual talking points specifically framed within a STAR behavioral or system design interview response.
+2. Human-in-the-Loop on Send: You NEVER dispatch external applications or emails automatically. You must always stage an action proposal using the `stage_application_proposal` tool so the candidate can review and click Approve.
+3. Anti-Hallucination Barrier: Only reference facts verified in the candidate's canonical profile.
+4. Decisive Action: When the user asks you to find jobs, tailor a resume, or prepare interview stories, call the appropriate tool.
+5. CLEAN & POLISHED PROSE:
+   - Your responses must be clean, professional, concise, and structured.
+   - Never output raw JSON escape characters, unescaped newlines, or unformatted text blocks. Use clear headings, bullet points, and well-spaced paragraphs.
 
 AVAILABLE TOOLS:
 {tools_doc}
@@ -156,8 +167,9 @@ class AgentEngine:
             convo.title = user_text[:35] + ("..." if len(user_text) > 35 else "")
             self.db.commit()
 
-        # 2. Check for deterministic fast-track intent or prepare LLM query
-        fast_tool = self._detect_fast_track_tool(user_text, context_filters)
+        # 2. Check for deterministic fast-track intent or out-of-scope requests or prepare LLM query
+        scope_refusal = self._evaluate_scope_boundary(user_text)
+        fast_tool = self._detect_fast_track_tool(user_text, context_filters) if not scope_refusal else None
         
         thought_content = ""
         tool_call_dict = None
@@ -165,7 +177,11 @@ class AgentEngine:
         widget_to_render = None
         tool_res_obj = None
 
-        if fast_tool:
+        if scope_refusal:
+            thought_content = scope_refusal["thought"]
+            tool_call_dict = None
+            assistant_text = scope_refusal["message"]
+        elif fast_tool:
             thought_content = f"Detected high-intent query: directing to {fast_tool['name']}."
             tool_call_dict = fast_tool
             assistant_text = f"Executing {fast_tool['name'].replace('_', ' ')} based on your request..."
@@ -424,6 +440,68 @@ class AgentEngine:
 
         return None
 
+    def _evaluate_scope_boundary(self, text: str) -> Optional[Dict[str, Any]]:
+        """
+        Enforce strict SaaS scope boundary:
+        The Career Copilot agent is dedicated strictly to job search automation,
+        LaTeX CV tailoring, application pipeline management, and interview coaching.
+        Arbitrary code generation, standalone scripts, algorithms, or programming assignments
+        are politely refused and redirected.
+        """
+        t = text.lower().strip()
+
+        # If it is an explicit career/job/interview/CV task, keep it in scope
+        in_scope_markers = [
+            "cv", "resume", "latex", "interview", "star", "job", "career",
+            "apply", "application", "outreach", "cover letter", "radar",
+            "experience", "salary", "portfolio", "headline", "recruiter",
+            "hire", "hiring", "posting", "referral"
+        ]
+        if any(marker in t for marker in in_scope_markers):
+            return None
+
+        # Check for standalone code generation / data structure / homework patterns
+        code_request_patterns = [
+            r"\b(?:write|code|create|generate|implement|build|give me)\s+(?:a|an|the|some)?\s*(?:python|javascript|typescript|java|c\+\+|c#|golang|rust|ruby|php|sql|bash|shell)?\s*(?:script|code|program|function|class|method|algorithm|snippet|solution|data structure)\b",
+            r"\b(?:implement|code|write)\s+(?:a|an)?\s*(?:node|binary tree|linked list|stack|queue|hashmap|trie|graph|sorting|quicksort|mergesort|dfs|bfs|dynamic programming)\b",
+            r"\b(?:solve|solution for)\s+(?:this\s+)?(?:leetcode|hackerrank|codewars|problem|algorithm|puzzle)\b",
+            r"\bclass\s+[A-Za-z0-9_]+\s*:\s*def\s+__init__",
+            r"\bdef\s+[a-z0-9_]+\s*\(.*\)\s*:",
+        ]
+
+        for pattern in code_request_patterns:
+            if re.search(pattern, t):
+                return {
+                    "thought": "Detected out-of-scope general programming request. My exclusive role is Job Application & Career Copilot.",
+                    "tool_call": None,
+                    "message": (
+                        "I am your dedicated **JobEazy Career Copilot**. My focus is exclusively on automating your job applications, tailoring your CV, managing your pipeline, and preparing you for interviews.\n\n"
+                        "I do not generate standalone programming scripts or data structures. However, I can help you with your technical career in several impactful ways:\n\n"
+                        "• **Find Software Engineering Roles**: Discover matching developer jobs aligned with your tech stack.\n"
+                        "• **Tailor Your CV**: Highlight your software projects, system design achievements, and tech skills for specific job openings.\n"
+                        "• **Technical & STAR Interview Coaching**: Practice explaining system design, architectural decisions, and behavioral scenarios.\n\n"
+                        "Would you like me to run a job radar scan or tailor your CV for an engineering opportunity?"
+                    ),
+                }
+
+        return None
+
+    def _clean_assistant_message(self, raw: str) -> str:
+        if not raw:
+            return ""
+        text = raw.strip()
+        # Unescape literal escaped newlines if raw JSON string leaked through
+        if "\\n" in text and "\n" not in text:
+            text = text.replace("\\n", "\n")
+        if "\\t" in text:
+            text = text.replace("\\t", "  ")
+        if '\\"' in text:
+            text = text.replace('\\"', '"')
+        # Close any unclosed markdown code fence
+        if text.count("```") % 2 != 0:
+            text += "\n```"
+        return text.strip()
+
     def _parse_llm_json(self, raw: str) -> Dict[str, Any]:
         """Robustly extracts JSON payload from LLM responses even if wrapped in backticks."""
         raw = raw.strip()
@@ -433,29 +511,44 @@ class AgentEngine:
             raw = match.group(1).strip()
 
         try:
-            return json.loads(raw)
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                if parsed.get("message"):
+                    parsed["message"] = self._clean_assistant_message(parsed["message"])
+                return parsed
         except Exception:
-            # Fallback: simple text response
-            return {
-                "thought": "Direct response generated.",
-                "tool_call": None,
-                "message": raw,
-            }
+            pass
+
+        # Fallback: clean text response
+        return {
+            "thought": "Direct response generated.",
+            "tool_call": None,
+            "message": self._clean_assistant_message(raw),
+        }
 
     def _chunk_text(self, text: str, size: int = 40) -> List[str]:
-        words = text.split(" ")
+        # Split by lines first so newlines are strictly preserved in chunks
+        lines = text.split("\n")
         chunks = []
-        current = []
-        current_len = 0
-        for w in words:
-            current.append(w)
-            current_len += len(w) + 1
-            if current_len >= size:
-                chunks.append(" ".join(current) + " ")
-                current = []
-                current_len = 0
-        if current:
-            chunks.append(" ".join(current))
+        for line_idx, line in enumerate(lines):
+            words = line.split(" ")
+            current = []
+            current_len = 0
+            for w in words:
+                current.append(w)
+                current_len += len(w) + 1
+                if current_len >= size:
+                    chunks.append(" ".join(current) + " ")
+                    current = []
+                    current_len = 0
+            if current:
+                chunks.append(" ".join(current))
+            # Preserve line break between lines
+            if line_idx < len(lines) - 1:
+                if chunks:
+                    chunks[-1] += "\n"
+                else:
+                    chunks.append("\n")
         return chunks
 
     async def approve_proposal(self, proposal_id: str, feedback: Optional[str] = None) -> Dict[str, Any]:
