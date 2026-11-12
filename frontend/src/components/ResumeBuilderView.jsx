@@ -18,6 +18,7 @@ import {
   FileCode,
   Eye,
   ExternalLink,
+  Layers,
 } from 'lucide-react';
 import LatexCodeEditor from './studio/LatexCodeEditor';
 import CompilerDiagnosticsDrawer from './studio/CompilerDiagnosticsDrawer';
@@ -52,7 +53,15 @@ export default function ResumeBuilderView({
     return 'Lead AI Systems Engineer Master CV';
   });
 
-  const [activeTemplate, setActiveTemplate] = useState('01_MODERN_TECH');
+  const [activeTemplate, setActiveTemplate] = useState(() => {
+    if (builderContext?.templateId && TEMPLATES.some((t) => t.id === builderContext.templateId)) {
+      return builderContext.templateId;
+    }
+    if (builderContext?.tailoredLatex || builderContext?.resumeLatex || builderContext?.resumeId) {
+      return 'custom';
+    }
+    return '01_MODERN_TECH';
+  });
   const [editedLatex, setEditedLatex] = useState('');
   const [initialLatex, setInitialLatex] = useState('');
   const [isCompiling, setIsCompiling] = useState(false);
@@ -90,6 +99,11 @@ export default function ResumeBuilderView({
       const src = builderContext.tailoredLatex || builderContext.resumeLatex;
       setEditedLatex(src);
       setInitialLatex(src);
+      if (builderContext?.templateId && TEMPLATES.some((t) => t.id === builderContext.templateId)) {
+        setActiveTemplate(builderContext.templateId);
+      } else {
+        setActiveTemplate('custom');
+      }
       return;
     }
 
@@ -104,13 +118,18 @@ export default function ResumeBuilderView({
             setEditedLatex(data.latex_source);
             setInitialLatex(data.latex_source);
           }
+          if (data?.template_id && TEMPLATES.some((t) => t.id === data.template_id)) {
+            setActiveTemplate(data.template_id);
+          } else {
+            setActiveTemplate('custom');
+          }
         })
         .catch(() => {});
       return;
     }
 
     // Default: compile from candidate profile
-    fetchTemplatePreview(activeTemplate);
+    fetchTemplatePreview(activeTemplate === 'custom' ? '01_MODERN_TECH' : activeTemplate);
   }, [builderContext, accountId]);
 
   // Fetch compiled LaTeX for a template from backend TeX compiler
@@ -362,30 +381,36 @@ export default function ResumeBuilderView({
             />
           </div>
 
-          {/* TEMPLATE SWITCHER PILLS */}
-          <div
-            className="template-pills-row cv-template-pills-row"
-            style={{ margin: 0, padding: 0, border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <span className="pills-label" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Template:
-            </span>
-            {TEMPLATES.map((tmpl) => {
-              const isSelected = activeTemplate === tmpl.id;
-              return (
-                <button
-                  key={tmpl.id}
-                  type="button"
-                  className={`pill-btn cv-template-pill ${isSelected ? 'active' : ''}`}
-                  onClick={() => fetchTemplatePreview(tmpl.id)}
-                  disabled={isCompiling}
-                  style={{ fontSize: '11.5px', padding: '3px 10px' }}
-                >
-                  {isSelected && <Check size={12} className="cv-pill-check-icon text-emerald-400" />}
-                  <span>{tmpl.label}</span>
-                </button>
-              );
-            })}
+          {/* TEMPLATE DROPDOWN */}
+          <div className="builder-template-dropdown-wrapper">
+            <Layers size={13} className="template-dropdown-icon text-emerald-400" />
+            <span className="template-dropdown-label">Template:</span>
+            <div className="builder-template-select-box">
+              <select
+                className="builder-template-select"
+                value={TEMPLATES.some((t) => t.id === activeTemplate) ? activeTemplate : 'custom'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'custom') {
+                    setActiveTemplate('custom');
+                    showToast?.('Switched to Custom template mode.');
+                  } else {
+                    fetchTemplatePreview(val);
+                  }
+                }}
+                disabled={isCompiling}
+                title="Choose Resume Template"
+              >
+                {TEMPLATES.map((tmpl) => (
+                  <option key={tmpl.id} value={tmpl.id}>
+                    {tmpl.label}
+                  </option>
+                ))}
+                <option value="custom">Custom (Bespoke LaTeX)</option>
+              </select>
+              <ChevronDown size={11} className="template-select-arrow" />
+            </div>
+            {isCompiling && <RefreshCw size={12} className="icon-spin text-emerald-400" />}
           </div>
         </div>
 
@@ -399,18 +424,18 @@ export default function ResumeBuilderView({
               disabled={isSaving}
               title="Save changes and return back to Application Studio"
             >
-              <Check size={14} />
+              <Check size={13} />
               <span>{isSaving ? 'Saving...' : 'Save & Return to Studio'}</span>
             </button>
           ) : (
             <button
               type="button"
-              className="action-btn-primary"
+              className="action-btn-primary btn-save-profile"
               onClick={handleSaveToProfile}
               disabled={isSaving}
               title="Save to My Resumes storage"
             >
-              <Save size={14} />
+              <Save size={13} />
               <span>{isSaving ? 'Saving...' : 'Save to Profile'}</span>
             </button>
           )}
@@ -423,7 +448,7 @@ export default function ResumeBuilderView({
             disabled={!editedLatex}
             title="Copy full LaTeX source to clipboard"
           >
-            {isCopied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            {isCopied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
             <span>{isCopied ? 'Copied!' : 'Copy LaTeX'}</span>
           </button>
 
@@ -438,9 +463,9 @@ export default function ResumeBuilderView({
               aria-expanded={isDownloadOpen}
               title="Download CV as PDF or LaTeX"
             >
-              <Download size={14} />
+              <Download size={13} />
               <span>Download</span>
-              <ChevronDown size={13} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
+              <ChevronDown size={11} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
             </button>
 
             {isDownloadOpen && (
@@ -490,11 +515,11 @@ export default function ResumeBuilderView({
           {/* FULLSCREEN TOGGLE */}
           <button
             type="button"
-            className="action-btn-secondary cv-toolbar-btn"
+            className="action-btn-secondary cv-toolbar-btn cv-toolbar-icon-btn"
             onClick={() => setIsFullscreen((prev) => !prev)}
             title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
           >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
           </button>
         </div>
       </div>

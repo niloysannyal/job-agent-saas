@@ -11431,7 +11431,7 @@
       "file_type": "code",
       "norm_label": "resumebuilderview()",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L34"
+      "source_location": "L35"
     },
     {
       "id": "frontend_src_components_resumebuilderview_resumebuilderview_handleclickoutside",
@@ -11443,7 +11443,7 @@
       "file_type": "code",
       "norm_label": "handleclickoutside()",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L74"
+      "source_location": "L83"
     },
     {
       "id": "frontend_src_components_studio_resumepreviewmodal_resumepreviewmodal",
@@ -29982,7 +29982,7 @@
       "file_type": "code",
       "norm_label": "templates",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L28"
+      "source_location": "L29"
     },
     {
       "id": "frontend_src_components_studio_compilerdiagnosticsdrawer",
@@ -39564,7 +39564,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L202",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -39576,7 +39576,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L207",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -39588,7 +39588,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L211",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -39600,7 +39600,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L238",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -39612,7 +39612,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L453",
+      "source_location": "L478",
       "weight": 1.0
     },
     {
@@ -39624,7 +39624,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L475",
+      "source_location": "L500",
       "weight": 1.0
     },
     {
@@ -60624,7 +60624,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -60636,7 +60636,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -60648,7 +60648,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -60660,7 +60660,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -60672,7 +60672,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -60684,7 +60684,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -60696,7 +60696,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -60708,7 +60708,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -60720,7 +60720,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -72720,7 +72720,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -72732,7 +72732,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -72744,7 +72744,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -72756,7 +72756,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0
     },
     {
@@ -72768,7 +72768,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -91759,7 +91759,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -91770,7 +91770,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -104221,7 +104221,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L80",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -114729,5 +114729,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b3aacddedb0aeda614fef4ec02adbd85399cfd13"
+  "built_at_commit": "cdef962e57fd141667e3cc656e7b384b5bffbe8a"
 }
