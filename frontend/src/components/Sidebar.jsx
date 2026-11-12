@@ -17,6 +17,7 @@ import {
   Server,
   Layers,
   FileCode,
+  FileText,
   Search,
   Moon,
   Sun,

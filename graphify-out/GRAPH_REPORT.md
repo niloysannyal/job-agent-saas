@@ -1,7 +1,7 @@
 # Graph Report - job-agent-saas  (2026-11-12)
 
 ## Corpus Check
-- 264 files · ~1,395,773 words
+- 264 files · ~191,733 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ec942e37`
+- Built from commit: `a2e3520d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -667,9 +667,9 @@ Nodes (3): 4.1 Interface Specification, 4.2 Thresholds & Batch Budgeting, 4. Quo
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Account` connect `Account` to `Any`, `tailor_service.py`, `get_me`, `test_profile.py`, `llm_provider.py`, `api/profile.py`, `SendGateway`, `JobPosting`, `job.py`, `applications.py`, `config.py`, `test_jobs.py`, `main.py`, `Base`, `integrations.py`, `Job`, `api/agent.py`, `test_admin.py`, `admin.py`, `account.py`, `test_cv_tailor_service_with_structured_profile`, `Architecture — Job Application Agent SaaS`, `LLMService`, `jobs.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `worker.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `UserProfile`, `StarStory`, `models/__init__.py`, `gateway.py`, `test_interview.py`, `test_models.py`, `Application`, `test_profile_resumes.py`, `client`?**
-  _High betweenness centrality (0.144) - this node is a cross-community bridge._
+  _High betweenness centrality (0.143) - this node is a cross-community bridge._
 - **Why does `Job` connect `Job` to `tailor_service.py`, `JobPosting`, `SendGateway`, `job.py`, `applications.py`, `session.py`, `test_jobs.py`, `matching/service.py`, `Base`, `MatchingService`, `test_admin.py`, `admin.py`, `account.py`, `test_cv_tailor_service_with_structured_profile`, `Architecture — Job Application Agent SaaS`, `detective.py`, `AgentEngine`, `LLMService`, `jobs.py`, `logging`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `worker.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `UserProfile`, `StarStory`, `models/__init__.py`, `gateway.py`, `test_models.py`, `Application`, `client`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Why does `Base` connect `Base` to `tailor_service.py`, `JobPosting`, `test_profile.py`, `llm_provider.py`, `api/profile.py`, `SendGateway`, `job.py`, `session.py`, `test_jobs.py`, `main.py`, `Account`, `integrations.py`, `Job`, `api/agent.py`, `test_admin.py`, `admin.py`, `account.py`, `lucide-react`, `LLMService`, `logging`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `worker.py`, `UserProfile`, `StarStory`, `check_migrations.py`, `models/__init__.py`, `db_session`, `test_interview.py`, `test_models.py`, `Application`, `8. Persistence, Checkpointers & Hold-Queue Architecture`, `test_profile_resumes.py`, `client`?**
   _High betweenness centrality (0.065) - this node is a cross-community bridge._
 - **Are the 129 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**

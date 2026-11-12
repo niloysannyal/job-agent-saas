@@ -470,10 +470,10 @@ export default function ResumeBuilderView({
                       <div className="cv-header-top-row">
                         <div className="cv-header-left">
                           <h1 className="cv-name">
-                            {(parsedDoc.header.name || profileForm?.full_name || 'CANDIDATE NAME').toUpperCase()}
+                            {(parsedDoc.header?.name || profileForm?.full_name || 'CANDIDATE NAME').toUpperCase()}
                           </h1>
                           <div className="cv-header-links-row">
-                            {parsedDoc.header.leftLinks.map((lk, lIdx) => (
+                            {(parsedDoc.header?.leftLinks || []).map((lk, lIdx) => (
                               <React.Fragment key={lIdx}>
                                 <a href={lk.url} target="_blank" rel="noopener noreferrer" className="cv-header-link">
                                   {lk.label}
@@ -486,7 +486,28 @@ export default function ResumeBuilderView({
 
                         <div className="cv-header-right">
                           <div className="cv-location-line">
-                            Location: {parsedDoc.header.location || [profileForm?.location_city, profileForm?.location_country].filter(Boolean).join(', ') || 'Remote'}
+                            Location: {parsedDoc.header?.location || [profileForm?.location_city, profileForm?.location_country].filter(Boolean).join(', ') || 'Remote'}
+                          </div>
+                          <div className="cv-header-contact-row">
+                            {(parsedDoc.header?.rightLinks || []).map((rk, rIdx) => (
+                              <React.Fragment key={rIdx}>
+                                <span className="cv-contact-prefix">
+                                  {rk.url?.startsWith('mailto:') ? 'Email: ' : 'Mobile: '}
+                                </span>
+                                <a
+                                  href={rk.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="cv-header-link"
+                                  title={rk.url}
+                                >
+                                  {rk.label}
+                                </a>
+                                {rIdx < parsedDoc.header.rightLinks.length - 1 && (
+                                  <span className="cv-link-pipe">|</span>
+                                )}
+                              </React.Fragment>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -494,38 +515,99 @@ export default function ResumeBuilderView({
                     </div>
                   )}
 
-                  {page.sections.map((sec, sIdx) => {
+                  {(page.sections || []).map((sec, secIdx) => {
                     const cleanTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
                     const showTitle = Boolean(cleanTitle && !sec.isContinuation);
                     return (
-                      <div key={sIdx} className="cv-section-container">
+                      <div key={secIdx} className="cv-section-container">
                         {showTitle && (
-                          <div className="cv-section-title-row">
-                            <h2 className="cv-section-title">{cleanTitle.toUpperCase()}</h2>
+                          <div className="cv-section-title-wrap">
+                            <h3 className="cv-section-heading">{cleanTitle}</h3>
                             <div className="cv-section-rule" />
                           </div>
                         )}
-                        {sec.entries.map((entry, eIdx) => (
-                          <div key={eIdx} className="cv-entry-block">
-                            <div className="cv-entry-row-1">
-                              <span className="cv-entry-bold">{entry.company}</span>
-                              <span className="cv-entry-italic">{entry.location}</span>
-                            </div>
-                            <div className="cv-entry-row-2">
-                              <span className="cv-entry-italic">{entry.title}</span>
-                              <span className="cv-entry-date">{entry.dates}</span>
-                            </div>
-                            {entry.bullets.map((b, bIdx) => (
-                              <div key={bIdx} className="cv-bullet-item">
-                                <span className="cv-bullet-dot">•</span>
-                                <span className="cv-bullet-text">{b}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
+
+                        <div className="cv-section-items-body">
+                          {(sec.items || []).map((item, itemIdx) => {
+                            if (item.type === 'skills_line') {
+                              return (
+                                <div key={itemIdx} className="cv-skills-row">
+                                  <strong
+                                    className="skills-category-col"
+                                    dangerouslySetInnerHTML={{
+                                      __html: item.categoryHtml ? `${item.categoryHtml}:` : `${item.category}:`,
+                                    }}
+                                  />
+                                  <span
+                                    className="skills-content-col"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                </div>
+                              );
+                            }
+                            if (item.type === 'heading') {
+                              return (
+                                <div key={itemIdx} className="cv-quad-heading-block">
+                                  <div className="quad-row quad-top">
+                                    <span
+                                      className="quad-role-title"
+                                      dangerouslySetInnerHTML={{ __html: item.roleHtml || item.role }}
+                                    />
+                                    <span
+                                      className="quad-location-text"
+                                      dangerouslySetInnerHTML={{ __html: item.locationOrDateHtml || item.locationOrDate }}
+                                    />
+                                  </div>
+                                  <div className="quad-row quad-bottom">
+                                    <span
+                                      className="quad-company-text"
+                                      dangerouslySetInnerHTML={{ __html: `<em>${item.companyOrDegreeHtml || item.companyOrDegree}</em>` }}
+                                    />
+                                    {(item.submetaHtml || item.submeta) && (
+                                      <span
+                                        className="quad-dates-text"
+                                        dangerouslySetInnerHTML={{ __html: `<em>${item.submetaHtml || item.submeta}</em>` }}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (item.type === 'trio_heading') {
+                              return (
+                                <div key={itemIdx} className="cv-trio-heading-block">
+                                  <div
+                                    className="trio-title-text"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                  {item.right && <span className="trio-right-text">{item.right}</span>}
+                                </div>
+                              );
+                            }
+                            if (item.type === 'bullet') {
+                              return (
+                                <div key={itemIdx} className="cv-bullet-item-row">
+                                  <span className="cv-bullet-point">•</span>
+                                  <div
+                                    className="cv-bullet-text-wrap"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={itemIdx}
+                                className="cv-prose-text-wrap"
+                                dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                              />
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
+                  <div className="a4-page-number-footer">Page {page.pageNumber} of {paginatedPages.length}</div>
                 </div>
               ))}
             </div>
@@ -535,3 +617,4 @@ export default function ResumeBuilderView({
     </div>
   );
 }
+

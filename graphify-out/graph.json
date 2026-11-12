@@ -10855,7 +10855,7 @@
       "file_type": "code",
       "norm_label": "sidebar()",
       "source_file": "frontend/src/components/Sidebar.jsx",
-      "source_location": "L40"
+      "source_location": "L41"
     },
     {
       "id": "frontend_src_components_sidebar_sidebar_handleclickoutside",
@@ -10867,7 +10867,7 @@
       "file_type": "code",
       "norm_label": "handleclickoutside()",
       "source_file": "frontend/src/components/Sidebar.jsx",
-      "source_location": "L120"
+      "source_location": "L121"
     },
     {
       "id": "frontend_src_context_agentcontext_useagent",
@@ -39625,7 +39625,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/Sidebar.jsx",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -91686,7 +91686,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/Sidebar.jsx",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -104115,7 +104115,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "frontend/src/components/Sidebar.jsx",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -114611,5 +114611,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ec942e375c55e7d6ab8663e99094e20b8a658172"
+  "built_at_commit": "a2e3520d44951be26efbe908ab116e2ddc923c05"
 }

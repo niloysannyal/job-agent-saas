@@ -30,8 +30,8 @@
     "semantic_hash": ""
   },
   "backend/app/api/profile.py": {
-    "mtime": 1794469910.6732502,
-    "seen": 1794470565.4136093,
+    "mtime": 1794470835.6639156,
+    "seen": 1794471365.0814807,
     "ast_hash": "b15d75d00331f85b2a7126d6e800bec8",
     "semantic_hash": ""
   },
@@ -108,8 +108,8 @@
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
-    "mtime": 1794469514.6443417,
-    "seen": 1794470565.4187438,
+    "mtime": 1794470835.7798877,
+    "seen": 1794471365.081526,
     "ast_hash": "b0328e5a0be80530c7bf61acaaaabcb0",
     "semantic_hash": ""
   },
@@ -312,8 +312,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/matching/profile_parser.py": {
-    "mtime": 1794469656.314913,
-    "seen": 1794470565.425368,
+    "mtime": 1794470835.904731,
+    "seen": 1794471365.0816195,
     "ast_hash": "e032be96aade25d79f0b96aeba5a5ccf",
     "semantic_hash": ""
   },
@@ -468,8 +468,8 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1794470300.7338336,
-    "seen": 1794470565.4306524,
+    "mtime": 1794470836.5200756,
+    "seen": 1794471365.0816865,
     "ast_hash": "48a9da41575aacff509cc414fabef780",
     "semantic_hash": ""
   },
@@ -522,15 +522,15 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1794470174.8641207,
-    "seen": 1794470565.4318237,
+    "mtime": 1794470836.8726983,
+    "seen": 1794471365.0817065,
     "ast_hash": "c97896607e7d657d7a8ae4d4b3996ea7",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1794470129.5994513,
-    "seen": 1794470565.4318275,
-    "ast_hash": "dc8bac81f07ff268255f82e3001a941d",
+    "mtime": 1794471304.9382913,
+    "seen": 1794471365.0817094,
+    "ast_hash": "4119b310932f981a5abfa8fe0cd02fb0",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -1398,8 +1398,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
-    "mtime": 1794470236.809877,
-    "seen": 1794470565.4339452,
+    "mtime": 1794470837.4845474,
+    "seen": 1794471365.0817397,
     "ast_hash": "0c50df693f609038a5911282878ab1ef",
     "semantic_hash": ""
   },
@@ -1620,21 +1620,27 @@
     "semantic_hash": ""
   },
   "backend/tests/test_profile_resumes.py": {
-    "mtime": 1794469896.2011874,
-    "seen": 1794470565.4303036,
+    "mtime": 1794470836.0650692,
+    "seen": 1794471365.0816803,
     "ast_hash": "5025bf73e165fa4216c7f1d9e269c686",
     "semantic_hash": ""
   },
   "frontend/src/components/ResumeBuilderView.jsx": {
-    "mtime": 1794470119.5334482,
-    "seen": 1794470565.4318259,
-    "ast_hash": "594a403b74d0061a0f9d470c223cf2b6",
+    "mtime": 1794471304.813134,
+    "seen": 1794471365.081708,
+    "ast_hash": "885270eb0a4202676f17d270f4118a70",
     "semantic_hash": ""
   },
   "frontend/src/components/profile/SavedResumesTab.jsx": {
-    "mtime": 1794470066.9214385,
-    "seen": 1794470565.4336529,
-    "ast_hash": "1ca7e2b275a68252525a65ee05a7f00d",
+    "mtime": 1794471305.0407016,
+    "seen": 1794471365.081735,
+    "ast_hash": "cba3fe8c2f67ed25d5306dbb658af5d9",
+    "semantic_hash": ""
+  },
+  "backups/jobeazy_latest.json": {
+    "mtime": 1794470651.1543336,
+    "seen": 1794470692.216752,
+    "ast_hash": "93a691b6699a480aabe15d2c4de468e7",
     "semantic_hash": ""
   }
 }
