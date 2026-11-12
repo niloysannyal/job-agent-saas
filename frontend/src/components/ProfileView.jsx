@@ -7,6 +7,7 @@ import {
   FolderGit2,
   Compass,
   FileCode,
+  FileText,
   Upload,
 } from 'lucide-react';
 import { parseLatexDocument, paginateParsedDocument, compileParsedLatexToPdf } from '../utils/latexCompiler';
@@ -17,6 +18,7 @@ import ProfileSkillsTab from './profile/ProfileSkillsTab';
 import ProfileProjectsTab from './profile/ProfileProjectsTab';
 import ProfileTargetsTab from './profile/ProfileTargetsTab';
 import ProfileTemplatesTab from './profile/ProfileTemplatesTab';
+import SavedResumesTab from './profile/SavedResumesTab';
 import ProfileExperienceModal from './profile/ProfileExperienceModal';
 import ProfileEducationModal from './profile/ProfileEducationModal';
 import ProfileProjectModal from './profile/ProfileProjectModal';
@@ -43,8 +45,9 @@ export default function ProfileView({
   authHeaders = {},
   onOpenOnboarding,
   onRefreshProfile,
+  onNavigate,
 }) {
-  const [activeTab, setActiveTab] = useState('identity'); // identity | experience | education | skills | projects | targets | template
+  const [activeTab, setActiveTab] = useState('identity'); // identity | experience | education | skills | projects | targets | resumes
 
   // Local state for modals/forms
   const [newRole, setNewRole] = useState('');
@@ -549,14 +552,11 @@ export default function ProfileView({
           <span>Target Roles & Modes</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeTab === 'template' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('template');
-            if (!previewLatex) handleFetchPreview();
-          }}
+          className={`sub-tab-btn ${activeTab === 'resumes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('resumes')}
         >
-          <FileCode size={16} />
-          <span>CV Template & Preview</span>
+          <FileText size={16} />
+          <span>My Resumes</span>
         </button>
       </div>
 
@@ -635,23 +635,13 @@ export default function ProfileView({
         />
       )}
 
-      {/* TAB 7: CV TEMPLATE & PREVIEW */}
-      {activeTab === 'template' && (
-        <ProfileTemplatesTab
-          previewTemplateName={previewTemplateName}
-          handleFetchPreview={handleFetchPreview}
-          isLoadingPreview={isLoadingPreview}
-          previewLatex={previewLatex}
-          editedLatex={editedLatex}
-          setEditedLatex={setEditedLatex}
-          isCopied={isCopied}
-          handleCopyLatex={handleCopyLatex}
-          previewMode={previewMode}
-          setPreviewMode={setPreviewMode}
-          handleDownloadLatex={handleDownloadLatex}
-          handleDownloadPdf={handleDownloadPdf}
-          parsedDoc={parsedDoc}
-          paginatedPages={paginatedPages}
+      {/* TAB 7: MY RESUMES (CV KEEPER & BUILDER LAUNCHER) */}
+      {activeTab === 'resumes' && (
+        <SavedResumesTab
+          accountId={accountId}
+          authHeaders={authHeaders}
+          showToast={showToast}
+          onNavigate={onNavigate}
           profileForm={profileForm}
         />
       )}

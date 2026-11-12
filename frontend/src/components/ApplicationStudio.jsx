@@ -770,6 +770,7 @@ ${candidateEmail} | ${candidateLinkedin}`;
         previewRef={previewRef}
         paginatedPages={paginatedPages}
         parsedDoc={parsedDoc}
+        onNavigate={onNavigate}
       />
 
       {/* STRICT HUMAN-IN-THE-LOOP SEND GATE */}

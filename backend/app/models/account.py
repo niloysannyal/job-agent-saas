@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from app.models.job import Job
     from app.models.llm_provider import LLMProviderConfig
     from app.models.oauth import OAuthConnection
-    from app.models.profile import UserProfile
+    from app.models.profile import UserProfile, UserResume
     from app.models.subscription import Entitlement
 
 
@@ -124,6 +124,11 @@ class Account(Base):
     )
     oauth_connections: Mapped[List["OAuthConnection"]] = relationship(
         "OAuthConnection",
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+    resumes: Mapped[List["UserResume"]] = relationship(
+        "UserResume",
         back_populates="account",
         cascade="all, delete-orphan",
     )

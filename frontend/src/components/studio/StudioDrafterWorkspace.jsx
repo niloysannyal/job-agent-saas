@@ -23,6 +23,7 @@ import {
   Check,
   Maximize2,
   Minimize2,
+  Edit2,
 } from 'lucide-react';
 import StudioFactAuditBadge from './StudioFactAuditBadge';
 import { StudioFormQAEditor, StudioFormQADispatchHub } from './StudioFormQAWorkspace';
@@ -76,6 +77,7 @@ export default function StudioDrafterWorkspace({
   previewRef,
   paginatedPages = [],
   parsedDoc,
+  onNavigate,
 }) {
   const editorRef = useRef(null);
   const [splitRatio, setSplitRatio] = useState(48);
@@ -179,8 +181,8 @@ export default function StudioDrafterWorkspace({
             className={`draft-tab ${activeDraftTab === 'latex' ? 'active' : ''}`}
             onClick={() => setActiveDraftTab('latex')}
           >
-            <Terminal className="tab-icon-sm" />
-            <span>Tailored LaTeX CV (Overleaf Engine)</span>
+            <FileText className="tab-icon-sm" />
+            <span>Tailored Resume (PDF)</span>
           </button>
           <button
             className={`draft-tab ${activeDraftTab === 'cover' ? 'active' : ''}`}
@@ -385,67 +387,102 @@ export default function StudioDrafterWorkspace({
             )}
 
             {activeDraftTab === 'latex' && (
-              <div className="overleaf-editor-wrapper" style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <LatexCodeEditor
-                  ref={editorRef}
-                  value={editedLatex}
-                  onChange={setEditedLatex}
-                  onCompile={handleCompile}
-                  extraActions={
-                    <>
-                      <div
-                        className="editor-tool-btn compact-tool-btn"
-                        title="Budget CV (1 or 2 pages)"
-                      >
-                        <Scissors size={13} />
-                        <select
-                          className="compact-select-overlay"
-                          defaultValue=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              handleCompactToPages(Number(e.target.value));
-                              e.target.value = '';
-                            }
-                          }}
-                          title="Budget CV to 1 or 2 pages"
-                        >
-                          <option value="" disabled>Compact CV to...</option>
-                          <option value="1">1 Page</option>
-                          <option value="2">2 Pages</option>
-                        </select>
-                      </div>
-                      <button
-                        type="button"
-                        className="editor-tool-btn"
-                        onClick={handleDownloadLatex}
-                        title="Download raw LaTeX (.tex) file"
-                      >
-                        <Download size={13} />
-                        <span style={{ fontSize: '11px', marginLeft: '3px' }}>.tex</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="editor-tool-btn"
-                        onClick={() => handleCopyDraft(editedLatex, 'LaTeX Source')}
-                        title="Copy LaTeX source"
-                      >
-                        <Copy size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        className="editor-tool-btn"
-                        onClick={() => setIsFullscreen((prev) => !prev)}
-                        title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
-                      >
-                        {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                      </button>
-                    </>
-                  }
-                />
-                <CompilerDiagnosticsDrawer
-                  diagnostics={diagnostics}
-                  onJumpToLine={(line) => editorRef.current?.jumpToLine(line)}
-                />
+              <div className="studio-tailored-resume-card">
+                <div className="tailored-resume-header">
+                  <div className="tailored-resume-icon-badge">
+                    <FileText size={22} className="text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="tailored-resume-title">
+                      Tailored Resume for {customCompany || 'Opportunity'}
+                    </h3>
+                    <span className="tailored-resume-role">
+                      Target Role: {customRole || 'AI Engineer'} • {paginatedPages.length} {paginatedPages.length === 1 ? 'Page' : 'Pages'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tailored-resume-actions-row">
+                  <button
+                    type="button"
+                    className="btn-studio-edit-builder"
+                    onClick={() => {
+                      onNavigate?.('builder', {
+                        returnTo: 'studio',
+                        resumeLatex: editedLatex,
+                        job: { company: customCompany, title: customRole },
+                      });
+                    }}
+                    title="Open in dedicated Resume Builder to edit LaTeX code and styling"
+                  >
+                    <Edit2 size={15} />
+                    <span>Edit in Resume Builder</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-studio-download-pdf"
+                    onClick={handleDownloadPdf}
+                    title="Download tailored PDF"
+                  >
+                    <Download size={14} />
+                    <span>Download PDF</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-studio-download-tex"
+                    onClick={handleDownloadLatex}
+                    title="Download LaTeX source"
+                  >
+                    <FileCode size={14} />
+                    <span>.tex</span>
+                  </button>
+                </div>
+
+                <div className="tailored-resume-info-box">
+                  <div className="info-box-header">
+                    <Sparkles size={14} className="text-emerald-400" />
+                    <span>Verified Tailoring Highlights</span>
+                  </div>
+                  <p className="info-box-text">
+                    This resume has been algorithmically optimized for <strong>{customCompany || 'the hiring organization'}</strong>.
+                    Facts and achievements are verified against your master profile with zero hallucination.
+                  </p>
+                  <div className="tailored-resume-stats-row">
+                    <div className="stat-item">
+                      <span className="stat-label">Page Budget</span>
+                      <span className="stat-value">{paginatedPages.length} of 2 Pages</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">ATS Compliance</span>
+                      <span className="stat-value text-emerald-400">100% Text Layer</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Page Engine</span>
+                      <span className="stat-value">A4 Clean Standard</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="builder-launch-callout">
+                  <span className="callout-text">
+                    Need to modify bullet points, reorder sections, or change LaTeX formatting?
+                  </span>
+                  <button
+                    type="button"
+                    className="callout-link-btn"
+                    onClick={() => {
+                      onNavigate?.('builder', {
+                        returnTo: 'studio',
+                        resumeLatex: editedLatex,
+                        job: { company: customCompany, title: customRole },
+                      });
+                    }}
+                  >
+                    Launch Full LaTeX Editor &rarr;
+                  </button>
+                </div>
               </div>
             )}
 

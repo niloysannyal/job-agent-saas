@@ -125,6 +125,10 @@ class UserProfile(Base):
         "Certification", back_populates="profile", cascade="all, delete-orphan",
         order_by="Certification.order_index",
     )
+    resumes: Mapped[List["UserResume"]] = relationship(
+        "UserResume", back_populates="profile", cascade="all, delete-orphan",
+        order_by="UserResume.created_at.desc()",
+    )
 
 
 class WorkExperience(Base):
@@ -486,6 +490,54 @@ class SpokenLanguage(Base):
     )
 
 
+class UserResume(Base):
+    """
+    Saved candidate resume/CV documents (uploaded PDFs or built via LaTeX Resume Builder).
+    Enforces multi-tenant scoping via account_id and supports up to 5 resumes per account.
+    """
+    __tablename__ = "user_resumes"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    profile_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("user_profiles.id", ondelete="CASCADE"),
+        index=True, nullable=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="uploaded",
+        doc="'uploaded' | 'builder'",
+    )
+    latex_source: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    pdf_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Base64 encoded PDF
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    page_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relationships
+    account: Mapped["Account"] = relationship("Account", back_populates="resumes")
+    profile: Mapped[Optional["UserProfile"]] = relationship("UserProfile", back_populates="resumes")
+
+
+
 # ---------------------------------------------------------------------------
 # Pydantic Schemas
 # ---------------------------------------------------------------------------
@@ -821,3 +873,55 @@ class UserProfileRead(UserProfileBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# UserResume Schemas
+class UserResumeBase(BaseModel):
+    name: str
+    filename: str
+    source_type: str = "uploaded"  # 'uploaded' | 'builder'
+    latex_source: Optional[str] = None
+    file_size_bytes: int = 0
+    page_count: int = 1
+    extracted_text: Optional[str] = None
+    is_default: bool = False
+
+
+class UserResumeCreate(UserResumeBase):
+    pdf_data: Optional[str] = None
+
+
+class UserResumeUpdate(BaseModel):
+    name: Optional[str] = None
+    is_default: Optional[bool] = None
+    latex_source: Optional[str] = None
+    pdf_data: Optional[str] = None
+
+
+class UserResumeSummary(BaseModel):
+    id: str
+    account_id: str
+    profile_id: Optional[str] = None
+    name: str
+    filename: str
+    source_type: str
+    file_size_bytes: int
+    page_count: int
+    is_default: bool
+    has_latex: bool = False
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserResumeRead(UserResumeBase):
+    id: str
+    account_id: str
+    profile_id: Optional[str] = None
+    pdf_data: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+

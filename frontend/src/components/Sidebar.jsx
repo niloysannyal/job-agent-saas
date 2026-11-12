@@ -188,6 +188,11 @@ export default function Sidebar({
         icon: FileEdit,
       },
       {
+        id: 'builder',
+        label: 'Resume Builder',
+        icon: FileText,
+      },
+      {
         id: 'pipeline',
         label: 'Application Pipeline',
         icon: Kanban,

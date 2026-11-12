@@ -7,12 +7,18 @@ All endpoints are scoped to account_id (multi-tenant, Phase 0 trusted parameter 
 see ARCHITECTURE.md §13 for the Phase 3 auth migration plan).
 """
 import base64
+import io
 import json
+import logging
+import re
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
-from sqlalchemy import or_, select
+from fastapi import APIRouter, Body, Depends, File, Form, Header, HTTPException, Query, Response, UploadFile, status
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
+import pypdf
+
+logger = logging.getLogger(__name__)
 
 from app.core.auth import get_current_account
 from app.db.session import get_db
@@ -61,6 +67,11 @@ from app.models.profile import (
     WorkExperienceCreate,
     WorkExperienceRead,
     WorkExperienceUpdate,
+    UserResume,
+    UserResumeCreate,
+    UserResumeRead,
+    UserResumeSummary,
+    UserResumeUpdate,
 )
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -1337,6 +1348,437 @@ def compile_texlive(
         **result,
         "pdf_base64": pdf_base64,
     }
+
+
+# ---------------------------------------------------------------------------
+# Saved Resumes & CV Keeper Endpoints (Max 5 Resumes Per Tenant)
+# ---------------------------------------------------------------------------
+
+def _resolve_target_account_id(
+    account_id: Optional[str],
+    x_account_id: Optional[str],
+    authorization: Optional[str],
+    db: Session,
+) -> str:
+    from app.core.auth import decode_access_token
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            token = authorization.split("Bearer ")[1].strip()
+            payload = decode_access_token(token)
+            sub = payload.get("sub")
+            if sub:
+                return sub
+        except Exception:
+            pass
+    target = account_id or x_account_id
+    if target:
+        return target
+    first_acc = db.scalars(select(Account).order_by(Account.created_at)).first()
+    if first_acc:
+        return first_acc.id
+    raise HTTPException(status_code=400, detail="account_id required")
+
+
+@router.get(
+    "/resumes",
+    summary="List all saved resumes for the tenant account (max 5)",
+)
+def list_user_resumes(
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    target_id = _resolve_target_account_id(account_id, x_account_id, authorization, db)
+
+    stmt = (
+        select(UserResume)
+        .where(UserResume.account_id == target_id)
+        .order_by(UserResume.is_default.desc(), UserResume.created_at.desc())
+    )
+    resumes = db.scalars(stmt).all()
+
+    items = [
+        UserResumeSummary(
+            id=r.id,
+            account_id=r.account_id,
+            profile_id=r.profile_id,
+            name=r.name,
+            filename=r.filename,
+            source_type=r.source_type,
+            file_size_bytes=r.file_size_bytes,
+            page_count=r.page_count,
+            is_default=r.is_default,
+            has_latex=bool(r.latex_source and r.latex_source.strip()),
+            created_at=r.created_at,
+            updated_at=r.updated_at,
+        )
+        for r in resumes
+    ]
+    return {
+        "account_id": target_id,
+        "count": len(items),
+        "max_limit": 5,
+        "resumes": items,
+    }
+
+
+@router.post(
+    "/resumes/upload",
+    summary="Upload a readymade PDF resume/CV document (max 5 enforced)",
+)
+async def upload_user_resume(
+    file: UploadFile = File(...),
+    name: Optional[str] = Form(None),
+    is_default: bool = Form(False),
+    account_id: Optional[str] = Form(None),
+    query_account_id: Optional[str] = Query(None, alias="account_id"),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    effective_acc_id = account_id or query_account_id
+    target_id = _resolve_target_account_id(effective_acc_id, x_account_id, authorization, db)
+
+    existing_count = db.scalar(
+        select(func.count(UserResume.id)).where(UserResume.account_id == target_id)
+    ) or 0
+    if existing_count >= 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum limit of 5 saved resumes reached. Please delete an existing resume to upload a new one.",
+        )
+
+    filename = file.filename or "resume.pdf"
+    if not filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File exceeds maximum 10MB limit.")
+
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(content))
+        page_count = max(1, len(reader.pages))
+        extracted_text_pieces = []
+        for p in reader.pages:
+            t = p.extract_text()
+            if t:
+                extracted_text_pieces.append(t)
+        extracted_text = "\n".join(extracted_text_pieces).strip()
+    except Exception as e:
+        logger.warning(f"Failed to parse PDF text with pypdf: {e}")
+        page_count = 1
+        extracted_text = ""
+
+    display_name = (name or "").strip()
+    if not display_name:
+        display_name = filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ").title()
+
+    should_be_default = is_default or (existing_count == 0)
+    if should_be_default:
+        db.query(UserResume).filter(UserResume.account_id == target_id).update({"is_default": False})
+
+    profile = _get_or_create_profile(db, target_id)
+    pdf_b64 = base64.b64encode(content).decode("ascii")
+
+    resume = UserResume(
+        account_id=target_id,
+        profile_id=profile.id,
+        name=display_name,
+        filename=filename,
+        source_type="uploaded",
+        latex_source=None,
+        pdf_data=pdf_b64,
+        file_size_bytes=len(content),
+        page_count=page_count,
+        extracted_text=extracted_text,
+        is_default=should_be_default,
+    )
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+
+    return {
+        "id": resume.id,
+        "account_id": resume.account_id,
+        "name": resume.name,
+        "filename": resume.filename,
+        "source_type": resume.source_type,
+        "file_size_bytes": resume.file_size_bytes,
+        "page_count": resume.page_count,
+        "is_default": resume.is_default,
+        "has_latex": False,
+        "created_at": resume.created_at.isoformat(),
+        "updated_at": resume.updated_at.isoformat(),
+    }
+
+
+@router.post(
+    "/resumes/save-builder",
+    summary="Save or compile a resume from LaTeX Resume Builder",
+)
+def save_builder_resume(
+    payload: Dict[str, Any] = Body(...),
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    effective_acc_id = account_id or payload.get("account_id")
+    target_id = _resolve_target_account_id(effective_acc_id, x_account_id, authorization, db)
+
+    name = (payload.get("name") or "Built Resume").strip()
+    latex_source = (payload.get("latex_source") or "").strip()
+    pdf_base64 = payload.get("pdf_base64")
+    resume_id = payload.get("resume_id")
+    is_default = payload.get("is_default", False)
+
+    if not latex_source:
+        raise HTTPException(status_code=400, detail="latex_source cannot be empty.")
+
+    existing_resume = None
+    if resume_id:
+        existing_resume = db.scalars(
+            select(UserResume).where(UserResume.id == resume_id, UserResume.account_id == target_id)
+        ).first()
+
+    if not existing_resume:
+        count = db.scalar(select(func.count(UserResume.id)).where(UserResume.account_id == target_id)) or 0
+        if count >= 5:
+            raise HTTPException(
+                status_code=400,
+                detail="Maximum limit of 5 saved resumes reached. Please delete an existing resume to save a new one.",
+            )
+
+    pdf_bytes = None
+    if pdf_base64:
+        try:
+            pdf_bytes = base64.b64decode(pdf_base64)
+        except Exception:
+            pdf_bytes = None
+
+    if not pdf_bytes:
+        comp_res = TeXLiveCompilerService.compile_latex(
+            latex_source=latex_source,
+            account_id=target_id,
+            compiler="pdflatex",
+        )
+        pdf_bytes = comp_res.get("pdf_bytes")
+        if pdf_bytes:
+            pdf_base64 = base64.b64encode(pdf_bytes).decode("ascii")
+
+    page_count = 1
+    extracted_text = ""
+    if pdf_bytes:
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+            page_count = max(1, len(reader.pages))
+            extracted_text = "\n".join(p.extract_text() or "" for p in reader.pages).strip()
+        except Exception:
+            pass
+
+    if not extracted_text:
+        from app.services.matching.profile_parser import ProfileParser
+        extracted_text = ProfileParser.extract_clean_cv_text(latex_source)
+
+    profile = _get_or_create_profile(db, target_id)
+    total_count = db.scalar(select(func.count(UserResume.id)).where(UserResume.account_id == target_id)) or 0
+    should_be_default = is_default or (total_count == 0)
+
+    if should_be_default:
+        db.query(UserResume).filter(UserResume.account_id == target_id).update({"is_default": False})
+
+    clean_slug = re.sub(r"[^a-zA-Z0-9_-]", "_", name.lower()).strip("_") or "resume"
+    filename = f"{clean_slug}.pdf"
+
+    if existing_resume:
+        existing_resume.name = name
+        existing_resume.filename = filename
+        existing_resume.latex_source = latex_source
+        if pdf_base64:
+            existing_resume.pdf_data = pdf_base64
+            existing_resume.file_size_bytes = len(pdf_bytes) if pdf_bytes else len(pdf_base64)
+            existing_resume.page_count = page_count
+        existing_resume.extracted_text = extracted_text
+        if is_default is not None:
+            existing_resume.is_default = should_be_default
+        db.commit()
+        db.refresh(existing_resume)
+        res_obj = existing_resume
+    else:
+        new_resume = UserResume(
+            account_id=target_id,
+            profile_id=profile.id,
+            name=name,
+            filename=filename,
+            source_type="builder",
+            latex_source=latex_source,
+            pdf_data=pdf_base64,
+            file_size_bytes=len(pdf_bytes) if pdf_bytes else 0,
+            page_count=page_count,
+            extracted_text=extracted_text,
+            is_default=should_be_default,
+        )
+        db.add(new_resume)
+        db.commit()
+        db.refresh(new_resume)
+        res_obj = new_resume
+
+    return {
+        "id": res_obj.id,
+        "account_id": res_obj.account_id,
+        "name": res_obj.name,
+        "filename": res_obj.filename,
+        "source_type": res_obj.source_type,
+        "file_size_bytes": res_obj.file_size_bytes,
+        "page_count": res_obj.page_count,
+        "is_default": res_obj.is_default,
+        "has_latex": True,
+        "created_at": res_obj.created_at.isoformat(),
+        "updated_at": res_obj.updated_at.isoformat(),
+    }
+
+
+@router.put(
+    "/resumes/{resume_id}/default",
+    summary="Set a saved resume as the default resume for the account",
+)
+def set_default_resume(
+    resume_id: str,
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    target_id = _resolve_target_account_id(account_id, x_account_id, authorization, db)
+    resume = db.scalars(
+        select(UserResume).where(UserResume.id == resume_id, UserResume.account_id == target_id)
+    ).first()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    acc_id = resume.account_id
+    db.query(UserResume).filter(UserResume.account_id == acc_id).update({"is_default": False})
+    resume.is_default = True
+    db.commit()
+    db.refresh(resume)
+    return {"id": resume.id, "name": resume.name, "is_default": True}
+
+
+@router.get(
+    "/resumes/{resume_id}",
+    summary="Get detailed resume document including PDF data and LaTeX source",
+)
+def get_user_resume(
+    resume_id: str,
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    target_id = _resolve_target_account_id(account_id, x_account_id, authorization, db)
+    resume = db.scalars(
+        select(UserResume).where(UserResume.id == resume_id, UserResume.account_id == target_id)
+    ).first()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    return {
+        "id": resume.id,
+        "account_id": resume.account_id,
+        "profile_id": resume.profile_id,
+        "name": resume.name,
+        "filename": resume.filename,
+        "source_type": resume.source_type,
+        "latex_source": resume.latex_source,
+        "pdf_data": resume.pdf_data,
+        "file_size_bytes": resume.file_size_bytes,
+        "page_count": resume.page_count,
+        "extracted_text": resume.extracted_text,
+        "is_default": resume.is_default,
+        "created_at": resume.created_at.isoformat(),
+        "updated_at": resume.updated_at.isoformat(),
+    }
+
+
+@router.get(
+    "/resumes/{resume_id}/download",
+    summary="Download PDF binary for a saved resume",
+)
+def download_user_resume(
+    resume_id: str,
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+):
+    target_id = _resolve_target_account_id(account_id, x_account_id, authorization, db)
+    resume = db.scalars(
+        select(UserResume).where(UserResume.id == resume_id, UserResume.account_id == target_id)
+    ).first()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    if not resume.pdf_data:
+        if resume.latex_source:
+            res = TeXLiveCompilerService.compile_latex(latex_source=resume.latex_source, account_id=resume.account_id)
+            pdf_bytes = res.get("pdf_bytes")
+            if pdf_bytes:
+                return Response(
+                    content=pdf_bytes,
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{resume.filename}"'},
+                )
+        raise HTTPException(status_code=404, detail="No PDF binary available for this resume.")
+
+    try:
+        pdf_bytes = base64.b64decode(resume.pdf_data)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Invalid PDF base64 encoding.")
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{resume.filename}"'},
+    )
+
+
+@router.delete(
+    "/resumes/{resume_id}",
+    summary="Delete a saved resume document",
+)
+def delete_user_resume(
+    resume_id: str,
+    account_id: Optional[str] = Query(None),
+    x_account_id: Optional[str] = Header(None, alias="X-Account-ID"),
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    target_id = _resolve_target_account_id(account_id, x_account_id, authorization, db)
+    resume = db.scalars(
+        select(UserResume).where(UserResume.id == resume_id, UserResume.account_id == target_id)
+    ).first()
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+
+    acc_id = resume.account_id
+    was_default = resume.is_default
+    db.delete(resume)
+    db.commit()
+
+    if was_default:
+        next_default = db.scalars(
+            select(UserResume).where(UserResume.account_id == acc_id).order_by(UserResume.created_at.desc())
+        ).first()
+        if next_default:
+            next_default.is_default = True
+            db.commit()
+
+    return {"message": "Resume deleted successfully", "id": resume_id}
 
 
 # ---------------------------------------------------------------------------

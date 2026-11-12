@@ -14,6 +14,7 @@ import JobsView from './components/JobsView';
 import ApplicationStudio from './components/ApplicationStudio';
 import PipelineView from './components/PipelineView';
 import InterviewCoachView from './components/InterviewCoachView';
+import ResumeBuilderView from './components/ResumeBuilderView';
 import AdminView from './components/AdminView';
 import JobDetailModal from './components/JobDetailModal';
 import FollowUpModal from './components/FollowUpModal';
@@ -66,6 +67,18 @@ function CareerAppInner() {
       localStorage.setItem('jobeazy_active_section', section);
     } catch {}
   };
+
+  const [builderContext, setBuilderContext] = useState(null);
+
+  const handleNavigate = useCallback((section, context = null) => {
+    if (context !== null) {
+      setBuilderContext(context);
+    }
+    setActiveSectionState(section);
+    try {
+      localStorage.setItem('jobeazy_active_section', section);
+    } catch {}
+  }, []);
 
   const [viewMode, setViewMode] = useState(() => (localStorage.getItem('jobeazy_jwt_token') ? 'app' : 'landing'));
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -865,7 +878,7 @@ function CareerAppInner() {
       {/* SIDEBAR NAVIGATION (Role-Gated Workspace) */}
       <Sidebar
         activeSection={effectiveSection}
-        setActiveSection={setActiveSection}
+        setActiveSection={handleNavigate}
         adminTab={adminTab}
         setAdminTab={setAdminTab}
         profileName={
@@ -1001,6 +1014,7 @@ function CareerAppInner() {
             authHeaders={authHeaders}
             onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
             onRefreshProfile={fetchProfile}
+            onNavigate={handleNavigate}
           />
         )}
 
@@ -1034,8 +1048,30 @@ function CareerAppInner() {
             onCancelSend={handleCancelSend}
             isSending={isSending}
             showToast={showToast}
-            onNavigate={setActiveSection}
+            onNavigate={handleNavigate}
             authHeaders={authHeaders}
+          />
+        )}
+
+        {/* SECTION 4.5: DEDICATED RESUME BUILDER */}
+        {effectiveSection === 'builder' && (
+          <ResumeBuilderView
+            accountId={accountId}
+            authHeaders={authHeaders}
+            showToast={showToast}
+            profile={profile}
+            profileForm={profileForm}
+            builderContext={builderContext}
+            onNavigate={handleNavigate}
+            onSaveAndReturn={(saved) => {
+              if (saved?.latex) {
+                setTailorResult((prev) => ({
+                  ...(prev || {}),
+                  cv_latex: saved.latex,
+                }));
+              }
+              handleNavigate('studio');
+            }}
           />
         )}
 
