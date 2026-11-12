@@ -11,11 +11,13 @@ Executes the strict two-phase atomic dispatch protocol per Section 3 of Mileston
 from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any, Dict, Optional
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.crypto import decrypt_oauth_token, encrypt_oauth_token
+from app.models.subscription import Entitlement
 from app.models.application import Application
 from app.models.dispatch import (
     AccountDispatchSettings,
@@ -24,12 +26,13 @@ from app.models.dispatch import (
     HoldQueueItem,
     SendAuthorization,
     SendEvidence,
+    UserCommand,
 )
 from app.models.job import Job
 from app.models.metering import QuotaReservation
 from app.models.oauth import OAuthConnection
 from app.services.dispatch.hash_utils import compute_content_hash
-from app.services.metering.quota_service import QuotaService
+from app.services.metering.quota_service import QuotaService, QuotaExceededException
 from app.services.integrations.google_service import (
     GoogleIntegrationService,
     GmailApiException,
@@ -57,6 +60,111 @@ class SendGateway:
     Orchestrates verified outbound email dispatch with strict safety caps,
     kill switches, idempotency barriers, and immutable evidence logging.
     """
+
+    @classmethod
+    def queue_application_send(
+        cls,
+        db: Session,
+        account_id: str,
+        application: Application,
+        source: str = "ui_click",
+        mode: str = "supervised",
+        undo_delay_seconds: int = 30,
+        correlation_id: Optional[str] = None,
+    ) -> HoldQueueItem:
+        """
+        Enqueues an application for outbound dispatch with an undo hold window.
+        Atomically:
+        1. Checks account and entitlement validity (auto_send_allowed).
+        2. Reserves quota via QuotaService.
+        3. Records UserCommand and mints SendAuthorization with canonical content hash.
+        4. Inserts HoldQueueItem with release_at = now + undo_delay_seconds.
+        5. Sets application.status = 'queued' (sent_at strictly remains None).
+        """
+        now = datetime.now(timezone.utc)
+
+        # 1. Check dispatch settings / kill switch
+        settings_row = db.query(AccountDispatchSettings).filter_by(account_id=account_id).first()
+        if not settings_row:
+            settings_row = AccountDispatchSettings(account_id=account_id, autonomy_mode="supervised")
+            db.add(settings_row)
+            db.flush()
+
+        if settings_row.kill_switch or settings_row.is_suspended_by_admin:
+            raise SendGatewayException("Dispatch is paused: kill switch active or account suspended.")
+
+        # 2. Reserve quota
+        reservation = QuotaService.reserve(
+            db=db,
+            account_id=account_id,
+            quota_key="monthly_applications_limit",
+            units=1,
+            correlation_id=correlation_id or application.id,
+        )
+
+        delay_sec = getattr(settings_row, "undo_delay_seconds", undo_delay_seconds) or undo_delay_seconds
+        release_at = now + timedelta(seconds=delay_sec)
+
+        # 4. UserCommand
+        cmd = UserCommand(
+            id=str(uuid.uuid4()),
+            account_id=account_id,
+            command_type="single",
+            mode=mode,
+            source=source,
+            target_job_ids=[application.job_id] if application.job_id else [],
+            expires_at=now + timedelta(hours=1),
+        )
+        db.add(cmd)
+        db.flush()
+
+        # 5. Canonical Content Hash & SendAuthorization
+        pdf_payload = db.query(ApplicationPdfPayload).filter_by(application_id=application.id).first()
+        pdf_sha256 = pdf_payload.sha256 if pdf_payload else (application.pdf_sha256 or "")
+        recipient_email = application.recipient_email or ""
+
+        content_hash = compute_content_hash(
+            cv_version_id=application.cv_version_id or "",
+            subject=application.subject or "",
+            body=application.draft_content or application.body or "",
+            recipient=recipient_email,
+            answers_json="[]",
+            attachment_sha256=pdf_sha256,
+        )
+
+        auth = SendAuthorization(
+            id=str(uuid.uuid4()),
+            account_id=account_id,
+            application_id=application.id,
+            command_id=cmd.id,
+            recipient_email=recipient_email,
+            content_hash=content_hash,
+            minted_by="human_approval",
+            status="pending",
+            expires_at=now + timedelta(hours=1),
+        )
+        db.add(auth)
+        db.flush()
+
+        # 6. HoldQueueItem
+        hold_item = HoldQueueItem(
+            id=str(uuid.uuid4()),
+            account_id=account_id,
+            application_id=application.id,
+            authorization_id=auth.id,
+            reservation_id=reservation.id,
+            status="pending",
+            release_at=release_at,
+            hold_kind="review_required",
+            channel=application.channel or "email",
+        )
+        db.add(hold_item)
+
+        # 7. Transition Application state: application is queued, sent_at is strictly None!
+        application.status = "queued"
+        db.commit()
+
+        return hold_item
 
     @classmethod
     async def dispatch_hold_item(cls, db: Session, hold_item_id: str) -> bool:

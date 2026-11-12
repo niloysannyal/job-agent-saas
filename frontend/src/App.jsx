@@ -620,7 +620,7 @@ function CareerAppInner() {
           }
           return [sentApp, ...prev];
         });
-        showToast('Application approved & confirmed! 10-day follow-up scheduled.');
+        showToast('Application queued for outbound dispatch! 30-second undo window active in Pipeline.');
         setActiveSection('pipeline');
         fetchJobs();
         // Quietly sync summary count in background

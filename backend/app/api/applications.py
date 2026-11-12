@@ -648,9 +648,10 @@ def mark_application_sent(
     db: Session = Depends(get_db),
 ):
     """
-    Strict Human-in-the-loop Send gate:
-    Only a human can trigger this endpoint to confirm review and transition
-    an application from 'draft' to 'sent'. Records timestamp sent_at and sets follow_up_due (10 days).
+    Supervised Send Gate with Undo Window:
+    Transitions application from 'draft' to 'queued', reserves monthly quota, mints authorization,
+    and inserts an outbox hold item with a 30-second undo countdown window.
+    Sent_at strictly remains None until the outbox poller daemon completes dispatch.
     """
     application = (
         db.query(Application)
@@ -664,22 +665,41 @@ def mark_application_sent(
             detail=f"Application '{application_id}' not found.",
         )
 
-    now = datetime.now(timezone.utc)
-    application.sent_at = now
-    application.status = "sent"
-    # Default 10 days follow-up schedule per ARCHITECTURE.md §6
-    application.follow_up_due = now + timedelta(days=10)
+    if application.status not in ("draft", "queued"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Application is already in '{application.status}' state.",
+        )
 
-    # Sync corresponding Job row
-    job = db.query(Job).filter_by(id=application.job_id, account_id=account_id).first()
-    if job:
-        job.status = "applied"
-        job.applied_at = now
-        job.follow_up_due = application.follow_up_due
+    from app.services.dispatch.gateway import SendGateway, SendGatewayException
+    from app.services.metering.quota_service import QuotaExceededException
 
-    db.commit()
+    try:
+        SendGateway.queue_application_send(
+            db=db,
+            account_id=account_id,
+            application=application,
+            source="ui_click",
+            mode="supervised",
+            undo_delay_seconds=30,
+        )
+    except QuotaExceededException as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e),
+        )
+    except SendGatewayException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to queue application for dispatch: {str(e)}",
+        )
+
     db.refresh(application)
-
     return application
 
 

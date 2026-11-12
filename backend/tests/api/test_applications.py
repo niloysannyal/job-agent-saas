@@ -110,12 +110,24 @@ def test_tailor_and_send_application_lifecycle(client: TestClient, api_test_db: 
     assert len(apps_list) == 1
     assert apps_list[0]["id"] == app_id
 
-    # 3. Human Reviews and confirms Send gate
+    # 3. Human Reviews and confirms Send gate (transitions to queued with outbox hold)
     send_res = client.post(f"/api/v1/applications/{app_id}/send?account_id={account.id}")
     assert send_res.status_code == 200
     sent_app = send_res.json()
-    assert sent_app["status"] == "sent"
-    assert sent_app["sent_at"] is not None
+    assert sent_app["status"] == "queued"
+    assert sent_app["sent_at"] is None
+
+    # 4. Candidate triggers Undo/Cancel Send during countdown
+    cancel_res = client.post(f"/api/v1/applications/{app_id}/cancel-send?account_id={account.id}")
+    assert cancel_res.status_code == 200
+    cancel_data = cancel_res.json()
+    assert cancel_data["success"] is True
+    assert cancel_data["application_status"] == "draft"
+
+    # 5. Re-queue for dispatch
+    re_send_res = client.post(f"/api/v1/applications/{app_id}/send?account_id={account.id}")
+    assert re_send_res.status_code == 200
+    assert re_send_res.json()["status"] == "queued"
 
 
 def test_applications_multi_tenant_isolation(client: TestClient, api_test_db: Session):

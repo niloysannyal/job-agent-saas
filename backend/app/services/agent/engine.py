@@ -595,13 +595,14 @@ class AgentEngine:
             ).first()
 
         if app:
-            # 1. Reserve quota
+            from app.services.dispatch.gateway import SendGateway, SendGatewayException
             try:
-                reservation = QuotaService.reserve(
+                hold_item = SendGateway.queue_application_send(
                     db=self.db,
                     account_id=self.account_id,
-                    quota_key="monthly_applications_limit",
-                    units=1,
+                    application=app,
+                    source="ui_click",
+                    mode="supervised",
                     correlation_id=proposal.id,
                 )
             except QuotaExceededException as e:
@@ -612,82 +613,19 @@ class AgentEngine:
                     "proposal_id": proposal.id,
                     "status": "pending",
                 }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error_code": "DISPATCH_QUEUE_FAILED",
+                    "message": str(e),
+                    "proposal_id": proposal.id,
+                    "status": "pending",
+                }
 
-            # 2. Settings row for undo countdown delay
-            settings_row = self.db.query(AccountDispatchSettings).filter_by(account_id=self.account_id).first()
-            if not settings_row:
-                settings_row = AccountDispatchSettings(account_id=self.account_id, autonomy_mode="supervised")
-                self.db.add(settings_row)
-                self.db.flush()
-
-            # 3. Create UserCommand (source: ui_click, mode: supervised)
-            cmd = UserCommand(
-                id=str(uuid.uuid4()),
-                account_id=self.account_id,
-                command_type="single",
-                mode="supervised",
-                source="ui_click",
-                target_job_ids=[app.job_id] if app.job_id else [],
-                expires_at=now + timedelta(hours=1),
-            )
-            self.db.add(cmd)
-            self.db.flush()
-
-            # 4. Canonical Content Hash
-            pdf_payload = self.db.query(ApplicationPdfPayload).filter_by(application_id=app.id).first()
-            pdf_sha256 = pdf_payload.sha256 if pdf_payload else (app.pdf_sha256 or "")
-            recipient_email = (
-                app.recipient_email
-                or (proposal.payload_snapshot.get("recipient") if proposal.payload_snapshot else "")
-                or ""
-            )
-
-            content_hash = compute_content_hash(
-                cv_version_id=app.cv_version_id or "",
-                subject=app.subject or "",
-                body=app.draft_content or app.body or "",
-                recipient=recipient_email,
-                answers_json="[]",
-                attachment_sha256=pdf_sha256,
-            )
-
-            # 5. Mint SendAuthorization
-            auth = SendAuthorization(
-                id=str(uuid.uuid4()),
-                account_id=self.account_id,
-                application_id=app.id,
-                command_id=cmd.id,
-                recipient_email=recipient_email,
-                content_hash=content_hash,
-                minted_by="human_approval",
-                status="pending",
-                expires_at=now + timedelta(hours=1),
-            )
-            self.db.add(auth)
-            self.db.flush()
-
-            # 6. Enqueue HoldQueueItem (default 30s undo countdown window)
-            delay_sec = getattr(settings_row, "undo_delay_seconds", 30) or 30
-            release_at = now + timedelta(seconds=delay_sec)
-            hold_item = HoldQueueItem(
-                id=str(uuid.uuid4()),
-                account_id=self.account_id,
-                application_id=app.id,
-                authorization_id=auth.id,
-                reservation_id=reservation.id,
-                status="pending",
-                release_at=release_at,
-                hold_kind="review_required",
-                channel=app.channel or "email",
-            )
-            self.db.add(hold_item)
-
-            # 7. Transition states: app is queued (sent_at remains None until dispatch poller completes!)
+            # Transition states
             proposal.status = "approved"
             proposal.approved_at = now
             proposal.executed_at = now
-            app.status = "queued"
-
             self.db.commit()
 
             # Broadcast domain event
@@ -699,14 +637,22 @@ class AgentEngine:
                 )
             )
 
+            if hold_item.release_at:
+                rel = hold_item.release_at if hold_item.release_at.tzinfo else hold_item.release_at.replace(tzinfo=timezone.utc)
+                delay_sec = max(0, int((rel - now).total_seconds()))
+                release_at_str = rel.isoformat()
+            else:
+                delay_sec = 30
+                release_at_str = None
+
             return {
                 "success": True,
                 "message": f"Proposal '{proposal.title}' approved and queued for dispatch with {delay_sec}s undo countdown.",
                 "proposal_id": proposal.id,
                 "status": "queued",
                 "hold_queue_item_id": hold_item.id,
-                "authorization_id": auth.id,
-                "undo_expires_at": release_at.isoformat(),
+                "authorization_id": hold_item.authorization_id,
+                "undo_expires_at": release_at_str,
                 "executed_at": now.isoformat(),
             }
 
