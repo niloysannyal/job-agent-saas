@@ -1,17 +1,17 @@
 # Graph Report - job-agent-saas  (2026-11-12)
 
 ## Corpus Check
-- 265 files · ~193,667 words
+- 265 files · ~194,643 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
 ## Summary
-- 2627 nodes · 7228 edges · 138 communities (122 shown, 16 thin omitted)
+- 2627 nodes · 7231 edges · 132 communities (116 shown, 16 thin omitted)
 - Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 969 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e7785f87`
+- Built from commit: `b3aacdde`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,8 +30,8 @@
 - FreehireJobSource
 - RemoteOKJobSource
 - BaseModel
-- test_google_dispatch.py
-- config.py
+- crypto.py
+- check_migrations.py
 - package.json
 - LeverJobSource
 - RemotiveJobSource
@@ -39,7 +39,7 @@
 - matching/service.py
 - JobEazy: LangGraph Migration & Per-Account Autonomy Architecture Plan
 - test_generate_form_answers_api_endpoint
-- gateway.py
+- 4. QuotaService Interface, Settle Branching & Counter Mutation
 - What You Must Do When Invoked
 - typing
 - integrations.py
@@ -64,7 +64,6 @@
 - lucide-react
 - Job Application Agent — Original Idea (transcribed from notebook)
 - Non-Negotiable Rules
-- .build_message
 - Project: Job Application Agent SaaS
 - dispatch_poller.py
 - Multi-Tenant SaaS Auditor
@@ -101,16 +100,15 @@
 - Cycle: Red -> Green -> Refactor
 - Verification Loop Skill — Job Application Agent SaaS
 - Running Verification
-- pathlib
+- config.py
 - ProfileView.jsx
 - Development Context — Job Application Agent SaaS
 - .parse_from_db
 - worker.py
-- JobEazy: Milestone M1m Implementation Specification
+- .generate
 - test_bookmarklet_generation_with_job_and_star_answers
 - get_available_sources
 - Product Development Environment Guide — Job Application Agent SaaS
-- QuotaService
 - ResumeBuilderView.jsx
 - JobsView.jsx
 - applications.py
@@ -119,17 +117,15 @@
 - Base
 - StarStory
 - deploy.sh
-- 2.1 Table Definitions (SQLAlchemy 2.0 Declarative)
 - AgentToolRegistry
 - Education
-- encrypt_secret
 - bug-workflow.md
 - models/__init__.py
-- google_service.py
+- gateway.py
 - MockEmbeddingClient
-- .generate
+- 5.2 Node Inventory Table & Tailor Refactoring
 - theme.js
-- UsageEvent
+- 3. Database Schema Definitions (SQLAlchemy 2.0 Declarative)
 - TestClient
 - get_monitor_summary
 - devDependencies
@@ -144,10 +140,8 @@
 - client
 - apply_parsed_cv
 - 6. Autonomy Policy Engine & Guardrails
-- mark_application_sent
-- 12. Dependency Plan & Environment Strategy
+- QuotaExceededException
 - update_application_status
-- .get_authorization_url
 - 1. Executive Summary & Scope
 - 13. Strategic Options Analysis & Recommendation
 
@@ -178,7 +172,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (138 total, 16 thin omitted)
+## Communities (132 total, 16 thin omitted)
 
 ### Community 0 - "run_posting_guard"
 Cohesion: 0.05
@@ -209,8 +203,8 @@ Cohesion: 0.11
 Nodes (48): add_skill(), bulk_skills(), delete_certification(), delete_designation(), delete_education(), delete_language(), delete_location(), delete_project() (+40 more)
 
 ### Community 8 - "SendGateway"
-Cohesion: 0.12
-Nodes (25): Any, Session, Execute dispatch for a claimed hold_queue_item. Returns True if sent…, Executes pre-checks, checks send caps and kill switches, verifies canonical…, Atomically abort hold queue item and release associated resources., Handle non-retryable fatal dispatch failure., Handle retryable 429/5xx error by scheduling exponential backoff and releasing…, Atomically record successful external dispatch, evidence, and state transitions. (+17 more)
+Cohesion: 0.08
+Nodes (56): AccountDispatchSettings, ApplicationPdfPayload, DispatchedAction, HoldQueueItem, Immutable authority-to-attempt minted by UI clicks, verified chat intent, or…, Tenant-scoped dispatch settings, safety caps, and kill switches. Users can…, Content-pinned authorization. Binds exact recipient, content hash, tracking id,…, Stores compiled PDF byte payloads outside applications table to prevent bloat. (+48 more)
 
 ### Community 9 - "GreenhouseJobSource"
 Cohesion: 0.07
@@ -232,13 +226,13 @@ Nodes (26): _clean_html(), _format_salary(), _parse_date(), Any, AsyncClient, da
 Cohesion: 0.10
 Nodes (31): cancel_application_send(), create_email_draft(), detect_apply_channel(), DetectChannelRequest, DetectChannelResponse, draft_follow_up(), DraftEmailRequest, DraftEmailResponse (+23 more)
 
-### Community 14 - "test_google_dispatch.py"
-Cohesion: 0.12
-Nodes (29): argparse, decrypt_oauth_token(), decrypt_secret(), _derive_legacy_key(), encrypt_oauth_token(), _get_legacy_fernet(), get_oauth_fernet(), Decrypt an encrypted secret at rest. Gracefully falls back between legacy… (+21 more)
+### Community 14 - "crypto.py"
+Cohesion: 0.07
+Nodes (39): 1. Multi-Tenant Partitioning, 2. Secrets & Encryption, 3. Ingestion & Prompt Injection Defense, 4. Human-in-the-Loop on Send, Security & Tenancy Policy (adapted from ECC AgentShield), argparse, decrypt_oauth_token(), decrypt_secret() (+31 more)
 
-### Community 15 - "config.py"
-Cohesion: 0.12
-Nodes (21): assert_safe_database_url(), get_database_url(), include_object(), Enforces local development boundary per Advisor Review 9. Blocks remote host…, Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline(), run_migrations_online() (+13 more)
+### Community 15 - "check_migrations.py"
+Cohesion: 0.32
+Nodes (7): 11.1 Test Suite Specifications (`backend/tests/agent/`), 11.2 Verification Loop Integration (`scripts/verify.py`), 11. Test Plan & Verification Gate Integration, check_alembic_heads(), check_models_tenancy(), Database Migration & Schema Boundary Auditor — Job Application Agent SaaS…, run_migration_audit()
 
 ### Community 16 - "package.json"
 Cohesion: 0.07
@@ -262,15 +256,15 @@ Nodes (15): compute_cosine_similarity(), EmbeddingClient, get_embedding_client()
 
 ### Community 21 - "JobEazy: LangGraph Migration & Per-Account Autonomy Architecture Plan"
 Cohesion: 0.12
-Nodes (16): 11.1 Test Suite Specifications (`backend/tests/agent/`), 11.2 Verification Loop Integration (`scripts/verify.py`), 11. Test Plan & Verification Gate Integration, 15. Decision Register, 16. Document Changelog, 3. Decision D1 Resolution Text (for `docs/ARCHITECTURE.md §3`), 4.1 System Topology Diagram, 4. Target Architecture: Split Graphs & Topology (+8 more)
+Nodes (16): 12.1 Lockfile Strategy in Milestone M0, 12.2 Known Baseline Constraints (Retrieved 2026-11-10), 12. Dependency Plan & Environment Strategy, 15. Decision Register, 16. Document Changelog, 3. Decision D1 Resolution Text (for `docs/ARCHITECTURE.md §3`), 4.1 System Topology Diagram, 4. Target Architecture: Split Graphs & Topology (+8 more)
 
 ### Community 22 - "test_generate_form_answers_api_endpoint"
 Cohesion: 0.32
 Nodes (7): client(), fixture, Session, TestClient, test_detect_channel_api_endpoint(), test_draft_email_api_endpoint(), test_generate_form_answers_api_endpoint()
 
-### Community 23 - "gateway.py"
-Cohesion: 0.14
-Nodes (27): AccountDispatchSettings, ApplicationPdfPayload, DispatchedAction, Immutable authority-to-attempt minted by UI clicks, verified chat intent, or…, Tenant-scoped dispatch settings, safety caps, and kill switches. Users can…, Content-pinned authorization. Binds exact recipient, content hash, tracking id,…, Stores compiled PDF byte payloads outside applications table to prevent bloat., Immutable audit evidence of external transmission. Uses NO ACTION DEFERRABLE… (+19 more)
+### Community 23 - "4. QuotaService Interface, Settle Branching & Counter Mutation"
+Cohesion: 0.67
+Nodes (3): 4.1 Interface Specification, 4.2 Thresholds & Batch Budgeting, 4. QuotaService Interface, Settle Branching & Counter Mutation
 
 ### Community 24 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -281,8 +275,8 @@ Cohesion: 0.04
 Nodes (28): alembic, downgrade(), Create agent action proposals, conversations, and messages tables., Drop agent tables in reverse order., upgrade(), downgrade(), Add is_pinned column to agent_conversations., Drop is_pinned column from agent_conversations. (+20 more)
 
 ### Community 26 - "integrations.py"
-Cohesion: 0.15
-Nodes (23): BookmarkletResponse, create_gmail_draft(), CreateGmailDraftRequest, CreateGmailDraftResponse, disconnect_google(), get_autofill_bookmarklet(), get_google_auth_url(), get_google_status() (+15 more)
+Cohesion: 0.14
+Nodes (25): BookmarkletResponse, create_gmail_draft(), CreateGmailDraftRequest, CreateGmailDraftResponse, disconnect_google(), get_autofill_bookmarklet(), get_google_auth_url(), get_google_status() (+17 more)
 
 ### Community 27 - "MatchingService"
 Cohesion: 0.15
@@ -321,8 +315,8 @@ Cohesion: 0.06
 Nodes (47): Application, Multi-tenant Application model matching ARCHITECTURE.md §6 & §7: (job_id,…, Job, Multi-tenant Job model matching ARCHITECTURE.md §7: (account_id, company, role,…, admin_client(), override_current_account(), override_get_db(), admin_test_db() (+39 more)
 
 ### Community 40 - "JobEazy: Milestone M1 & M1b Implementation Specification"
-Cohesion: 0.09
-Nodes (22): 1.1 Goal, 1.2 Frozen Canonical Vocabulary, 1.3 Sub-Milestones, 1. Executive Summary & Architecture Scope, 3.1 Single Atomic Transaction Before External Call, 3.2 Periodic Sweeper (Stale Claimed & Stale Sending), 3.3 Mid-Hold Cancel & Autonomy Toggle Off, 3. Send State Machine & Outbox Poller (+14 more)
+Cohesion: 0.06
+Nodes (33): 1.1 Goal, 1.2 Frozen Canonical Vocabulary, 1.3 Sub-Milestones, 1. Executive Summary & Architecture Scope, 2.1 Table Definitions (SQLAlchemy 2.0 Declarative), 2.2 Cap-Count Queries, 2.3 Application and Entitlement Model Modifications, 2. Database Schema (All Tables Tenant-Scoped) (+25 more)
 
 ### Community 41 - "generator.py"
 Cohesion: 0.23
@@ -364,17 +358,13 @@ Nodes (7): General flow (manual, today), Job Application Agent — Original Idea
 Cohesion: 0.29
 Nodes (6): 1. Never Invent Facts, 2. LaTeX Syntax & Preamble Preservation, 3. Relevance-Weighted Trimming & Page Budget, 4. PDF Verification & ATS Text-Layer Check, CV Tailoring Guard, Non-Negotiable Rules
 
-### Community 51 - ".build_message"
-Cohesion: 0.12
-Nodes (19): InvalidEmailRecipientException, InvalidPdfPayloadException, MessageSizeExceededException, MimeBuilderException, Exception, Base exception for MIME construction and validation errors., Raised when recipient email fails RFC 5322 validation., Raised when PDF bytes do not match valid %PDF-1. magic header. (+11 more)
-
 ### Community 52 - "Project: Job Application Agent SaaS"
 Cohesion: 0.29
 Nodes (6): Current priority (per ROADMAP.md Phase 0 → 1), Non-negotiables (do not redesign these without being asked), Project: Job Application Agent SaaS, Read these before writing code, Tech stack (decided, don't re-propose alternatives), What this is
 
 ### Community 53 - "dispatch_poller.py"
-Cohesion: 0.14
-Nodes (17): claim_pending_batch(), main(), poll_and_dispatch_batch(), Session, backend/app/workers/dispatch_poller.py PostgreSQL DB Outbox Poller Worker…, Poll, claim, and execute dispatch for one batch of hold items. Returns count of…, Continuous poller daemon loop. Runs every `poll_interval` seconds until…, Periodic 30-second sweeper per Section 3.2 of specification: 1. Stale claimed… (+9 more)
+Cohesion: 0.21
+Nodes (11): claim_pending_batch(), main(), poll_and_dispatch_batch(), Session, backend/app/workers/dispatch_poller.py PostgreSQL DB Outbox Poller Worker…, Poll, claim, and execute dispatch for one batch of hold items. Returns count of…, Continuous poller daemon loop. Runs every `poll_interval` seconds until…, Claim a batch of eligible hold items using SELECT ... FOR UPDATE SKIP LOCKED.… (+3 more)
 
 ### Community 55 - "CVTemplateCompiler"
 Cohesion: 0.23
@@ -480,9 +470,9 @@ Nodes (4): Execution, Phases Checked, Verification Loop Skill — Job Applicatio
 Cohesion: 0.50
 Nodes (3): Protocol Guidelines:, Running Verification, Verification Loop Standard (adapted from ECC)
 
-### Community 88 - "pathlib"
-Cohesion: 0.06
-Nodes (33): TeX Live backend compiler service. Adapted from Overleaf CLSI (Common LaTeX…, csv, decimal, os, pathlib, backup_data(), json_serializer(), Backup Supabase Data — Job Application Agent SaaS Extracts all public tables… (+25 more)
+### Community 88 - "config.py"
+Cohesion: 0.05
+Nodes (50): assert_safe_database_url(), get_database_url(), include_object(), Enforces local development boundary per Advisor Review 9. Blocks remote host…, Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline(), run_migrations_online() (+42 more)
 
 ### Community 90 - "ProfileView.jsx"
 Cohesion: 0.12
@@ -500,9 +490,9 @@ Nodes (11): ParsedProfile, Any, Path, Structured representation of parsed user p
 Cohesion: 0.12
 Nodes (16): arq, arq_connections, embed_jobs_batch_task(), Any, Worker task to run Experience Reflector and update learning insights., Background worker task to compute vector embeddings and gate jobs., reflect_experience_task(), parse_redis_settings() (+8 more)
 
-### Community 94 - "JobEazy: Milestone M1m Implementation Specification"
+### Community 94 - ".generate"
 Cohesion: 0.13
-Nodes (14): 1.1 Goal, 1.2 Frozen Canonical Vocabulary, 1.3 Phased Delivery (M1m-a vs M1m-b), 1. Executive Summary & Phased Delivery Scope, 2.2 Tenancy Exemption in `scripts/check_migrations.py`, 2. Reuse of Existing Subscription Schema & Tenancy Audits, 4.1 Interface Specification, 4.2 Thresholds & Batch Budgeting (+6 more)
+Nodes (15): Any, Execute generation across the provider chain with automatic fallback., 10. Observability & Cost Controls, 1.1 Goal, 1.2 Frozen Canonical Vocabulary, 1.3 Phased Delivery (M1m-a vs M1m-b), 1. Executive Summary & Phased Delivery Scope, 2.2 Tenancy Exemption in `scripts/check_migrations.py` (+7 more)
 
 ### Community 95 - "test_bookmarklet_generation_with_job_and_star_answers"
 Cohesion: 0.18
@@ -515,10 +505,6 @@ Nodes (10): get_available_sources(), Return instantiated JobSource instances bas
 ### Community 97 - "Product Development Environment Guide — Job Application Agent SaaS"
 Cohesion: 0.18
 Nodes (10): 1. Fast Start, 2. The 5-Phase Verification Loop, 3. Development Contexts (`contexts/`), 4. Agent Rules & Engineering Standards (`.agents/rules/`), 5. Automated Health & Quality Tooling (`scripts/`), 5. Non-Negotiables, Diagnose Environment Health, Install Automated Git Pre-Commit Hook (+2 more)
-
-### Community 98 - "QuotaService"
-Cohesion: 0.15
-Nodes (15): Any, datetime, Exception, Session, QuotaExceededException, QuotaService, Resolves effective quota limit using precedence hierarchy: 1.…, Atomically reserves multi-dimensional quota within a database transaction.… (+7 more)
 
 ### Community 99 - "ResumeBuilderView.jsx"
 Cohesion: 0.20
@@ -548,10 +534,6 @@ Nodes (55): Base, Base SQLAlchemy declarative model., get_db(), get_engine(), ge
 Cohesion: 0.16
 Nodes (23): create_story(), delete_story(), get_story(), list_stories(), list_tags(), delete, get, patch (+15 more)
 
-### Community 107 - "2.1 Table Definitions (SQLAlchemy 2.0 Declarative)"
-Cohesion: 0.15
-Nodes (13): 2.1 Table Definitions (SQLAlchemy 2.0 Declarative), 2.2 Cap-Count Queries, 2.3 Application and Entitlement Model Modifications, 2. Database Schema (All Tables Tenant-Scoped), Table 1: `account_dispatch_settings` (Tenant Autonomy, Safety Caps & Kill Switches), Table 2: `user_commands` (Authority to Attempt), Table 3: `send_authorizations` (Content-Pinned Authorization), Table 4: `application_pdf_payloads` (Dedicated PDF Byte Storage) (+5 more)
-
 ### Community 108 - "AgentToolRegistry"
 Cohesion: 0.20
 Nodes (5): Session, AgentToolRegistry, Any, Central Registry for Autonomous Agent Tools. Enforces the Open-Closed…, Generates standard JSON schema definitions suitable for LLM function calling /…
@@ -560,33 +542,29 @@ Nodes (5): Session, AgentToolRegistry, Any, Central Registry for Autonomous Agen
 Cohesion: 0.18
 Nodes (12): add_certification(), add_designation(), add_education(), add_location(), create_profile(), post, Create a user profile for an account (one per account)., Education (+4 more)
 
-### Community 110 - "encrypt_secret"
-Cohesion: 0.20
-Nodes (9): 1. Multi-Tenant Partitioning, 2. Secrets & Encryption, 3. Ingestion & Prompt Injection Defense, 4. Human-in-the-Loop on Send, Security & Tenancy Policy (adapted from ECC AgentShield), encrypt_secret(), Encrypt a general sensitive plaintext secret (e.g. LLM API key, SMTP password)…, Verify secrets are encrypted and decrypted accurately. (+1 more)
-
 ### Community 112 - "models/__init__.py"
 Cohesion: 0.12
 Nodes (43): add_language(), add_project(), add_work_experience(), JobUpdate, CertificationBase, CertificationCreate, CertificationRead, CertificationUpdate (+35 more)
 
-### Community 113 - "google_service.py"
-Cohesion: 0.09
-Nodes (32): GmailApiException, GmailApiNotConfiguredException, GmailInsufficientPermissionsException, GmailNetworkTimeoutException, GmailRateLimitException, GmailServerErrorException, GoogleIntegrationService, Any (+24 more)
+### Community 113 - "gateway.py"
+Cohesion: 0.07
+Nodes (55): backend/app/services/dispatch/gateway.py SendGateway: Operational Outbound…, GmailApiException, GmailApiNotConfiguredException, GmailInsufficientPermissionsException, GmailNetworkTimeoutException, GmailRateLimitException, GmailServerErrorException, GoogleIntegrationService (+47 more)
 
 ### Community 114 - "MockEmbeddingClient"
 Cohesion: 0.32
 Nodes (3): MockEmbeddingClient, Deterministic mock embedding client for testing without network or GPU.…, Generate embedding for a single text.
 
-### Community 115 - ".generate"
-Cohesion: 0.22
-Nodes (8): Any, Execute generation across the provider chain with automatic fallback., 10. Observability & Cost Controls, 5.1 Decoupled Graph States (`CopilotState` vs `ApplyState`), 5.2 Node Inventory Table & Tailor Refactoring, 5.3 Bounded Review Loop & Recursion Limit, 5. State Schemas, Nodes, and Interrupt Catalogs, 8. Milestone Implementation & Effort
+### Community 115 - "5.2 Node Inventory Table & Tailor Refactoring"
+Cohesion: 0.50
+Nodes (4): 5.1 Decoupled Graph States (`CopilotState` vs `ApplyState`), 5.2 Node Inventory Table & Tailor Refactoring, 5.3 Bounded Review Loop & Recursion Limit, 5. State Schemas, Nodes, and Interrupt Catalogs
 
 ### Community 116 - "theme.js"
 Cohesion: 0.50
 Nodes (6): LandingPageView(), applyTheme(), getInitialTheme(), getTheme, setTheme(), useTheme()
 
-### Community 117 - "UsageEvent"
-Cohesion: 0.25
-Nodes (8): Append-only usage ledger. scope separates tenant usage from platform background…, UsageEvent, 3.1 Model 1: `AccountSubscription` (Anchored Billing Periods), 3.2 Model 2: `AccountUsageCounter` (BigInteger Aggregated Balances), 3.3 Model 3: `QuotaReservation` (Multi-Dimensional Lifecycle), 3.4 Model 4: `ModelPricing` (In `backend/app/models/model_pricing.py`), 3.5 Model 5: `UsageEvent` (Scope Column Added), 3. Database Schema Definitions (SQLAlchemy 2.0 Declarative)
+### Community 117 - "3. Database Schema Definitions (SQLAlchemy 2.0 Declarative)"
+Cohesion: 0.33
+Nodes (6): 3.1 Model 1: `AccountSubscription` (Anchored Billing Periods), 3.2 Model 2: `AccountUsageCounter` (BigInteger Aggregated Balances), 3.3 Model 3: `QuotaReservation` (Multi-Dimensional Lifecycle), 3.4 Model 4: `ModelPricing` (In `backend/app/models/model_pricing.py`), 3.5 Model 5: `UsageEvent` (Scope Column Added), 3. Database Schema Definitions (SQLAlchemy 2.0 Declarative)
 
 ### Community 118 - "TestClient"
 Cohesion: 0.15
@@ -605,8 +583,8 @@ Cohesion: 0.06
 Nodes (52): 4. Pydantic Schemas & Security, Session, Seed initial multi-tenant defaults matching ARCHITECTURE.md §0, §5, §7, §11: 1.…, seed_initial_data(), AccountCreate, ApplicationCreate, CvTemplate, LaTeX CV template model matching ARCHITECTURE.md §5 & §7. Admin-curated system… (+44 more)
 
 ### Community 122 - "test_engine_approval_and_lifecycle.py"
-Cohesion: 0.17
-Nodes (24): HoldQueueItem, Durable PostgreSQL DB Outbox queue polled with SELECT ... FOR UPDATE SKIP…, AccountUsageCounter, QuotaReservation, Live aggregated balances per billing period. Updated transactionally with…, Multi-dimensional atomic reservation lifecycle (reserved -> settled | released…, client(), create_approval_fixture() (+16 more)
+Cohesion: 0.09
+Nodes (39): AccountUsageCounter, QuotaReservation, Append-only usage ledger. scope separates tenant usage from platform background…, Live aggregated balances per billing period. Updated transactionally with…, Multi-dimensional atomic reservation lifecycle (reserved -> settled | released…, UsageEvent, Any, datetime (+31 more)
 
 ### Community 123 - "8. Persistence, Checkpointers & Hold-Queue Architecture"
 Cohesion: 0.40
@@ -617,8 +595,8 @@ Cohesion: 0.08
 Nodes (40): CompensationExpectation, Structured work experience entity for candidates across all industries.…, Core profile for a user (one-to-one with Account). Stores identity, narrative,…, Target job titles / designations a user is searching for. Per ARCHITECTURE.md…, Target work locations / regions a user is willing to work in. Supports remote /…, Salary / compensation expectations (one per profile). Marked sensitive — never…, Languages the user speaks, with proficiency level. Used by the language gate in…, Saved candidate resume/CV documents (uploaded PDFs or built via LaTeX Resume… (+32 more)
 
 ### Community 125 - "test_profile_compile_texlive.py"
-Cohesion: 0.29
-Nodes (6): Tests for TeX Live compilation service and /compile-texlive endpoint., When TeX Live is not on PATH, the endpoint gracefully returns…, When TeX Live compiles successfully, returns PDF base64 and logs., test_compile_texlive_endpoint_mock_success(), test_compile_texlive_endpoint_when_compiler_unavailable(), unittest_mock
+Cohesion: 0.33
+Nodes (5): Tests for TeX Live compilation service and /compile-texlive endpoint., When TeX Live is not on PATH, the endpoint gracefully returns…, When TeX Live compiles successfully, returns PDF base64 and logs., test_compile_texlive_endpoint_mock_success(), test_compile_texlive_endpoint_when_compiler_unavailable()
 
 ### Community 126 - "test_monitor_followups_task"
 Cohesion: 0.33
@@ -644,21 +622,13 @@ Nodes (18): apply_parsed_cv(), compile_texlive(), download_user_resume(), list_u
 Cohesion: 0.50
 Nodes (4): 6.1 Database-Backed Authorization Model & Content Pinning [SUPERSEDED], 6.2 Trust-On-First-Use (TOFU) Recipient Validation & Public-Mail Block [SUPERSEDED], 6.3 Resilient SendGateway & Idempotency Key, 6. Autonomy Policy Engine & Guardrails
 
-### Community 132 - "mark_application_sent"
-Cohesion: 0.40
-Nodes (5): mark_application_sent(), Supervised Send Gate with Undo Window: Transitions application from 'draft' to…, Exception, Base exception for SendGateway dispatch failures., SendGatewayException
-
-### Community 133 - "12. Dependency Plan & Environment Strategy"
-Cohesion: 0.67
-Nodes (3): 12.1 Lockfile Strategy in Milestone M0, 12.2 Known Baseline Constraints (Retrieved 2026-11-10), 12. Dependency Plan & Environment Strategy
+### Community 132 - "QuotaExceededException"
+Cohesion: 0.22
+Nodes (8): mark_application_sent(), Supervised Send Gate with Undo Window: Transitions application from 'draft' to…, Exception, Base exception for SendGateway dispatch failures., SendGatewayException, Exception, QuotaExceededException, Raised when an account exceeds its allocated usage quota.
 
 ### Community 134 - "update_application_status"
 Cohesion: 0.50
 Nodes (4): patch, Module 3 (Monitor): Update application status across pipeline stages: draft ->…, StatusUpdateRequest, update_application_status()
-
-### Community 135 - ".get_authorization_url"
-Cohesion: 0.50
-Nodes (3): Generate the Google OAuth 2.0 consent URL requesting offline access and full…, Verify authorization URL includes gmail.send, gmail.compose, and userinfo.email., test_google_auth_url_scope()
 
 ### Community 136 - "1. Executive Summary & Scope"
 Cohesion: 0.67
@@ -676,11 +646,11 @@ Nodes (4): 13. Strategic Options Analysis & Recommendation, Lead Architect Recom
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Account` connect `Account` to `client`, `apply_parsed_cv`, `tailor_service.py`, `JobPosting`, `test_profile.py`, `api/profile.py`, `BaseModel`, `test_google_dispatch.py`, `TestClient`, `test_generate_form_answers_api_endpoint`, `gateway.py`, `integrations.py`, `api/agent.py`, `Job`, `test_auth.py`, `Architecture — Job Application Agent SaaS`, `LLMService`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `Base`, `StarStory`, `models/__init__.py`, `TestClient`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `UserProfile`, `test_monitor_followups_task`?**
-  _High betweenness centrality (0.142) - this node is a cross-community bridge._
-- **Why does `Job` connect `Job` to `tailor_service.py`, `JobPosting`, `SendGateway`, `BaseModel`, `TestClient`, `matching/service.py`, `gateway.py`, `MatchingService`, `engine.py`, `Account`, `Architecture — Job Application Agent SaaS`, `AgentEngine`, `LLMService`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `worker.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `Base`, `StarStory`, `models/__init__.py`, `.generate`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `UserProfile`, `test_monitor_followups_task`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
-- **Why does `Base` connect `Base` to `tailor_service.py`, `JobPosting`, `test_profile.py`, `api/profile.py`, `config.py`, `TestClient`, `JobEazy: LangGraph Migration & Per-Account Autonomy Architecture Plan`, `gateway.py`, `api/agent.py`, `Job`, `Account`, `test_auth.py`, `lucide-react`, `AgentEngine`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `applications.py`, `StarStory`, `Education`, `models/__init__.py`, `UsageEvent`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `8. Persistence, Checkpointers & Hold-Queue Architecture`, `UserProfile`, `test_monitor_followups_task`?**
+- **Why does `Account` connect `Account` to `client`, `apply_parsed_cv`, `tailor_service.py`, `JobPosting`, `test_profile.py`, `api/profile.py`, `SendGateway`, `BaseModel`, `crypto.py`, `TestClient`, `test_generate_form_answers_api_endpoint`, `integrations.py`, `api/agent.py`, `Job`, `test_auth.py`, `Architecture — Job Application Agent SaaS`, `LLMService`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `Base`, `StarStory`, `models/__init__.py`, `gateway.py`, `TestClient`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `UserProfile`, `test_monitor_followups_task`?**
+  _High betweenness centrality (0.141) - this node is a cross-community bridge._
+- **Why does `Job` connect `Job` to `tailor_service.py`, `JobPosting`, `SendGateway`, `BaseModel`, `TestClient`, `matching/service.py`, `MatchingService`, `engine.py`, `Account`, `Architecture — Job Application Agent SaaS`, `AgentEngine`, `LLMService`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `worker.py`, `test_bookmarklet_generation_with_job_and_star_answers`, `applications.py`, `Base`, `StarStory`, `models/__init__.py`, `gateway.py`, `5.2 Node Inventory Table & Tailor Refactoring`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `UserProfile`, `test_monitor_followups_task`?**
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+- **Why does `Base` connect `Base` to `tailor_service.py`, `JobPosting`, `test_profile.py`, `api/profile.py`, `SendGateway`, `check_migrations.py`, `TestClient`, `integrations.py`, `api/agent.py`, `Job`, `Account`, `test_auth.py`, `lucide-react`, `AgentEngine`, `main.py`, `test_matching.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_agent.py`, `config.py`, `applications.py`, `StarStory`, `Education`, `models/__init__.py`, `test_models.py`, `test_engine_approval_and_lifecycle.py`, `8. Persistence, Checkpointers & Hold-Queue Architecture`, `UserProfile`, `test_monitor_followups_task`?**
   _High betweenness centrality (0.066) - this node is a cross-community bridge._
 - **Are the 129 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**
   _`Account` has 129 INFERRED edges - model-reasoned connections that need verification._

@@ -693,57 +693,208 @@ ${candidateEmail} | ${candidateLinkedin}`;
         {/* FIT ANALYSIS REPORT CARD */}
         {fitResult ? (
           <div className="fit-analysis-report-box">
+            {/* Top Summary Row: Score Ring + Recommendation + Headline */}
             <div className="fit-report-summary-row">
               <div className="fit-score-circle">
                 <span className="fit-number">
-                  {Math.round(fitResult.fit_score != null ? (fitResult.fit_score <= 1.0 ? fitResult.fit_score * 100 : fitResult.fit_score) : 92)}%
+                  {Math.round(
+                    fitResult.overall_score != null
+                      ? fitResult.overall_score
+                      : fitResult.fit_score != null
+                      ? fitResult.fit_score <= 1.0
+                        ? fitResult.fit_score * 100
+                        : fitResult.fit_score
+                      : 92
+                  )}%
                 </span>
                 <span className="fit-label">Semantic Match</span>
               </div>
               <div className="fit-headline-text">
-                <h5>{fitResult.headline || 'High Semantic Alignment for Target Role'}</h5>
-                <p>{fitResult.rationale || 'Candidate experience closely maps to core backend, systems architecture, and AI engineering requirements.'}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <h5 style={{ margin: 0 }}>
+                    {fitResult.headline || `${fitResult.role || customRole || 'Role'} @ ${fitResult.company || customCompany || 'Company'} Fit Evaluation`}
+                  </h5>
+                  {fitResult.recommendation && (
+                    <span className="overall-score-pill">
+                      <span className="pill-recommendation">{fitResult.recommendation}</span>
+                    </span>
+                  )}
+                </div>
+                <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+                  {fitResult.rationale ||
+                    'Candidate profile evaluated across technical competencies, location & logistics, language gate, and dealbreaker boundaries.'}
+                </p>
               </div>
             </div>
 
-            <div className="fit-breakdown-grid">
-              {/* Matched Strengths */}
-              <div className="breakdown-card matched-strengths">
-                <span className="breakdown-title">
-                  <Check size={14} className="text-emerald-400" />
-                  <span>Key Strengths &amp; Matched Criteria</span>
-                </span>
-                <div className="pills-cloud">
-                  {(fitResult.key_strengths || ['Distributed Systems', 'Python / FastAPI', 'LLM Chains & RAG', 'PostgreSQL / Redis', 'MLOps']).map((s, idx) => (
-                    <span key={idx} className="strength-pill">
-                      ✓ {s}
+            {/* 4-DIMENSION DIAGNOSTICS GRID (PULLED FROM COMMIT eb96867) */}
+            {fitResult.technical_skills ? (
+              <div className="dimensions-grid" style={{ marginTop: '16px' }}>
+                {/* 1. Technical Competencies */}
+                <div className="dimension-card">
+                  <div className="dim-header">
+                    <strong>Technical Competencies</strong>
+                    <span
+                      className={`dim-badge ${
+                        fitResult.technical_skills.verdict === 'STRONG_MATCH' || fitResult.technical_skills.verdict === 'PASS'
+                          ? 'badge-pass'
+                          : fitResult.technical_skills.verdict === 'FLAG' || fitResult.technical_skills.verdict === 'MODERATE_MATCH'
+                          ? 'badge-flag'
+                          : 'badge-fail'
+                      }`}
+                    >
+                      {fitResult.technical_skills.verdict}
                     </span>
-                  ))}
+                  </div>
+                  <p className="dim-notes">{fitResult.technical_skills.notes}</p>
+                  <div className="skills-tags-cloud">
+                    {(fitResult.technical_skills.matched_items || []).map((skill) => (
+                      <span key={skill} className="skill-tag matched">
+                        ✓ {skill}
+                      </span>
+                    ))}
+                    {(fitResult.technical_skills.missing_items || []).map((gap) => (
+                      <span key={gap} className="skill-tag gap">
+                        ! {gap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Location & Logistics */}
+                <div className="dimension-card">
+                  <div className="dim-header">
+                    <strong>Location &amp; Logistics</strong>
+                    <span
+                      className={`dim-badge ${
+                        fitResult.location_logistics?.verdict === 'PASS'
+                          ? 'badge-pass'
+                          : fitResult.location_logistics?.verdict === 'FLAG'
+                          ? 'badge-flag'
+                          : 'badge-fail'
+                      }`}
+                    >
+                      {fitResult.location_logistics?.verdict || 'PASS'}
+                    </span>
+                  </div>
+                  <p className="dim-notes">{fitResult.location_logistics?.notes}</p>
+                  <div className="skills-tags-cloud">
+                    {(fitResult.location_logistics?.matched_items || []).map((m) => (
+                      <span key={m} className="skill-tag matched">
+                        ✓ {m}
+                      </span>
+                    ))}
+                    {(fitResult.location_logistics?.missing_items || []).map((gap) => (
+                      <span key={gap} className="skill-tag gap">
+                        ! {gap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Language Gate */}
+                <div className="dimension-card">
+                  <div className="dim-header">
+                    <strong>Language Gate</strong>
+                    <span
+                      className={`dim-badge ${
+                        fitResult.language_gate?.verdict === 'PASS'
+                          ? 'badge-pass'
+                          : fitResult.language_gate?.verdict === 'FLAG'
+                          ? 'badge-flag'
+                          : 'badge-fail'
+                      }`}
+                    >
+                      {fitResult.language_gate?.verdict || 'PASS'}
+                    </span>
+                  </div>
+                  <p className="dim-notes">{fitResult.language_gate?.notes}</p>
+                  <div className="skills-tags-cloud">
+                    {(fitResult.language_gate?.matched_items || []).map((l) => (
+                      <span key={l} className="skill-tag matched">
+                        ✓ {l}
+                      </span>
+                    ))}
+                    {(fitResult.language_gate?.missing_items || []).map((gap) => (
+                      <span key={gap} className="skill-tag gap">
+                        ! {gap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Dealbreaker Guard */}
+                <div className="dimension-card">
+                  <div className="dim-header">
+                    <strong>Dealbreaker Guard</strong>
+                    <span
+                      className={`dim-badge ${
+                        fitResult.dealbreaker_check?.verdict === 'PASS'
+                          ? 'badge-pass'
+                          : fitResult.dealbreaker_check?.verdict === 'FLAG'
+                          ? 'badge-flag'
+                          : 'badge-fail'
+                      }`}
+                    >
+                      {fitResult.dealbreaker_check?.verdict || 'PASS'}
+                    </span>
+                  </div>
+                  <p className="dim-notes">{fitResult.dealbreaker_check?.notes}</p>
+                  <div className="skills-tags-cloud">
+                    {(fitResult.dealbreaker_check?.matched_items || []).map((item) => (
+                      <span key={item} className="skill-tag matched">
+                        ✓ {item}
+                      </span>
+                    ))}
+                    {(fitResult.dealbreaker_check?.missing_items || []).map((gap) => (
+                      <span key={gap} className="skill-tag gap">
+                        ! {gap}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
+            ) : (
+              /* Fallback to 2-column breakdown if 4 dimensions not available */
+              <div className="fit-breakdown-grid" style={{ marginTop: '16px' }}>
+                <div className="breakdown-card matched-strengths">
+                  <span className="breakdown-title">
+                    <Check size={14} className="text-emerald-400" />
+                    <span>Key Strengths &amp; Matched Criteria</span>
+                  </span>
+                  <div className="pills-cloud">
+                    {(fitResult.key_strengths || ['Distributed Systems', 'Python / FastAPI', 'LLM Chains & RAG', 'PostgreSQL / Redis']).map((s, idx) => (
+                      <span key={idx} className="strength-pill">
+                        ✓ {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-              {/* Missing Skills / Gaps */}
-              <div className="breakdown-card missing-gaps">
-                <span className="breakdown-title">
-                  <Info size={14} className="text-amber-400" />
-                  <span>Missing Gaps &amp; Skill Opportunities</span>
-                </span>
-                <div className="pills-cloud">
-                  {(fitResult.missing_skills || ['Go (Golang)', 'Kubernetes Operators']).map((m, idx) => (
-                    <span key={idx} className="gap-pill">
-                      • {m}
-                    </span>
-                  ))}
+                <div className="breakdown-card missing-gaps">
+                  <span className="breakdown-title">
+                    <Info size={14} className="text-amber-400" />
+                    <span>Missing Gaps &amp; Skill Opportunities</span>
+                  </span>
+                  <div className="pills-cloud">
+                    {(fitResult.missing_skills || ['Kubernetes Operators']).map((m, idx) => (
+                      <span key={idx} className="gap-pill">
+                        • {m}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Strategic Advice */}
-            {fitResult.strategic_advice && (
-              <div className="strategic-advice-banner">
+            {/* Strategic Recruiter Advice Banner */}
+            {(fitResult.strategic_advice || fitResult.recommendation) && (
+              <div className="strategic-advice-banner" style={{ marginTop: '14px' }}>
                 <Zap size={14} className="text-amber-400" />
                 <span>
-                  <strong>Senior Recruiter Advice:</strong> {fitResult.strategic_advice}
+                  <strong>Senior Recruiter Advice:</strong>{' '}
+                  {fitResult.strategic_advice ||
+                    `Candidate displays ${fitResult.recommendation?.toLowerCase() || 'strong alignment'}. Prioritize high-impact production achievements in the LaTeX tailoring pass.`}
                 </span>
               </div>
             )}
@@ -751,7 +902,7 @@ ${candidateEmail} | ${candidateLinkedin}`;
         ) : (
           <div className="fit-empty-placeholder">
             <Info size={16} className="text-secondary" />
-            <span>Click <strong>Run Fit Analysis</strong> above to generate the vector alignment score and skill gap breakdown.</span>
+            <span>Click <strong>Run Fit Analysis</strong> above to generate the vector alignment score and 4-dimension diagnostic report.</span>
           </div>
         )}
       </div>

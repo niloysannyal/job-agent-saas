@@ -13,17 +13,16 @@ import {
   Minimize2,
   ChevronDown,
   Sparkles,
-  Layers,
+  Scissors,
+  Printer,
   FileCode,
-  Layout,
-  Columns,
   Eye,
   ExternalLink,
 } from 'lucide-react';
 import LatexCodeEditor from './studio/LatexCodeEditor';
 import CompilerDiagnosticsDrawer from './studio/CompilerDiagnosticsDrawer';
 import { analyzeLatexDiagnostics } from '../utils/latexLogParser';
-import { parseLatexDocument, paginateParsedDocument } from '../utils/latexCompiler';
+import { compactLatex, parseLatexDocument, paginateParsedDocument, decodeHtmlEntities } from '../utils/latexCompiler';
 import { downloadLatexSource, downloadPdfDocument } from './studio/studioExportUtils';
 
 const TEMPLATES = [
@@ -54,15 +53,15 @@ export default function ResumeBuilderView({
   });
 
   const [activeTemplate, setActiveTemplate] = useState('01_MODERN_TECH');
-  const [previewMode, setPreviewMode] = useState('split'); // 'preview' | 'split'
   const [editedLatex, setEditedLatex] = useState('');
   const [initialLatex, setInitialLatex] = useState('');
   const [isCompiling, setIsCompiling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(70);
+  const [zoomLevel, setZoomLevel] = useState(75);
   const [splitRatio, setSplitRatio] = useState(48);
+  const [activePage, setActivePage] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const isDraggingSplitter = useRef(false);
@@ -143,11 +142,11 @@ export default function ResumeBuilderView({
 
     const handleMouseMove = (moveEvent) => {
       if (!isDraggingSplitter.current) return;
-      const container = document.querySelector('.cv-preview-split-layout');
+      const container = document.querySelector('.split-editor-grid');
       if (!container) return;
       const rect = container.getBoundingClientRect();
       const newRatio = ((moveEvent.clientX - rect.left) / rect.width) * 100;
-      if (newRatio >= 25 && newRatio <= 75) {
+      if (newRatio >= 28 && newRatio <= 72) {
         setSplitRatio(Math.round(newRatio));
       }
     };
@@ -166,35 +165,37 @@ export default function ResumeBuilderView({
 
   // Auto calculate fit zoom width
   const calculateFitWidth = useCallback(() => {
-    if (!previewScrollRef.current) return 70;
-    const availableWidth = previewScrollRef.current.clientWidth - 48;
-    return Math.min(130, Math.max(50, Math.round((availableWidth / 794) * 100)));
+    if (!previewScrollRef?.current) return 75;
+    const availableWidth = previewScrollRef.current.clientWidth - 40;
+    const fit = Math.min(130, Math.max(50, Math.round((availableWidth / 794) * 100)));
+    return fit;
   }, []);
 
   useEffect(() => {
-    if (previewMode === 'split') {
-      const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (previewScrollRef?.current) {
         setZoomLevel(calculateFitWidth());
-      }, 50);
-      return () => clearTimeout(timer);
-    } else {
-      setZoomLevel(100);
-    }
-  }, [previewMode, calculateFitWidth]);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [calculateFitWidth]);
 
   // Jump to section in CodeMirror editor
-  const handleLocateSection = (sectionTitle) => {
-    if (!sectionTitle || !editorRef.current) return;
-    const source = editedLatex || '';
-    const lines = source.split(/\r?\n/);
-    const target = sectionTitle.toLowerCase().trim();
-    const lineIdx = lines.findIndex(
-      (l) => l.toLowerCase().includes(`\\section{${target}}`) || l.toLowerCase().includes(target)
-    );
-    if (lineIdx >= 0) {
-      editorRef.current.jumpToLine(lineIdx + 1);
-    }
-  };
+  const handleLocateSection = useCallback(
+    (sectionTitle) => {
+      if (!sectionTitle || !editorRef.current) return;
+      const source = editedLatex || '';
+      const lines = source.split(/\r?\n/);
+      const target = sectionTitle.toLowerCase().trim();
+      const lineIdx = lines.findIndex(
+        (l) => l.toLowerCase().includes(`\\section{${target}}`) || l.toLowerCase().includes(target)
+      );
+      if (lineIdx >= 0) {
+        editorRef.current.jumpToLine(lineIdx + 1);
+      }
+    },
+    [editedLatex]
+  );
 
   // Parsed AST & Paginated Pages
   const parsedDoc = useMemo(() => {
@@ -213,6 +214,35 @@ export default function ResumeBuilderView({
       actualPages: paginatedPages.length,
     });
   }, [editedLatex, paginatedPages.length]);
+
+  // Manual Recompile Action
+  const handleManualCompile = () => {
+    setIsCompiling(true);
+    setTimeout(() => {
+      try {
+        const parsed = parseLatexDocument(editedLatex || '');
+        showToast?.('✓ TeX compilation successful. Live preview re-rendered!');
+      } catch (err) {
+        console.error('Compilation error:', err);
+        showToast?.('LaTeX syntax warning during compile', 4000);
+      } finally {
+        setIsCompiling(false);
+      }
+    }, 220);
+  };
+
+  // Compact / Budget to target pages
+  const handleCompactToPages = (targetPages = 2) => {
+    try {
+      const source = editedLatex || '';
+      const compacted = compactLatex(source, targetPages, resumeTitle, '');
+      setEditedLatex(compacted);
+      showToast?.(`Compacted & budgeted CV strictly to ${targetPages} ${targetPages === 1 ? 'page' : 'pages'}!`);
+    } catch (err) {
+      console.error('Compact error:', err);
+      showToast?.('Error compacting CV.', 4000);
+    }
+  };
 
   // Copy LaTeX
   const handleCopyLatex = () => {
@@ -274,188 +304,24 @@ export default function ResumeBuilderView({
     onNavigate?.('studio');
   };
 
-  // Render Visual A4 Pages
-  const renderVisualA4Pages = () => {
-    return (
-      <div className="overleaf-pages-column" style={{ zoom: zoomLevel / 100, margin: '0 auto' }}>
-        {paginatedPages.map((page, pIdx) => (
-          <div key={pIdx} className="overleaf-a4-page-card" id={`builder-page-${page.pageNumber}`}>
-            <div className="a4-page-top-badge">Page {page.pageNumber} of {paginatedPages.length}</div>
-
-            {/* Document Header (Page 1) */}
-            {page.hasHeader && (
-              <div className="cv-header-container">
-                <div className="cv-header-top-row">
-                  <div className="cv-header-left">
-                    <h1 className="cv-name">
-                      {(parsedDoc.header?.name || profileForm?.full_name || 'CANDIDATE NAME').toUpperCase()}
-                    </h1>
-                    <div className="cv-header-links-row">
-                      {(parsedDoc.header?.leftLinks || []).map((lk, lIdx) => (
-                        <React.Fragment key={lIdx}>
-                          <a
-                            href={lk.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cv-header-link"
-                            title={lk.url}
-                          >
-                            {lk.label}
-                          </a>
-                          {lIdx < parsedDoc.header.leftLinks.length - 1 && (
-                            <span className="cv-link-pipe">|</span>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="cv-header-right">
-                    <div className="cv-location-line">
-                      Location: {parsedDoc.header?.location || [profileForm?.location_city, profileForm?.location_country].filter(Boolean).join(', ') || 'Remote / Worldwide'}
-                    </div>
-                    <div className="cv-header-contact-row">
-                      {(parsedDoc.header?.rightLinks || []).map((rk, rIdx) => (
-                        <React.Fragment key={rIdx}>
-                          <span className="cv-contact-prefix">
-                            {rk.url?.startsWith('mailto:') ? 'Email: ' : 'Mobile: '}
-                          </span>
-                          <a
-                            href={rk.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="cv-header-link"
-                            title={rk.url}
-                          >
-                            {rk.label}
-                          </a>
-                          {rIdx < parsedDoc.header.rightLinks.length - 1 && (
-                            <span className="cv-link-pipe">|</span>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="cv-header-divider" />
-              </div>
-            )}
-
-            {/* Sections on this page */}
-            {(page.sections || []).map((sec, secIdx) => {
-              const cleanTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
-              const showTitle = Boolean(cleanTitle && !sec.isContinuation);
-              return (
-                <div key={secIdx} className="cv-section-container">
-                  {showTitle && (
-                    <div
-                      className="cv-section-title-wrap cv-locateable-section"
-                      onDoubleClick={() => handleLocateSection(cleanTitle)}
-                      title="Double-click to locate section in LaTeX editor"
-                    >
-                      <h3 className="cv-section-heading">{cleanTitle}</h3>
-                      <div className="cv-section-rule" />
-                    </div>
-                  )}
-
-                  <div className="cv-section-items-body">
-                    {(sec.items || []).map((item, itemIdx) => {
-                      if (item.type === 'skills_line') {
-                        return (
-                          <div key={itemIdx} className="cv-skills-row">
-                            <strong
-                              className="skills-category-col"
-                              dangerouslySetInnerHTML={{
-                                __html: item.categoryHtml ? `${item.categoryHtml}:` : `${item.category}:`,
-                              }}
-                            />
-                            <span
-                              className="skills-content-col"
-                              dangerouslySetInnerHTML={{ __html: item.contentHtml }}
-                            />
-                          </div>
-                        );
-                      }
-                      if (item.type === 'heading') {
-                        return (
-                          <div key={itemIdx} className="cv-quad-heading-block">
-                            <div className="quad-row quad-top">
-                              <span
-                                className="quad-role-title"
-                                dangerouslySetInnerHTML={{ __html: item.roleHtml || item.role }}
-                              />
-                              <span
-                                className="quad-location-text"
-                                dangerouslySetInnerHTML={{ __html: item.locationOrDateHtml || item.locationOrDate }}
-                              />
-                            </div>
-                            <div className="quad-row quad-bottom">
-                              <span
-                                className="quad-company-text"
-                                dangerouslySetInnerHTML={{ __html: `<em>${item.companyOrDegreeHtml || item.companyOrDegree}</em>` }}
-                              />
-                              {(item.submetaHtml || item.submeta) && (
-                                <span
-                                  className="quad-dates-text"
-                                  dangerouslySetInnerHTML={{ __html: `<em>${item.submetaHtml || item.submeta}</em>` }}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      }
-                      if (item.type === 'trio_heading') {
-                        return (
-                          <div key={itemIdx} className="cv-trio-heading-block">
-                            <div
-                              className="trio-title-text"
-                              dangerouslySetInnerHTML={{ __html: item.contentHtml }}
-                            />
-                            {item.right && <span className="trio-right-text">{item.right}</span>}
-                          </div>
-                        );
-                      }
-                      if (item.type === 'bullet') {
-                        return (
-                          <div key={itemIdx} className="cv-bullet-item-row">
-                            <span className="cv-bullet-point">•</span>
-                            <div
-                              className="cv-bullet-text-wrap"
-                              dangerouslySetInnerHTML={{ __html: item.contentHtml }}
-                            />
-                          </div>
-                        );
-                      }
-                      return (
-                        <div
-                          key={itemIdx}
-                          className="cv-prose-text-wrap"
-                          dangerouslySetInnerHTML={{ __html: item.contentHtml }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-
-            <div className="a4-page-number-footer">Page {page.pageNumber} of {paginatedPages.length}</div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className={`panel-card cv-template-panel-card ${isFullscreen ? 'overleaf-fullscreen-mode' : ''}`}>
+    <div
+      className={`split-workspace-panel panel-card overleaf-workspace ${isFullscreen ? 'overleaf-fullscreen-mode' : ''}`}
+      style={{
+        height: isFullscreen ? '100vh' : 'calc(100vh - 120px)',
+        minHeight: '700px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {/* STUDIO INTEROP CONTEXT BANNER */}
       {isFromStudio && (
         <div className="builder-studio-interop-banner">
           <div className="interop-banner-left">
             <span className="interop-badge">Application Studio Mode</span>
             <span className="interop-title">
-              Tailoring CV for <strong>{builderContext?.role || 'Opportunity'}</strong> at <strong>{builderContext?.company || 'Company'}</strong>
+              Tailoring CV for <strong>{builderContext?.role || 'Opportunity'}</strong> at{' '}
+              <strong>{builderContext?.company || 'Company'}</strong>
             </span>
           </div>
           <button
@@ -470,48 +336,60 @@ export default function ResumeBuilderView({
         </div>
       )}
 
-      {/* TOP HEADER & ACTION BAR */}
-      <div className="panel-header cv-panel-header">
-        <div className="panel-header-title-box">
-          <div className="builder-title-input-row">
+      {/* TOP WORKSPACE HEADER & ACTION BAR */}
+      <div
+        className="workspace-tabs-bar"
+        style={{
+          padding: '10px 18px',
+          margin: 0,
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: '320px' }}>
+          <div className="builder-title-input-row" style={{ minWidth: '260px' }}>
             <input
               type="text"
               className="builder-resume-title-input"
               value={resumeTitle}
               onChange={(e) => setResumeTitle(e.target.value)}
               placeholder="Resume Name (e.g. Lead AI Systems Engineer Master CV)"
+              style={{ width: '100%', fontSize: '15px', fontWeight: 600 }}
             />
           </div>
-          <p className="subtext cv-panel-subtext">
-            Overleaf-grade LaTeX Resume Builder with dual-format export and TeX Live compiler.
-          </p>
+
+          {/* TEMPLATE SWITCHER PILLS */}
+          <div
+            className="template-pills-row cv-template-pills-row"
+            style={{ margin: 0, padding: 0, border: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <span className="pills-label" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              Template:
+            </span>
+            {TEMPLATES.map((tmpl) => {
+              const isSelected = activeTemplate === tmpl.id;
+              return (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  className={`pill-btn cv-template-pill ${isSelected ? 'active' : ''}`}
+                  onClick={() => fetchTemplatePreview(tmpl.id)}
+                  disabled={isCompiling}
+                  style={{ fontSize: '11.5px', padding: '3px 10px' }}
+                >
+                  {isSelected && <Check size={12} className="cv-pill-check-icon text-emerald-400" />}
+                  <span>{tmpl.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="cv-header-actions-toolbar">
-          {/* VIEW MODE SEGMENTED CONTROL */}
-          <div className="cv-segmented-group" role="tablist" aria-label="Preview Mode">
-            <button
-              type="button"
-              className={`cv-segmented-btn ${previewMode === 'preview' ? 'active' : ''}`}
-              onClick={() => setPreviewMode('preview')}
-              title="Full Page A4 Preview"
-            >
-              <Layout size={14} />
-              <span>Full Preview</span>
-            </button>
-            <button
-              type="button"
-              className={`cv-segmented-btn ${previewMode === 'split' ? 'active' : ''}`}
-              onClick={() => setPreviewMode('split')}
-              title="Edit LaTeX & View Side-by-Side"
-            >
-              <Columns size={14} />
-              <span>Split View</span>
-            </button>
-          </div>
-
-          <div className="cv-toolbar-divider" />
-
+        <div className="cv-header-actions-toolbar" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* SAVE BUTTON: INTEROP WITH STUDIO OR SAVE TO PROFILE */}
           {isFromStudio ? (
             <button
@@ -621,102 +499,114 @@ export default function ResumeBuilderView({
         </div>
       </div>
 
-      {/* TEMPLATE SWITCHER PILLS */}
-      <div className="template-pills-row cv-template-pills-row">
-        <span className="pills-label">Active Template:</span>
-        {TEMPLATES.map((tmpl) => {
-          const isSelected = activeTemplate === tmpl.id;
-          return (
-            <button
-              key={tmpl.id}
-              type="button"
-              className={`pill-btn cv-template-pill ${isSelected ? 'active' : ''}`}
-              onClick={() => fetchTemplatePreview(tmpl.id)}
-              disabled={isCompiling}
-            >
-              {isSelected && <Check size={13} className="cv-pill-check-icon text-emerald-400" />}
-              <span>{tmpl.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* MODE 1: FULL PAGE AUTHENTIC A4 PREVIEW */}
-      {previewMode === 'preview' && (
-        <div className="cv-full-preview-container overleaf-viewer-bg" ref={previewScrollRef}>
-          <div className="cv-full-preview-toolbar">
-            <div className="engine-status-badge">
-              <span className="status-dot-emerald" />
-              <span>TeX Live Engine: Clean</span>
-            </div>
-
-            <div className="cv-zoom-controls">
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={() => setZoomLevel((z) => Math.max(50, z - 10))}
-                title="Zoom Out"
-              >
-                <ZoomOut size={13} />
-              </button>
-              <span className="zoom-value">{zoomLevel}%</span>
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={() => setZoomLevel((z) => Math.min(130, z + 10))}
-                title="Zoom In"
-              >
-                <ZoomIn size={13} />
-              </button>
-            </div>
-          </div>
-
-          <div className="cv-full-preview-scroll-wrapper">
-            {renderVisualA4Pages()}
-          </div>
-        </div>
-      )}
-
-      {/* MODE 2: SPLIT OVERLEAF EDITOR & LIVE A4 PREVIEW */}
-      {previewMode === 'split' && (
-        <div className="cv-preview-split-layout">
-          {/* LEFT: CodeMirror 6 Overleaf Editor */}
-          <div className="cv-editor-col" style={{ width: `${splitRatio}%` }}>
+      {/* 2-COLUMN SPLIT CONTAINER (OVERLEAF-GRADE DUAL PANE) */}
+      <div
+        className="split-editor-grid overleaf-grid"
+        style={{
+          gridTemplateColumns: `${splitRatio}% 10px calc(${100 - splitRatio}% - 10px)`,
+          flex: 1,
+          height: 'calc(100% - 54px)',
+          minHeight: 0,
+        }}
+      >
+        {/* LEFT COLUMN: CODE EDITOR */}
+        <div className="editor-column overleaf-editor-column" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
+          <div className="overleaf-editor-wrapper" style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <LatexCodeEditor
               ref={editorRef}
-              latexCode={editedLatex}
-              onChange={(val) => setEditedLatex(val)}
-              onReset={() => {
-                setEditedLatex(initialLatex);
-                showToast?.('Reset edits to initial source.');
-              }}
-              onSave={isFromStudio ? handleSaveAndReturn : handleSaveToProfile}
+              value={editedLatex}
+              onChange={setEditedLatex}
+              onCompile={handleManualCompile}
+              extraActions={
+                <>
+                  <div className="editor-tool-btn compact-tool-btn" title="Budget CV (1 or 2 pages)">
+                    <Scissors size={13} />
+                    <select
+                      className="compact-select-overlay"
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleCompactToPages(Number(e.target.value));
+                          e.target.value = '';
+                        }
+                      }}
+                      title="Budget CV to 1 or 2 pages"
+                    >
+                      <option value="" disabled>
+                        Compact CV to...
+                      </option>
+                      <option value="1">1 Page</option>
+                      <option value="2">2 Pages</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={() => downloadLatexSource(editedLatex, profileForm, resumeTitle, showToast)}
+                    title="Download raw LaTeX (.tex) file"
+                  >
+                    <Download size={13} />
+                    <span style={{ fontSize: '11px', marginLeft: '3px' }}>.tex</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={handleCopyLatex}
+                    title="Copy LaTeX source"
+                  >
+                    {isCopied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    className="editor-tool-btn"
+                    onClick={() => setIsFullscreen((prev) => !prev)}
+                    title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+                  >
+                    {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                  </button>
+                </>
+              }
+            />
+            <CompilerDiagnosticsDrawer
               diagnostics={diagnostics}
+              onJumpToLine={(line) => editorRef.current?.jumpToLine(line)}
             />
           </div>
+        </div>
 
-          {/* DRAGGABLE SPLITTER */}
-          <div
-            className="cv-split-resizer"
-            onMouseDown={handleSplitterMouseDown}
-            title="Drag to resize editor and preview panes"
-          >
-            <div className="resizer-handle-line" />
-          </div>
+        {/* DRAGGABLE OVERLEAF SPLITTER GUTTER */}
+        <div
+          className="overleaf-splitter-gutter"
+          onMouseDown={handleSplitterMouseDown}
+          onDoubleClick={() => setSplitRatio(48)}
+          title="Drag to resize split view (Double-click to reset 50/50)"
+        >
+          <div className="splitter-handle-bar" />
+        </div>
 
-          {/* RIGHT: Live Visual A4 Preview */}
-          <div
-            className="cv-preview-scroll-pane overleaf-viewer-bg"
-            ref={previewScrollRef}
-            style={{ width: `calc(${100 - splitRatio}% - 10px)` }}
-          >
-            <div className="cv-split-preview-header">
-              <div className="engine-status-badge">
-                <span className="status-dot-emerald" />
-                <span>Real-Time Engine</span>
-              </div>
+        {/* RIGHT COLUMN: PREVIEW */}
+        <div
+          className="preview-column overleaf-preview-column"
+          style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}
+        >
+          {/* OVERLEAF PREVIEW TOOLBAR */}
+          <div className="column-toolbar overleaf-toolbar">
+            <div className="overleaf-toolbar-left">
+              <button
+                type="button"
+                className={`overleaf-compile-btn ${isCompiling ? 'loading' : ''}`}
+                onClick={handleManualCompile}
+                disabled={isCompiling}
+                title="Compile LaTeX source code (Ctrl + Enter)"
+              >
+                {isCompiling ? <RefreshCw size={13} className="icon-spin" /> : <Eye size={13} />}
+                <span>{isCompiling ? 'Compiling...' : 'Recompile'}</span>
+              </button>
+            </div>
 
-              <div className="cv-zoom-controls">
+            <div className="overleaf-toolbar-right">
+              {/* Overleaf Zoom Controls with Presets */}
+              <div className="zoom-controls-group">
                 <button
                   type="button"
                   className="zoom-btn"
@@ -725,24 +615,357 @@ export default function ResumeBuilderView({
                 >
                   <ZoomOut size={13} />
                 </button>
-                <span className="zoom-value">{zoomLevel}%</span>
+                <select
+                  className="zoom-dropdown-select"
+                  value={zoomLevel}
+                  onChange={(e) => {
+                    if (e.target.value === 'fit') {
+                      setZoomLevel(calculateFitWidth());
+                    } else {
+                      setZoomLevel(Number(e.target.value));
+                    }
+                  }}
+                  title="Zoom Preset"
+                >
+                  <option value="fit">Fit Width</option>
+                  <option value={50}>50%</option>
+                  <option value={60}>60%</option>
+                  <option value={75}>75%</option>
+                  <option value={85}>85%</option>
+                  <option value={100}>100%</option>
+                  <option value={115}>115%</option>
+                  <option value={130}>130%</option>
+                </select>
                 <button
                   type="button"
                   className="zoom-btn"
-                  onClick={() => setZoomLevel((z) => Math.min(130, z + 10))}
+                  onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
                   title="Zoom In"
                 >
                   <ZoomIn size={13} />
                 </button>
               </div>
-            </div>
 
-            <div className="cv-split-preview-body">
-              {renderVisualA4Pages()}
+              {/* Page Stepper Navigation */}
+              {paginatedPages.length > 1 && (
+                <div className="page-stepper-group">
+                  <button
+                    type="button"
+                    className="page-step-btn"
+                    onClick={() => {
+                      const prev = Math.max(1, activePage - 1);
+                      setActivePage(prev);
+                      document.getElementById(`builder-page-${prev}`)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    disabled={activePage <= 1}
+                    title="Previous Page"
+                  >
+                    ◀
+                  </button>
+                  <span className="page-step-indicator">
+                    Page {activePage} / {paginatedPages.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="page-step-btn"
+                    onClick={() => {
+                      const next = Math.min(paginatedPages.length, activePage + 1);
+                      setActivePage(next);
+                      document.getElementById(`builder-page-${next}`)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    disabled={activePage >= paginatedPages.length}
+                    title="Next Page"
+                  >
+                    ▶
+                  </button>
+                </div>
+              )}
+
+              {/* Overleaf Download Dropdown (PDF & LaTeX) */}
+              <div className="cv-download-dropdown-wrapper" ref={downloadRef}>
+                <button
+                  type="button"
+                  className="overleaf-toolbar-btn overleaf-toolbar-btn-download"
+                  onClick={() => setIsDownloadOpen((prev) => !prev)}
+                  aria-haspopup="true"
+                  aria-expanded={isDownloadOpen}
+                  title="Download CV as PDF or LaTeX"
+                >
+                  <Download size={13} />
+                  <span>Download</span>
+                  <ChevronDown size={11} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
+                </button>
+                {isDownloadOpen && (
+                  <div className="cv-download-dropdown-menu">
+                    <button
+                      type="button"
+                      className="cv-dropdown-item"
+                      onClick={() => {
+                        setIsDownloadOpen(false);
+                        downloadPdfDocument({
+                          parsedDoc,
+                          customCompany: resumeTitle,
+                          profile: profileForm,
+                          showToast,
+                        });
+                      }}
+                    >
+                      <div className="cv-dropdown-icon-box pdf-badge">
+                        <FileText size={14} />
+                      </div>
+                      <div className="cv-dropdown-text-box">
+                        <span className="cv-dropdown-item-title">Download PDF</span>
+                        <span className="cv-dropdown-item-desc">Pixel-perfect Overleaf PDF (.pdf)</span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      className="cv-dropdown-item"
+                      onClick={() => {
+                        setIsDownloadOpen(false);
+                        downloadLatexSource(editedLatex, profileForm, resumeTitle, showToast);
+                      }}
+                    >
+                      <div className="cv-dropdown-icon-box tex-badge">
+                        <FileCode size={14} />
+                      </div>
+                      <div className="cv-dropdown-text-box">
+                        <span className="cv-dropdown-item-title">Download LaTeX</span>
+                        <span className="cv-dropdown-item-desc">Raw Overleaf TeX source (.tex)</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Print Button */}
+              <button
+                type="button"
+                className="overleaf-toolbar-btn"
+                onClick={() => window.print()}
+                title="Print or Save via browser dialog"
+              >
+                <Printer size={13} />
+                <span>Print</span>
+              </button>
+
+              <button
+                type="button"
+                className="overleaf-toolbar-btn overleaf-toolbar-icon-btn"
+                onClick={() => setIsFullscreen((prev) => !prev)}
+                title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
+              >
+                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              </button>
+            </div>
+          </div>
+
+          {/* PREVIEW SHEET WRAPPER */}
+          <div
+            className="preview-content-scroll preview-sheet-wrapper overleaf-viewer-bg"
+            ref={previewScrollRef}
+            style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', minHeight: 0 }}
+          >
+            <div
+              className="overleaf-multi-page-container"
+              style={{
+                zoom: zoomLevel / 100,
+                margin: '0 auto',
+                padding: '24px 0',
+              }}
+            >
+              {paginatedPages.map((page, pIdx) => (
+                <div key={pIdx} className="overleaf-a4-page-card" id={`builder-page-${page.pageNumber}`}>
+                  {/* Authentic Page Tag Badge */}
+                  <div className="a4-page-top-badge">
+                    Page {page.pageNumber} of {paginatedPages.length}
+                  </div>
+
+                  {/* Document Header (Rendered on Page 1) */}
+                  {page.hasHeader && (
+                    <div className="cv-header-container">
+                      <div className="cv-header-top-row">
+                        <div className="cv-header-left">
+                          <h1 className="cv-name">
+                            {(parsedDoc.header?.name || profileForm?.full_name || 'NILOY SANNYAL').toUpperCase()}
+                          </h1>
+                          <div className="cv-header-links-row">
+                            {(parsedDoc.header?.leftLinks || []).map((lk, lIdx) => (
+                              <React.Fragment key={lIdx}>
+                                <a
+                                  href={lk.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="cv-header-link"
+                                  title={lk.url}
+                                >
+                                  {lk.label}
+                                </a>
+                                {lIdx < parsedDoc.header.leftLinks.length - 1 && (
+                                  <span className="cv-link-pipe">|</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="cv-header-right">
+                          <div className="cv-location-line">
+                            Location:{' '}
+                            {parsedDoc.header?.location ||
+                              [profileForm?.location_city, profileForm?.location_country]
+                                .filter(Boolean)
+                                .join(', ') ||
+                              'Dhaka, Bangladesh'}
+                          </div>
+                          <div className="cv-header-contact-row">
+                            {(parsedDoc.header?.rightLinks || []).map((rk, rIdx) => (
+                              <React.Fragment key={rIdx}>
+                                <span className="cv-contact-prefix">
+                                  {rk.url?.startsWith('mailto:') ? 'Email: ' : 'Mobile: '}
+                                </span>
+                                <a
+                                  href={rk.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="cv-header-link"
+                                  title={rk.url}
+                                >
+                                  {rk.label}
+                                </a>
+                                {rIdx < parsedDoc.header.rightLinks.length - 1 && (
+                                  <span className="cv-link-pipe">|</span>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="cv-header-divider" />
+                    </div>
+                  )}
+
+                  {/* Sections on this page */}
+                  {(page.sections || []).map((sec, secIdx) => {
+                    const cleanTitle = (sec.title || '').replace(/\s*\((?:cont\.?|continued)\)/gi, '').trim();
+                    const showTitle = Boolean(cleanTitle && !sec.isContinuation);
+                    return (
+                      <div key={secIdx} className="cv-section-container">
+                        {showTitle && (
+                          <div
+                            className="cv-section-title-wrap cv-locateable-section"
+                            onDoubleClick={() => handleLocateSection(cleanTitle)}
+                            title="Double-click to locate section in LaTeX editor"
+                          >
+                            <h3 className="cv-section-heading">{cleanTitle}</h3>
+                            <div className="cv-section-rule" />
+                          </div>
+                        )}
+
+                        <div className="cv-section-items-body">
+                          {(sec.items || []).map((item, itemIdx) => {
+                            if (item.type === 'skills_line') {
+                              return (
+                                <div key={itemIdx} className="cv-skills-row">
+                                  <strong
+                                    className="skills-category-col"
+                                    dangerouslySetInnerHTML={{
+                                      __html: item.categoryHtml ? `${item.categoryHtml}:` : `${item.category}:`,
+                                    }}
+                                  />
+                                  <span
+                                    className="skills-content-col"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                </div>
+                              );
+                            }
+                            if (item.type === 'heading') {
+                              return (
+                                <div key={itemIdx} className="cv-quad-heading-block">
+                                  <div className="quad-row quad-top">
+                                    <span
+                                      className="quad-role-title"
+                                      dangerouslySetInnerHTML={{ __html: item.roleHtml || item.role }}
+                                    />
+                                    <span
+                                      className="quad-location-text"
+                                      dangerouslySetInnerHTML={{ __html: item.locationOrDateHtml || item.locationOrDate }}
+                                    />
+                                  </div>
+                                  <div className="quad-row quad-bottom">
+                                    <span
+                                      className="quad-company-text"
+                                      dangerouslySetInnerHTML={{
+                                        __html: `<em>${item.companyOrDegreeHtml || item.companyOrDegree}</em>`,
+                                      }}
+                                    />
+                                    {(item.submetaHtml || item.submeta) && (
+                                      <span
+                                        className="quad-dates-text"
+                                        dangerouslySetInnerHTML={{
+                                          __html: `<em>${item.submetaHtml || item.submeta}</em>`,
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            if (item.type === 'trio_heading') {
+                              return (
+                                <div key={itemIdx} className="cv-trio-heading-block">
+                                  <div
+                                    className="trio-title-text"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                  {item.right && <span className="trio-right-text">{item.right}</span>}
+                                </div>
+                              );
+                            }
+                            if (item.type === 'bullet') {
+                              return (
+                                <div key={itemIdx} className="cv-bullet-item-row">
+                                  <span className="cv-bullet-point">•</span>
+                                  <div
+                                    className="cv-bullet-text-wrap"
+                                    dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                                  />
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={itemIdx}
+                                className="cv-prose-text-wrap"
+                                dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Authentic A4 Page Number Footer */}
+                  <div className="a4-page-number-footer">
+                    Page {page.pageNumber} of {paginatedPages.length}
+                  </div>
+                </div>
+              ))}
+
+              {paginatedPages.length === 0 && (
+                <div className="empty-latex-notice" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <p>
+                    Click <strong>Recompile</strong> to compile your LaTeX code into the visual document preview.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

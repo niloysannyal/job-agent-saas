@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1794474969.4252334,
-    "seen": 1794475272.7699702,
-    "ast_hash": "26107608764a9fab8a05fa6279955aa0",
+    "mtime": 1794476444.6393418,
+    "seen": 1794476841.5057461,
+    "ast_hash": "b383f38c1a4b373b2b1adbcb133d91b4",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -528,8 +528,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1794474708.5683692,
-    "seen": 1794475272.7699957,
+    "mtime": 1794475869.700348,
+    "seen": 1794476841.5057752,
     "ast_hash": "4e9200f5f4e1226f1d00347414ecc3bc",
     "semantic_hash": ""
   },
@@ -1626,9 +1626,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ResumeBuilderView.jsx": {
-    "mtime": 1794474797.130448,
-    "seen": 1794475272.7699943,
-    "ast_hash": "c3d43fc8e9a777f33be1ab2419cf0260",
+    "mtime": 1794476410.1335642,
+    "seen": 1794476841.5057733,
+    "ast_hash": "c15b17497d4010a9acdadeb6ab279762",
     "semantic_hash": ""
   },
   "frontend/src/components/profile/SavedResumesTab.jsx": {
