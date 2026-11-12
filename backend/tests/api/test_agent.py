@@ -182,17 +182,18 @@ def test_stage_proposal_and_approval_flow(api_test_db: Session, account_a: Accou
     res_b = client.post(f"/api/v1/agent/proposals/{proposal_id}/approve?account_id={account_b.id}")
     assert res_b.status_code in [403, 404]
 
-    # Step 3: Tenant A approves proposal
+    # Step 3: Tenant A approves proposal (Milestone M1 Outbox Lifecycle)
     res_a = client.post(f"/api/v1/agent/proposals/{proposal_id}/approve?account_id={account_a.id}")
     assert res_a.status_code == 200
     approval_data = res_a.json()
     assert approval_data["success"] is True
-    assert approval_data["status"] == "executed"
+    assert approval_data["status"] == "queued"
+    assert "undo_expires_at" in approval_data
 
-    # Step 4: Verify Application sent_at and status updated
+    # Step 4: Verify Application is queued for outbox worker; sent_at strictly remains None until dispatch
     api_test_db.refresh(app)
-    assert app.sent_at is not None
-    assert app.status == "applied"
+    assert app.status == "queued"
+    assert app.sent_at is None
 
 
 def test_agent_chat_stream(api_test_db: Session, account_a: Account, client: TestClient):

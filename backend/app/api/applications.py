@@ -683,6 +683,32 @@ def mark_application_sent(
     return application
 
 
+@router.post("/{application_id}/cancel-send")
+async def cancel_application_send(
+    application_id: str,
+    account_id: str = Query(..., description="Account ID for multi-tenant isolation"),
+    db: Session = Depends(get_db),
+):
+    """
+    Candidate Undo/Cancel Gate:
+    Cancels an application currently in the undo countdown window ('queued' / 'pending' hold item).
+    Reverts status to 'draft', voids the authorization, and releases reserved quota.
+    """
+    from app.services.agent.engine import AgentEngine
+    engine = AgentEngine(
+        account_id=account_id,
+        db_session=db,
+    )
+    try:
+        return await engine.cancel_hold_dispatch(application_id=application_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+
 @router.post("/{application_id}/follow-up/draft", response_model=FollowUpDraftResponse)
 async def draft_follow_up(
     application_id: str,

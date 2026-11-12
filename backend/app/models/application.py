@@ -56,6 +56,26 @@ class Application(Base):
         Text,
         nullable=True,
     )
+    subject: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    body: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    recipient_email: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    pdf_sha256: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+    )
+    archived_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     # Timestamp when human reviews and triggers Send (None while in draft)
     sent_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),

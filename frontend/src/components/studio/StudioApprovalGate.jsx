@@ -1,9 +1,10 @@
-import React from 'react';
-import { ShieldCheck, RefreshCw, Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, RefreshCw, Send, Clock, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 export default function StudioApprovalGate({
   isSending = false,
   onApproveAndSend,
+  onCancelSend,
   tailorResult,
   applications = [],
   activeJobId,
@@ -14,6 +15,23 @@ export default function StudioApprovalGate({
     tailorResult?.application?.id ||
     applications.find((a) => a.job_id === activeJobId)?.id;
 
+  const activeApp = applications.find((a) => a.id === applicationId || a.job_id === activeJobId);
+  const isQueued = activeApp?.status === 'queued';
+  const isSent = activeApp?.status === 'sent' || activeApp?.status === 'applied';
+
+  const [countdown, setCountdown] = useState(30);
+
+  useEffect(() => {
+    if (!isQueued) {
+      setCountdown(30);
+      return;
+    }
+    const interval = setInterval(() => {
+      setCountdown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isQueued]);
+
   return (
     <div className="send-gate-card">
       <div className="gate-notice-left">
@@ -21,39 +39,79 @@ export default function StudioApprovalGate({
         <div>
           <h4>Strict Human-in-the-Loop Send Gate</h4>
           <p>
-            This application is saved in <strong>Draft</strong> status. The platform never auto-sends.
-            Review the materials in the preview pane above, then click below to confirm.
+            {isQueued ? (
+              <>Application is in the <strong>30-second Undo Window</strong>. Outbox worker will dispatch via Gmail upon expiration.</>
+            ) : isSent ? (
+              <>Application was <strong>confirmed and dispatched</strong> to hiring team.</>
+            ) : (
+              <>This application is saved in <strong>Draft</strong> status. Review the preview above, then confirm to enqueue.</>
+            )}
           </p>
         </div>
       </div>
 
       <div className="gate-actions-right">
-        <button
-          className="approve-send-btn"
-          disabled={isSending}
-          onClick={() =>
-            onApproveAndSend({
-              applicationId,
-              jobId: activeJobId,
-              coverDraft: editedCoverDraft,
-              tailoredLatex: editedLatex,
-            })
-          }
-        >
-          {isSending ? (
-            <>
-              <RefreshCw className="btn-icon icon-spin" />
-              <span>Confirming...</span>
-            </>
-          ) : (
-            <>
-              <Send className="btn-icon" />
-              <span>Approve & Mark Sent</span>
-            </>
-          )}
-        </button>
+        {isQueued ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#fbbf24', fontSize: '0.85rem' }}>
+              <Clock size={14} className="icon-pulse" />
+              <span>Undo: {countdown}s</span>
+            </div>
+            {onCancelSend && countdown > 0 && (
+              <button
+                type="button"
+                className="btn-undo-send"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.5rem 0.9rem',
+                  borderRadius: '6px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  color: '#f87171',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+                onClick={() => onCancelSend({ applicationId })}
+              >
+                <RotateCcw size={13} />
+                <span>Undo Send</span>
+              </button>
+            )}
+          </div>
+        ) : isSent ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#34d399', fontWeight: 600 }}>
+            <CheckCircle2 size={16} />
+            <span>Applied</span>
+          </div>
+        ) : (
+          <button
+            className="approve-send-btn"
+            disabled={isSending}
+            onClick={() =>
+              onApproveAndSend({
+                applicationId,
+                jobId: activeJobId,
+                coverDraft: editedCoverDraft,
+                tailoredLatex: editedLatex,
+              })
+            }
+          >
+            {isSending ? (
+              <>
+                <RefreshCw className="btn-icon icon-spin" />
+                <span>Enqueuing...</span>
+              </>
+            ) : (
+              <>
+                <Send className="btn-icon" />
+                <span>Approve & Send</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 }
-

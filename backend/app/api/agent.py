@@ -260,3 +260,27 @@ async def reject_proposal(
         return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/proposals/{proposal_id}/cancel")
+async def cancel_proposal(
+    proposal_id: str,
+    account_id: Optional[str] = Query(None),
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """
+    Candidate Undo/Cancel Gate:
+    Cancels an approved proposal during its undo countdown window.
+    """
+    tenant_id = resolve_tenant_id(current_account, account_id)
+    engine = AgentEngine(
+        account_id=tenant_id,
+        db_session=db,
+        user_email=current_account.email,
+    )
+    try:
+        return await engine.cancel_hold_dispatch(proposal_id=proposal_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+

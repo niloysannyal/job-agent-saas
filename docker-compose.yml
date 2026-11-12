@@ -1,4 +1,23 @@
 services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-jobeazy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jobeazy"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - job_agent_net
+
   backend:
     build:
       context: .
@@ -7,15 +26,19 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/job_agent}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@db:5432/jobeazy}
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jobeazy-saas-production-jwt-key-2026}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost/auth/google/callback}
+      - OAUTH_ENCRYPTION_KEY=${OAUTH_ENCRYPTION_KEY}
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - cv_templates_vol:/app/cv_templates
     networks:
@@ -30,13 +53,36 @@ services:
     healthcheck:
       disable: true
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/job_agent}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@db:5432/jobeazy}
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jobeazy-saas-production-jwt-key-2026}
+      - OAUTH_ENCRYPTION_KEY=${OAUTH_ENCRYPTION_KEY}
     depends_on:
       - backend
       - redis
+    volumes:
+      - cv_templates_vol:/app/cv_templates
+    networks:
+      - job_agent_net
+
+  poller:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    command: ["python", "-m", "app.workers.dispatch_poller", "--poll-interval", "5"]
+    healthcheck:
+      disable: true
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@db:5432/jobeazy}
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jobeazy-saas-production-jwt-key-2026}
+      - OAUTH_ENCRYPTION_KEY=${OAUTH_ENCRYPTION_KEY}
+    depends_on:
+      - backend
+      - db
     volumes:
       - cv_templates_vol:/app/cv_templates
     networks:
@@ -67,8 +113,8 @@ services:
 volumes:
   redis_data:
   cv_templates_vol:
+  postgres_data:
 
 networks:
   job_agent_net:
     driver: bridge
-

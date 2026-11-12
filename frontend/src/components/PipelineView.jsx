@@ -12,6 +12,7 @@ import {
   Eye,
   Plus,
   Search,
+  RotateCcw,
 } from 'lucide-react';
 
 export default function PipelineView({
@@ -20,6 +21,7 @@ export default function PipelineView({
   onUpdateStatus,
   onDraftFollowUp,
   onSendFollowUp,
+  onCancelSend,
   onViewMaterials,
   onNavigate,
   showToast,
@@ -29,6 +31,7 @@ export default function PipelineView({
   // Kanban Stage Definitions with Pure SVG Icons (No Emojis)
   const stages = [
     { id: 'draft', label: 'Drafted', color: 'stage-draft', icon: FileEdit },
+    { id: 'queued', label: 'Queued (Hold)', color: 'stage-due', icon: Clock },
     { id: 'sent', label: 'Sent / Applied', color: 'stage-sent', icon: Send },
     { id: 'follow_up_due', label: 'Follow-Up Due', color: 'stage-due', icon: Clock },
     { id: 'responded', label: 'Responded', color: 'stage-responded', icon: MessageSquare },
@@ -49,6 +52,7 @@ export default function PipelineView({
   const groupedApps = useMemo(() => {
     const map = {
       draft: [],
+      queued: [],
       sent: [],
       follow_up_due: [],
       responded: [],
@@ -70,6 +74,8 @@ export default function PipelineView({
         map.follow_up_due.push(app);
       } else if (app.status === 'draft') {
         map.draft.push(app);
+      } else if (app.status === 'queued') {
+        map.queued.push(app);
       } else if (app.status === 'sent') {
         map.sent.push(app);
       } else if (app.status === 'responded') {
@@ -162,7 +168,12 @@ export default function PipelineView({
                       <h5 className="card-title" title={roleTitle}>{roleTitle}</h5>
 
                       <div className="card-timestamps">
-                        {app.sent_at ? (
+                        {app.status === 'queued' ? (
+                          <div className="time-item queued-time" style={{ color: 'var(--amber-400, #f59e0b)' }}>
+                            <Clock className="icon-xxs" />
+                            <span>Outbox Hold (Undoable)</span>
+                          </div>
+                        ) : app.sent_at ? (
                           <div className="time-item">
                             <Send className="icon-xxs" />
                             <span>Sent: {new Date(app.sent_at).toLocaleDateString()}</span>
@@ -199,6 +210,7 @@ export default function PipelineView({
                           aria-label="Update application stage"
                         >
                           <option value="draft">Draft</option>
+                          <option value="queued">Queued (Hold)</option>
                           <option value="sent">Sent</option>
                           <option value="responded">Responded</option>
                           <option value="interview">Interview</option>
@@ -215,6 +227,34 @@ export default function PipelineView({
                           <Eye className="icon-xs" />
                         </button>
                       </div>
+
+                      {/* Undo / Cancel Send CTA if in queued hold state */}
+                      {app.status === 'queued' && onCancelSend && (
+                        <button
+                          className="cancel-send-btn"
+                          style={{
+                            marginTop: '0.5rem',
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.375rem',
+                            padding: '0.4rem 0.6rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            color: '#f87171',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => onCancelSend({ applicationId: app.id })}
+                          title="Cancel dispatch and revert application to draft"
+                        >
+                          <RotateCcw className="icon-xxs" />
+                          <span>Undo Send (Revert to Draft)</span>
+                        </button>
+                      )}
 
                       {/* Follow-up Action CTA if due or sent */}
                       {app.status === 'sent' && app.follow_up_count < 2 && (

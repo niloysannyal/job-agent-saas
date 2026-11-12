@@ -1,6 +1,6 @@
 # JobEazy: LangGraph Migration & Per-Account Autonomy Architecture Plan
 
-> **Document Version:** 1.2.2  
+> **Document Version:** 1.2.3  
 > **Date:** 2026-11-10  
 > **Author:** Antigravity (Lead Architect)  
 > **Status:** Option B Selected by Niloy Sannyal — LangGraph Sections FROZEN (Deferred, not approved)  
@@ -54,7 +54,7 @@ Every finding below has been verified against raw source code on `feat/agentic-c
 ## 3. Decision D1 Resolution Text (for `docs/ARCHITECTURE.md §3`)
 
 ```markdown
-### 3. Human-in-the-Loop & Autonomy Policy (Amended 2026-11-10 per Decision D1)
+### 3. Human-in-the-Loop & Autonomy Policy (Amended 2026-11-10 per Decision D1 & Niloy Directives)
 
 **Default: Draft -> Human Review -> Send.**
 Human review before send remains the foundational invariant of JobEazy. Every newly created account defaults to `autonomy_mode = "supervised"`. No external communication is ever dispatched without explicit human inspection and approval unless the account has explicitly configured autonomous operations.
@@ -63,28 +63,38 @@ Human review before send remains the foundational invariant of JobEazy. Every ne
 Accounts configure operational policy via `account_dispatch_settings`:
 1. `supervised` (Default for all accounts):
    The agent executes the Find -> Tailor -> Audit -> Package pipeline and pauses at human approval (`SendApprovalGate`). The candidate inspects the tailored CV, cover letter, and ATS audit score, and explicitly clicks Approve. Approval sets `Application.status = 'queued'`, mints a content-pinned `send_authorizations` record, and enqueues the item in `hold_queue_items` with a 30-second undo window.
-2. `autonomous` (Opt-in via explicit authenticated acknowledgment):
-   Permits unattended application dispatch across allowed, verified channels for an explicit, authenticated `user_commands` record (`POST /api/v1/dispatch/commands`) targeting a specific job.
-   - **Rollout Guard:** Gated behind tenant configuration, enabled initially for the owner account (Niloy) for Phase 1 dogfooding, and disabled for other tenants pending review.
+2. `autonomous` (Self-serve opt-in for any account):
+   Permits unattended application dispatch across allowed, verified channels for an explicit, authenticated `user_commands` record (`POST /api/v1/dispatch/commands`) triggered via UI click, text chat instruction, or voice command.
+   - **Self-Serve Activation Prereqs (Niloy Decision 2026-11-10):** Any user may toggle autonomy ON based strictly on functional prerequisites:
+     (a) Active Google OAuth connection with `https://www.googleapis.com/auth/gmail.send`.
+     (b) Profile complete with zero missing required fields (name, email, headline, work history).
+     (c) Versioned timestamped risk acknowledgment stored in `acknowledged_at`.
+     *No requirement for clean supervised sends first. Legal review is tracked as a Phase 3 roadmap milestone.*
+   - **Turning Autonomy OFF Mid-Hold:** If a user switches `autonomy_mode` to `"supervised"` while autonomous dispatches are pending in the hold queue, all pending items immediately transition to `canceled`, authorizations are voided, and parent applications revert to `draft` (unsent).
+   - **Command Trigger Channels:** Applications can be initiated via direct UI button click, natural language text chat, or voice command. Commands are created exclusively by `POST /api/v1/dispatch/commands` after server-side session verification. Intent parsing sees only visible job summaries, never posting descriptions. Voice commands strictly require an explicit confirmation turn echoing the resolved jobs.
    - **No Background Auto-Apply:** Autonomous execution can NEVER be triggered by a background timer, cron schedule, webhook, or autonomous radar scan. It strictly requires an explicit user command initiated from an authenticated session.
    - **Database-Backed Single-Use Authorization:** Managed via `send_authorizations {id, account_id, command_id, application_id, content_hash, recipient_email, attachment_sha256, minted_by, status, expires_at, consumed_at}`. Both autonomous policy and supervised approvals mint this same single-use record. SendGateway requires a valid, unconsumed, unexpired authorization matching the exact content hash.
    - **Canonical Length-Prefixed Content Pinning:** `content_hash` is computed as `sha256(len:cv_id|len:subject|len:body|len:recipient|len:answers|len:attachment_sha256)`. SendGateway re-verifies this hash against the database and builds the RFC 2822 MIME strictly from pinned bytes. Any edit during the hold window immediately voids authorization.
    - **Pre-Send Verification Barrier:** Autonomous dispatch automatically downgrades to `supervised` if any of the following fail:
      (a) Fact Ledger audit finds unverified claims or disallowed exaggerations.
-     (b) ATS check score is below threshold (< 70%) or text layer contains < 100 characters.
-     (c) PDF compilation fails, page count != 1, or header invalid.
-     (d) Posting integrity gate flagged injection or suspicious content.
-     (e) Recipient domain fails Trust-On-First-Use (TOFU) validation.
-     (f) Daily cap (default 5, max 10) or hourly cap (default 2) exceeded.
+     (b) ATS check score is below threshold (< 70%), text layer contains < 100 characters, or verified contact email/phone regex fails.
+     (c) PDF compilation fails, page count exceeds template budget (1-2 pages per 01_MASTER_CV.tex), or header invalid.
+     (d) Outreach copy gate detects placeholders ([Company], {{role}}), length outside 50-300 words, or unverified links.
+     (e) Posting integrity gate flagged injection or suspicious content.
+     (f) Recipient domain fails Trust-On-First-Use (TOFU) validation against confirmed addresses.
+     (g) Autonomous daily cap (5) or hourly cap (2) exceeded, or overall safety cap (50/day, 15/hr) exceeded.
    - **Hold Queue & Undo Window:** Dispatches enter `hold_queue_items`. Supervised approvals enter a 30-second undo window. Autonomous dispatches enter a 5-minute hold window. Users may cancel before release.
-   - **Dual Kill Switch:** An account-level toggle (`account_dispatch_settings.kill_switch`) and platform-level global environment variable (`DISPATCH_GLOBAL_KILL_SWITCH`) immediately pause dispatching.
-   - **Channels Allowed:** Verified Email (via user's own OAuth with `gmail.send`). Direct Messages (LinkedIn/Twitter DMs) and LinkedIn Easy Apply are permanently excluded from autonomous execution.
+   - **Suspension Hierarchy:**
+     - Account Kill Switch (`account_dispatch_settings.kill_switch`): User-controlled freeze of outbox.
+     - Superadmin Account Suspension (`account_dispatch_settings.is_suspended_by_admin`): Admin revocation for abusive accounts.
+     - Global Kill Switch (`DISPATCH_GLOBAL_KILL_SWITCH`): Platform-wide emergency halt.
+   - **Channels Allowed:** Verified Email (via user's own OAuth with `gmail.send`). Direct Messages (LinkedIn/Twitter DMs) and LinkedIn Easy Apply are permanently excluded. Web Form Automation remains a future gated channel (Milestone M5c).
 ```
 
 ### Decision Log Entry (for `docs/ROADMAP.md` & `docs/ARCHITECTURE.md`)
 | Date | Phase | Decision | Rationale |
 |---|---|---|---|
-| 2026-11-10 | 1 | **D1: Per-Account Autonomy Policy with Multi-Layer Guardrails** | Allows high-leverage autonomous job applications for owner dogfooding while strictly preserving the human-in-the-loop default for all other tenants. Gated by `user_commands`, DB-backed `send_authorizations`, length-prefixed content pinning, hold queue, send caps, dual kill switches, and TOFU domain validation. DMs permanently excluded. |
+| 2026-11-10 | 1 | **D1: Per-Account Autonomy Policy with Multi-Layer Guardrails** | Allows self-serve autonomous job applications for any user meeting functional prerequisites (Gmail, profile, risk acknowledgment). Gated by `user_commands`, DB-backed `send_authorizations`, length-prefixed content pinning, hold queue, send caps, dual kill switches, and TOFU domain validation. DMs permanently excluded; web forms gated for M5c. Legal review tracked in Phase 3 roadmap. |
 
 ---
 
@@ -92,7 +102,7 @@ Accounts configure operational policy via `account_dispatch_settings`:
 
 > [!WARNING]
 > **FROZEN: Deferred, not approved.**
-> Decision Option B selected by Niloy Sannyal (2026-11-10): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on the legacy engine) first on branch `feat/real-dispatch`. The LangGraph orchestration design below is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
+> Option B recommended by advisor and lead architect (pending Niloy direct confirmation): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on legacy engine) first on branch `feat/real-dispatch`. LangGraph orchestration design is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
 
 
 ### 4.1 System Topology Diagram
@@ -177,7 +187,7 @@ flowchart TD
 
 > [!WARNING]
 > **FROZEN: Deferred, not approved.**
-> Decision Option B selected by Niloy Sannyal (2026-11-10): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on the legacy engine) first on branch `feat/real-dispatch`. The LangGraph orchestration design below is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
+> Option B recommended by advisor and lead architect (pending Niloy direct confirmation): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on legacy engine) first on branch `feat/real-dispatch`. LangGraph orchestration design is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
 
 
 ### 5.1 Decoupled Graph States (`CopilotState` vs `ApplyState`)
@@ -188,7 +198,7 @@ from typing import Annotated, Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 from langgraph.graph.message import add_messages
 
-# --- 1. Copilot Conversation Graph State ---
+    # --- 1. Copilot Conversation Graph State ---
 class CopilotState(BaseModel):
     messages: Annotated[List[Dict[str, Any]], add_messages] = Field(default_factory=list)
     account_id: str
@@ -196,7 +206,7 @@ class CopilotState(BaseModel):
     active_job_id: Optional[str] = None
     spawned_apply_thread_ids: List[str] = Field(default_factory=list)
 
-# --- 2. Application Pipeline Graph State ---
+    # --- 2. Application Pipeline Graph State ---
 class ApplicationPackageRef(BaseModel):
     application_id: str
     job_id: str
@@ -266,7 +276,7 @@ class ApplyState(BaseModel):
 ### 6.2 Trust-On-First-Use (TOFU) Recipient Validation & Public-Mail Block [SUPERSEDED]
 *Detailed in `docs/plans/m1-real-dispatch-spec.md` §6.3.*
 - Recipient domain validated against `trusted_recipients` allowlist.
-- Corporate domains allowed only if confirmed from ATS job board URLs (`greenhouse.io`, `lever.co`, `ashbyhq.com`) or target company records.
+- Corporate domains allowed only if confirmed from verified company records; ATS board APIs do not supply recruiter email domains. Public webmail domains strictly require per-address confirmation every time.
 - Public webmail domains (`gmail.com`, `yahoo.com`, `outlook.com`, etc.) strictly require explicit human confirmation for every single application.
 - Confirmed exact recruiter addresses are stored with `entry_type = 'exact_address'` and are reusable for that company.
 
@@ -301,7 +311,7 @@ Per official Google API Documentation (*Google Identity: OAuth 2.0 Scopes for Go
 |---|---|---|
 | **Dependencies** | Requires running Redis server + separate Arq worker process. | Zero new services; uses existing PostgreSQL database. |
 | **Durability** | In-memory with Redis snapshotting. Requires configuring Append-Only File (AOF) to survive crashes without dropping queued sends. | 100% ACID durable in Postgres. Survives server restarts or container redeployments effortlessly. |
-| **Transaction Safety** | Cannot enroll Redis enqueue into the database transaction creating the application. | Enqueue row commits in the exact same transaction as `Application` and `UserAuthorization`. |
+| **Transaction Safety** | Cannot enroll Redis enqueue into the database transaction creating the application. | Enqueue row commits in the exact same transaction as `Application` and `SendAuthorization`. |
 | **Maintenance** | `arq` is a light, community-maintained library (v0.28.0 installed). | Native SQL pattern using `SELECT ... FOR UPDATE SKIP LOCKED`. |
 | **Recommendation** | Acceptable if Redis is already mission-critical. | **RECOMMENDED:** Eliminates distributed state bugs and AOF overhead; matches single-VPS MVP architecture perfectly. |
 
@@ -319,7 +329,7 @@ Per official Google API Documentation (*Google Identity: OAuth 2.0 Scopes for Go
 
 > [!WARNING]
 > **FROZEN: Deferred, not approved.**
-> Decision Option B selected by Niloy Sannyal (2026-11-10): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on the legacy engine) first on branch `feat/real-dispatch`. The LangGraph orchestration design below is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
+> Option B recommended by advisor and lead architect (pending Niloy direct confirmation): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on legacy engine) first on branch `feat/real-dispatch`. LangGraph orchestration design is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
 
 ### 8.2 Supabase Connection Pooler Setup
 Per Psycopg 3 Connection Pool Documentation (*Psycopg 3.3 Connection Pools*, retrieved 2026-11-10; URL: `https://www.psycopg.org/psycopg3/docs/advanced/pool.html`):
@@ -354,7 +364,7 @@ Per LangGraph Checkpoint Persistence Documentation (*LangGraph Checkpoint Encryp
 ```python
 from langgraph.checkpoint.serde.encrypted import EncryptedSerializer
 
-# Uses dedicated 32-byte encryption key (CHECKPOINT_ENCRYPTION_KEY), NOT APP_SECRET_KEY
+    # Uses dedicated 32-byte encryption key (CHECKPOINT_ENCRYPTION_KEY), NOT APP_SECRET_KEY
 encrypted_serde = EncryptedSerializer.from_pycryptodome_aes(
     key=settings.CHECKPOINT_ENCRYPTION_KEY_BYTES
 )
@@ -379,7 +389,7 @@ checkpointer = AsyncPostgresSaver(pool, serde=encrypted_serde)
 
 > [!WARNING]
 > **FROZEN: Deferred, not approved.**
-> Decision Option B selected by Niloy Sannyal (2026-11-10): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on the legacy engine) first on branch `feat/real-dispatch`. The LangGraph orchestration design below is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
+> Option B recommended by advisor and lead architect (pending Niloy direct confirmation): Implementing Milestone M1 (real dispatch) and M1b (autonomy policy on legacy engine) first on branch `feat/real-dispatch`. LangGraph orchestration design is preserved for future architectural evaluation after live Phase 1 dogfooding, but is not currently active for implementation.
 
 
 ### 9.1 Custom Streaming Loop (Part Objects in Version "v2")
@@ -387,7 +397,7 @@ Per LangGraph v2 Streaming Documentation (*LangGraph astream version v2 Protocol
 In `version="v2"`, `graph.astream()` yields dictionary part objects with keys `{"type", "ns", "data"}`:
 
 ```python
-# Adapter Loop in FastAPI /agent/chat
+    # Adapter Loop in FastAPI /agent/chat
 async for part in graph.astream(
     input_data,
     config=config,
@@ -472,7 +482,7 @@ async for part in graph.astream(
    - Test `LangGraphSSEAdapter` against mock graph stream; assert `data: {"type": ...}` JSON frame format.
 
 ### 11.2 Verification Loop Integration (`scripts/verify.py`)
-- **Phase 3 (Database Audit):** `thread_accounts`, `user_authorizations`, and `hold_queue_items` models inherit `Base` and carry `account_id`, satisfying `check_models_tenancy()`.
+- **Phase 3 (Database Audit):** `thread_accounts`, `user_commands`, `send_authorizations`, and `hold_queue_items` models inherit `Base` and carry `account_id`, satisfying `check_models_tenancy()`.
 - **Phase 4 (Code Review):** Enforces 800-line ceiling on all new graph modules (`copilot_graph.py`, `apply_graph.py`).
 
 ---
@@ -501,7 +511,7 @@ Exact dependencies will be resolved in **Milestone M0** against the active virtu
 
 ### Option B: Real Dispatch (M1) + Legacy Engine Autonomy Policy + Delayed Port Decision
 - **Path:** Build M1 (real dispatch with `SendGateway`, `gmail.send`, and DB outbox hold queue) on `feat/real-dispatch`. Apply the Decision D1 autonomy policy directly to the existing `AgentEngine` procedural flow. Run Niloy's live job search for 2 weeks. Make a formal Go/No-Go decision on LangGraph based on real dogfooding data.
-- **Pros:** Delivers real, supervised (and autonomous owner) job applications immediately with zero graph overhead. Solves Niloy's primary business goal today.
+- **Pros:** Delivers real, supervised and self-serve autonomous job applications immediately with zero graph overhead. Solves Niloy's primary business goal today.
 - **Cons:** Delays LangGraph adoption until Phase 1 validation.
 
 ### Lead Architect Recommendation
@@ -516,8 +526,10 @@ Exact dependencies will be resolved in **Milestone M0** against the active virtu
 
 | Milestone | Scope & Deliverables | Target Branch | Estimated Effort |
 |---|---|---|---|
-| **M1: Real Outbound Dispatch** | `user_commands`, `send_authorizations`, `hold_queue_items` DB outbox, `GoogleIntegrationService` (`gmail.send`), `SendGateway`, legacy `approve_proposal` wiring. | `feat/real-dispatch` | **6-8 days** |
-| **M1b: Autonomy on Legacy Engine** | Pre-send verification barrier, TOFU domain validation, single-job command endpoint, kill switch on legacy engine. | `feat/real-dispatch` | **4-5 days** |
+| **M1: Real Outbound Dispatch** | `user_commands`, `send_authorizations`, `hold_queue_items` DB outbox, `GoogleIntegrationService` (`gmail.send`), `SendGateway` (with `QuotaService` interface), legacy `approve_proposal` wiring. | `feat/real-dispatch` | **6-8 days** |
+| **M1b: Autonomy on Legacy Engine** | Pre-send verification barrier, TOFU domain validation, chat command endpoint, intent parser, kill switches. *(Conditional on >=20% email-apply share).* | `feat/real-dispatch` | **4-5 days** |
+| **M1m: Metering & Quotas Engine** | Per-account micro-USD ledger (`usage_events`), atomic reserve/settle/release, owner-editable model pricing, superadmin dashboard. *(Mandatory before 2nd tenant).* | `feat/real-dispatch` | **6 days** |
+| **V1: Voice Command & STT [DEFERRED]** | Real-time speech-to-text integration (OpenAI Whisper / Deepgram Nova-3 with Bengali `bn` support), audio streaming, confirmation turn. | `feat/voice-commands` | **3-4 days (Deferred)** |
 | **M0: LangGraph & Pooler Spike [FROZEN]** | Spike Supabase pooler on port 6543 (`autocommit=True`, `prepare_threshold=None`), Python 3.14 vs 3.12, lockfile generation. | `feat/langgraph-orchestration` | **3 days (Deferred)** |
 | **M2: Checkpointer & Tenancy** | `thread_accounts` table, `checkpointer.setup()`, `EncryptedSerializer`. | `feat/langgraph-orchestration` | **3 days** |
 | **M3: Apply Subgraph & Refactoring** | Decouple `tailor_for_job()` into Drafter/Reviewer callables, bounded review loop, `interrupt(SendApprovalGate)`. | `feat/langgraph-orchestration` | **5 days** |
@@ -550,3 +562,4 @@ Exact dependencies will be resolved in **Milestone M0** against the active virtu
 | **1.2.0** | 2026-11-10 | Antigravity | **Advisor Review 2 Overhaul:**<br>• Removed hand-typed pins; added verified PyPI/doc citations.<br>• Fixed checkpointer pool: `prepare_threshold=None`, `supports_pipeline=False`, autocommit for `CREATE INDEX CONCURRENTLY`.<br>• Corrected `EncryptedSerializer.from_pycryptodome_aes` signature using dedicated key.<br>• Rewrote SSE adapter using v2 dictionary part objects `{'type', 'ns', 'data'}`.<br>• Added DB Outbox recommendation over Redis for hold queue.<br>• Added Content Pinning SHA-256 hash in `UserAuthorization`.<br>• Prohibited public-mail domains in TOFU allowlist.<br>• Decoupled `CopilotState` and `ApplyState`.<br>• Formulated Options A vs B and re-estimated M1 on `feat/real-dispatch`. |
 | **1.2.1** | 2026-11-10 | Antigravity | **Option B Selection & LangGraph Freeze:**<br>• LangGraph sections (§4, §5, §8.2-8.4, §9, M0, M2-M6) frozen as deferred.<br>• Reset D3, D5, D6, D7 to PROPOSED.<br>• Stripped 'verified' from unverified package pins.<br>• Added M1b to roadmap table. |
 | **1.2.2** | 2026-11-10 | Antigravity | **Option B Alignment with M1 Spec v1.1.0:**<br>• Rewrote §3 amendment text to match M1 spec: `user_commands`, `send_authorizations`, length-prefixed content pinning, dual kill switches, and rate caps.<br>• Marked §6.1, §6.2, §10, and §11.1 as superseded by `m1-real-dispatch-spec.md` v1.1.0.<br>• Removed disposable-email-domains citation, $0.24/$5/GPT-6 Luna claims, forged-token and >15-min tests.<br>• Corrected §7.1 scope verification citations against official Google OAuth documentation.<br>• Reconciled Decision D7 status across header and register as PROPOSED pending Niloy's direct confirmation.<br>• Documented M1b roadmap entry and lockfile dependency resolution. |
+| **1.2.3** | 2026-11-10 | Antigravity | **Advisor Review 5 Integration (Niloy Directives):**<br>• Self-serve autonomy: enabled for any user based solely on functional prerequisites (Gmail connected, profile complete, risk acknowledgment). Removed owner-only gating in §3.<br>• Mid-hold cancel behavior: turning autonomy OFF mid-hold immediately cancels pending items and reverts applications to draft.<br>• Added chat and voice command triggers in §3 with session-verified message validation.<br>• Added Milestone M1m (Metering, Quotas & Usage Ledger) to §14 roadmap table (mandatory before tenant #2).<br>• Added Milestone V1 (Voice Commands & STT) to §14 roadmap table (deferred).<br>• Noted M1b conditionality on measured email-apply share. |

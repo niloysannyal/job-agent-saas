@@ -21,6 +21,7 @@ export default function ApplicationStudio({
   isTailoring = false,
   tailorResult = null,
   onApproveAndSend,
+  onCancelSend,
   isSending = false,
   showToast,
   onNavigate,
@@ -775,6 +776,7 @@ ${candidateEmail} | ${candidateLinkedin}`;
       <StudioApprovalGate
         isSending={isSending}
         onApproveAndSend={onApproveAndSend}
+        onCancelSend={onCancelSend}
         tailorResult={tailorResult}
         applications={applications}
         activeJobId={activeJobId}

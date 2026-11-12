@@ -18,10 +18,13 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ROOT = Path(__file__).resolve().parent.parent
 
-def run_step(step_num: int, title: str, cmd: list[str], cwd: Path) -> bool:
+def run_step(step_num: int, title: str, cmd: list[str], cwd: Path, env: dict | None = None) -> bool:
     print(f"\n--- Phase {step_num}: {title} ---")
     print(f"Command: {' '.join(cmd)} in {cwd.name}/")
-    res = subprocess.run(cmd, cwd=cwd)
+    step_env = os.environ.copy()
+    if env:
+        step_env.update(env)
+    res = subprocess.run(cmd, cwd=cwd, env=step_env)
     if res.returncode == 0:
         print(f"[PASS] Phase {step_num}: {title}")
         return True
@@ -49,10 +52,17 @@ def main():
     # Phase 2: Pytest Suite
     venv_pytest = ROOT / "backend" / ".venv" / ("Scripts" if os.name == "nt" else "bin") / ("pytest.exe" if os.name == "nt" else "pytest")
     test_args = ["tests/api/test_admin.py", "tests/api/test_auth.py"] if quick_mode else ["tests/"]
+    test_env = {
+        "DATABASE_URL": os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5433/jobeazy_test")
+    }
+    if not (test_env["DATABASE_URL"].endswith(("_test", "_dev")) or "jobeazy_test" in test_env["DATABASE_URL"]):
+        test_env["DATABASE_URL"] = "postgresql+psycopg://postgres:postgres@localhost:5433/jobeazy_test"
+
     backend_ok = run_step(
         2, f"Backend Pytest Suite ({'Quick Admin/Auth' if quick_mode else 'Full Suite'})",
         [str(venv_pytest)] + test_args,
-        ROOT / "backend"
+        ROOT / "backend",
+        env=test_env,
     )
     if not backend_ok:
         print("\n[STOP] Backend tests failed. Fix regressions before proceeding.")

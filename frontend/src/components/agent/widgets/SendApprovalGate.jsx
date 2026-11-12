@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { Send, CheckCircle2, XCircle, AlertCircle, Fingerprint, Mail, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, CheckCircle2, XCircle, AlertCircle, Fingerprint, Mail, Clock, RotateCcw } from 'lucide-react';
 import { useAgent } from '../../../hooks/useAgent';
 
 export default function SendApprovalGate({ props }) {
-  const { approveProposal, rejectProposal } = useAgent();
+  const { approveProposal, rejectProposal, cancelProposal } = useAgent();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const {
     proposal_id,
     status = 'pending',
+    undo_expires_at,
     company,
     role,
     recipient,
@@ -18,9 +19,34 @@ export default function SendApprovalGate({ props }) {
     cv_sha256,
   } = props || {};
 
-  const isExecuted = status === 'executed' || status === 'approved';
+  const isQueued = status === 'queued';
+  const isExecuted = status === 'executed' || status === 'approved' || status === 'sent' || status === 'applied';
   const isRejected = status === 'rejected';
+  const isAborted = status === 'aborted';
   const isPending = status === 'pending';
+
+  // Calculate remaining seconds for the 30s countdown
+  const [countdown, setCountdown] = useState(() => {
+    if (undo_expires_at) {
+      const remaining = Math.max(0, Math.round((new Date(undo_expires_at).getTime() - Date.now()) / 1000));
+      return remaining > 0 ? remaining : 0;
+    }
+    return 30;
+  });
+
+  useEffect(() => {
+    if (!isQueued || countdown <= 0) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isQueued, countdown]);
 
   const handleApprove = async () => {
     if (!proposal_id || isSubmitting) return;
@@ -48,17 +74,36 @@ export default function SendApprovalGate({ props }) {
     }
   };
 
+  const handleCancel = async () => {
+    if (!proposal_id || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      if (cancelProposal) {
+        await cancelProposal(proposal_id);
+      } else {
+        await rejectProposal(proposal_id);
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Cancellation failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={`agent-widget send-approval-gate status-${status}`}>
       <div className="widget-header">
         <div className="widget-title-group">
-          <Send size={16} className={isExecuted ? 'text-emerald' : 'text-amber'} />
+          <Send size={16} className={isExecuted ? 'text-emerald' : isQueued ? 'text-amber' : 'text-amber'} />
           <span className="widget-title">Human-in-the-Loop Send Gate</span>
         </div>
         <div className={`status-pill pill-${status}`}>
           {isPending && <Clock size={11} />}
+          {isQueued && <Clock size={11} className="icon-pulse" />}
           {isExecuted && <CheckCircle2 size={11} />}
           {isRejected && <XCircle size={11} />}
+          {isAborted && <RotateCcw size={11} />}
           <span>{status.toUpperCase()}</span>
         </div>
       </div>
@@ -107,7 +152,7 @@ export default function SendApprovalGate({ props }) {
             onClick={handleApprove}
           >
             <CheckCircle2 size={14} />
-            <span>{isSubmitting ? 'Dispatching...' : 'Approve & Send'}</span>
+            <span>{isSubmitting ? 'Queuing...' : 'Approve & Send'}</span>
           </button>
           <button
             type="button"
@@ -121,10 +166,61 @@ export default function SendApprovalGate({ props }) {
         </div>
       )}
 
+      {isQueued && (
+        <div className="gate-queued-box" style={{ marginTop: '0.75rem', padding: '0.75rem', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.82rem', color: '#fbbf24' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Clock size={13} />
+              <span>Outbox Hold: {countdown > 0 ? `${countdown}s remaining to undo` : 'Hold released. Outbox poller dispatching...'}</span>
+            </div>
+            {countdown > 0 && (
+              <button
+                type="button"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.3rem 0.6rem',
+                  fontSize: '0.75rem',
+                  borderRadius: '6px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  color: '#f87171',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                }}
+                disabled={isSubmitting}
+                onClick={handleCancel}
+              >
+                <RotateCcw size={12} />
+                <span>{isSubmitting ? 'Cancelling...' : `Undo (${countdown}s)`}</span>
+              </button>
+            )}
+          </div>
+          <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div
+              style={{
+                width: `${Math.min(100, (countdown / 30) * 100)}%`,
+                height: '100%',
+                background: '#fbbf24',
+                transition: 'width 1s linear',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {isExecuted && (
         <div className="gate-executed-banner">
           <CheckCircle2 size={16} className="text-emerald" />
           <span>Application successfully dispatched. Added to Monitor Kanban.</span>
+        </div>
+      )}
+
+      {isAborted && (
+        <div className="gate-rejected-banner" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', color: '#f87171' }}>
+          <RotateCcw size={15} />
+          <span>Dispatch cancelled by candidate during countdown. Reverted to draft.</span>
         </div>
       )}
 

@@ -1,13 +1,21 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
 import logging
 import re
 from typing import Any, AsyncIterator, Dict, List, Optional
+import uuid
 from sqlalchemy.orm import Session
 
 from app.models.agent import AgentActionProposal, AgentConversation, AgentMessage
 from app.models.application import Application
+from app.models.dispatch import (
+    AccountDispatchSettings,
+    ApplicationPdfPayload,
+    HoldQueueItem,
+    SendAuthorization,
+    UserCommand,
+)
 from app.services.agent.base_tool import ToolExecutionContext, ToolResult
 from app.services.agent.event_bus import DomainEventBus, ProposalApprovedEvent
 from app.services.agent.registry import AgentToolRegistry
@@ -17,6 +25,8 @@ from app.services.agent.tools.stage_proposal_tool import StageApplicationProposa
 from app.services.agent.tools.star_coach_tool import StarCoachTool
 from app.services.agent.tools.tailor_cv_tool import AutonomousTailorCVTool
 from app.services.agent.tools.track_lifecycle_tool import TrackApplicationLifecycleTool
+from app.services.dispatch.hash_utils import compute_content_hash
+from app.services.metering.quota_service import QuotaService, QuotaExceededException
 from app.services.llm.service import LLMService
 
 logger = logging.getLogger(__name__)
@@ -554,7 +564,9 @@ class AgentEngine:
     async def approve_proposal(self, proposal_id: str, feedback: Optional[str] = None) -> Dict[str, Any]:
         """
         Executes human-in-the-loop approval of an action proposal.
-        Enforces tenant isolation and transitions status to 'approved' -> 'executed'.
+        Enforces tenant isolation, reserves quota, creates UserCommand, calculates canonical content hash,
+        mints SendAuthorization, enqueues HoldQueueItem with undo countdown window,
+        and transitions Application to 'queued' (NOT 'applied'; sent_at strictly remains None until dispatch).
         """
         proposal = self.db.query(AgentActionProposal).filter(
             AgentActionProposal.id == proposal_id,
@@ -573,23 +585,137 @@ class AgentEngine:
             }
 
         now = datetime.now(timezone.utc)
-        proposal.status = "approved"
-        proposal.approved_at = now
-        proposal.executed_at = now
 
-        # Execute business logic if target is Application
+        # Check if target is an Application for outbound dispatch
+        app = None
         if proposal.target_id:
             app = self.db.query(Application).filter(
                 Application.id == proposal.target_id,
                 Application.account_id == self.account_id
             ).first()
-            if app:
-                app.sent_at = now
-                app.status = "applied"
 
+        if app:
+            # 1. Reserve quota
+            try:
+                reservation = QuotaService.reserve(
+                    db=self.db,
+                    account_id=self.account_id,
+                    quota_key="monthly_applications_limit",
+                    units=1,
+                    correlation_id=proposal.id,
+                )
+            except QuotaExceededException as e:
+                return {
+                    "success": False,
+                    "error_code": "QUOTA_EXCEEDED",
+                    "message": str(e),
+                    "proposal_id": proposal.id,
+                    "status": "pending",
+                }
+
+            # 2. Settings row for undo countdown delay
+            settings_row = self.db.query(AccountDispatchSettings).filter_by(account_id=self.account_id).first()
+            if not settings_row:
+                settings_row = AccountDispatchSettings(account_id=self.account_id, autonomy_mode="supervised")
+                self.db.add(settings_row)
+                self.db.flush()
+
+            # 3. Create UserCommand (source: ui_click, mode: supervised)
+            cmd = UserCommand(
+                id=str(uuid.uuid4()),
+                account_id=self.account_id,
+                command_type="single",
+                mode="supervised",
+                source="ui_click",
+                target_job_ids=[app.job_id] if app.job_id else [],
+                expires_at=now + timedelta(hours=1),
+            )
+            self.db.add(cmd)
+            self.db.flush()
+
+            # 4. Canonical Content Hash
+            pdf_payload = self.db.query(ApplicationPdfPayload).filter_by(application_id=app.id).first()
+            pdf_sha256 = pdf_payload.sha256 if pdf_payload else (app.pdf_sha256 or "")
+            recipient_email = (
+                app.recipient_email
+                or (proposal.payload_snapshot.get("recipient") if proposal.payload_snapshot else "")
+                or ""
+            )
+
+            content_hash = compute_content_hash(
+                cv_version_id=app.cv_version_id or "",
+                subject=app.subject or "",
+                body=app.draft_content or app.body or "",
+                recipient=recipient_email,
+                answers_json="[]",
+                attachment_sha256=pdf_sha256,
+            )
+
+            # 5. Mint SendAuthorization
+            auth = SendAuthorization(
+                id=str(uuid.uuid4()),
+                account_id=self.account_id,
+                application_id=app.id,
+                command_id=cmd.id,
+                recipient_email=recipient_email,
+                content_hash=content_hash,
+                minted_by="human_approval",
+                status="pending",
+                expires_at=now + timedelta(hours=1),
+            )
+            self.db.add(auth)
+            self.db.flush()
+
+            # 6. Enqueue HoldQueueItem (default 30s undo countdown window)
+            delay_sec = getattr(settings_row, "undo_delay_seconds", 30) or 30
+            release_at = now + timedelta(seconds=delay_sec)
+            hold_item = HoldQueueItem(
+                id=str(uuid.uuid4()),
+                account_id=self.account_id,
+                application_id=app.id,
+                authorization_id=auth.id,
+                reservation_id=reservation.id,
+                status="pending",
+                release_at=release_at,
+                hold_kind="review_required",
+                channel=app.channel or "email",
+            )
+            self.db.add(hold_item)
+
+            # 7. Transition states: app is queued (sent_at remains None until dispatch poller completes!)
+            proposal.status = "approved"
+            proposal.approved_at = now
+            proposal.executed_at = now
+            app.status = "queued"
+
+            self.db.commit()
+
+            # Broadcast domain event
+            await DomainEventBus.publish(
+                ProposalApprovedEvent(
+                    account_id=self.account_id,
+                    proposal_id=proposal.id,
+                    action_type=proposal.action_type,
+                )
+            )
+
+            return {
+                "success": True,
+                "message": f"Proposal '{proposal.title}' approved and queued for dispatch with {delay_sec}s undo countdown.",
+                "proposal_id": proposal.id,
+                "status": "queued",
+                "hold_queue_item_id": hold_item.id,
+                "authorization_id": auth.id,
+                "undo_expires_at": release_at.isoformat(),
+                "executed_at": now.isoformat(),
+            }
+
+        # Non-application proposal approval
+        proposal.status = "approved"
+        proposal.approved_at = now
+        proposal.executed_at = now
         self.db.commit()
 
-        # Broadcast domain event
         await DomainEventBus.publish(
             ProposalApprovedEvent(
                 account_id=self.account_id,
@@ -606,7 +732,92 @@ class AgentEngine:
             "executed_at": now.isoformat(),
         }
 
+    async def cancel_hold_dispatch(
+        self,
+        hold_item_id: Optional[str] = None,
+        application_id: Optional[str] = None,
+        proposal_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Mid-hold cancel during undo countdown window.
+        Reverts application to 'draft', voids authorization, releases quota reservation,
+        and sets hold queue item status to 'aborted' with abort_reason='user_cancelled'.
+        """
+        now = datetime.now(timezone.utc)
+        hold_query = self.db.query(HoldQueueItem).filter(HoldQueueItem.account_id == self.account_id)
+
+        if hold_item_id:
+            hold_item = hold_query.filter(HoldQueueItem.id == hold_item_id).first()
+        elif application_id:
+            hold_item = hold_query.filter(
+                HoldQueueItem.application_id == application_id,
+                HoldQueueItem.status == "pending"
+            ).order_by(HoldQueueItem.created_at.desc()).first()
+        elif proposal_id:
+            prop = self.db.query(AgentActionProposal).filter_by(id=proposal_id, account_id=self.account_id).first()
+            if not prop or not prop.target_id:
+                raise ValueError(f"Proposal {proposal_id} not found or has no application target.")
+            hold_item = hold_query.filter(
+                HoldQueueItem.application_id == prop.target_id,
+                HoldQueueItem.status == "pending"
+            ).order_by(HoldQueueItem.created_at.desc()).first()
+        else:
+            raise ValueError("Must provide hold_item_id, application_id, or proposal_id to cancel.")
+
+        if not hold_item:
+            raise ValueError("No active pending dispatch hold item found to cancel.")
+
+        if hold_item.status != "pending":
+            return {
+                "success": False,
+                "message": f"Cannot cancel dispatch: item is already in '{hold_item.status}' state.",
+                "hold_item_id": hold_item.id,
+                "status": hold_item.status,
+            }
+
+        # 1. Abort hold item
+        hold_item.status = "aborted"
+        hold_item.abort_reason = "user_cancelled"
+        hold_item.error_message = "Cancelled by candidate during undo window."
+
+        # 2. Release quota reservation
+        if hold_item.reservation_id:
+            QuotaService.release(self.db, hold_item.reservation_id)
+
+        # 3. Void SendAuthorization
+        if hold_item.authorization_id:
+            auth = self.db.query(SendAuthorization).filter_by(id=hold_item.authorization_id).first()
+            if auth:
+                auth.status = "voided"
+                auth.voided_at = now
+
+        # 4. Revert Application to draft
+        app = self.db.query(Application).filter_by(id=hold_item.application_id, account_id=self.account_id).first()
+        if app:
+            app.status = "draft"
+            app.sent_at = None
+
+        # 5. If proposal exists, mark rejected
+        if proposal_id:
+            prop = self.db.query(AgentActionProposal).filter_by(id=proposal_id, account_id=self.account_id).first()
+            if prop:
+                prop.status = "rejected"
+
+        self.db.commit()
+
+        return {
+            "success": True,
+            "message": "Dispatch cancelled successfully. Application reverted to draft.",
+            "hold_item_id": hold_item.id,
+            "status": "aborted",
+            "abort_reason": "user_cancelled",
+            "application_status": "draft",
+        }
+
     async def reject_proposal(self, proposal_id: str, feedback: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Rejects a proposal. If it was already approved and is in pending hold, cancels the dispatch.
+        """
         proposal = self.db.query(AgentActionProposal).filter(
             AgentActionProposal.id == proposal_id,
             AgentActionProposal.account_id == self.account_id
@@ -614,6 +825,13 @@ class AgentEngine:
 
         if not proposal:
             raise ValueError(f"Proposal {proposal_id} not found.")
+
+        if proposal.status == "approved":
+            # If in hold queue, cancel it
+            try:
+                return await self.cancel_hold_dispatch(proposal_id=proposal_id)
+            except ValueError:
+                pass
 
         proposal.status = "rejected"
         proposal.updated_at = datetime.now(timezone.utc)

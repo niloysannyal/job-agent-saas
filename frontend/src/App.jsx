@@ -640,6 +640,29 @@ function CareerAppInner() {
     }
   };
 
+  // Candidate Undo/Cancel Send (during undo window)
+  const handleCancelSend = async ({ applicationId }) => {
+    if (!applicationId) return;
+    try {
+      const res = await fetch(`${API_BASE}/applications/${applicationId}/cancel-send?account_id=${accountId}`, {
+        method: 'POST',
+        headers: { ...authHeaders },
+      });
+      if (res.ok) {
+        setApplications((prev) =>
+          prev.map((a) => (a.id === applicationId ? { ...a, status: 'draft', sent_at: null } : a))
+        );
+        showToast('Application send cancelled. Reverted to draft.');
+        fetchJobs();
+      } else {
+        const err = await res.json();
+        showToast(err.detail || 'Could not cancel send.', 4000);
+      }
+    } catch (err) {
+      showToast('Error cancelling send.', 4000);
+    }
+  };
+
   // Pipeline: Update Status (Optimistic UI with 0ms visual latency)
   const handleUpdateAppStatus = async (appId, newStatus) => {
     const targetApp = applications.find((a) => a.id === appId);
@@ -1008,6 +1031,7 @@ function CareerAppInner() {
             isTailoring={isTailoring}
             tailorResult={tailorResult}
             onApproveAndSend={handleApproveAndSend}
+            onCancelSend={handleCancelSend}
             isSending={isSending}
             showToast={showToast}
             onNavigate={setActiveSection}
@@ -1023,6 +1047,7 @@ function CareerAppInner() {
             onUpdateStatus={handleUpdateAppStatus}
             onDraftFollowUp={handleDraftFollowUp}
             onSendFollowUp={handleSendFollowUpConfirm}
+            onCancelSend={handleCancelSend}
             onViewMaterials={(app) => setViewingMaterialsApp(app)}
             onNavigate={setActiveSection}
             showToast={showToast}

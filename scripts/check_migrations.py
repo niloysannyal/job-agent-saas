@@ -19,7 +19,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def check_models_tenancy():
     models_dir = ROOT / "backend" / "app" / "models"
-    non_tenant_allowed = {"cv_template.py", "__init__.py"}
+    non_tenant_allowed = {
+        "cv_template.py",
+        "__init__.py",
+        "model_pricing.py",
+        "admin_audit_log.py",
+    }
     passed = True
     checked = 0
     errors = []

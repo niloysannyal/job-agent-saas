@@ -61,7 +61,7 @@ def upgrade() -> None:
         sa.Column('profile_id', sa.String(36), sa.ForeignKey('user_profiles.id', ondelete='CASCADE'), nullable=False),
         sa.Column('title', sa.String(255), nullable=False),
         sa.Column('priority', sa.Integer(), nullable=False, server_default='0'),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
     op.create_index('ix_target_designations_account_id', 'target_designations', ['account_id'])
     op.create_index('ix_target_designations_profile_id', 'target_designations', ['profile_id'])
@@ -74,8 +74,8 @@ def upgrade() -> None:
         sa.Column('profile_id', sa.String(36), sa.ForeignKey('user_profiles.id', ondelete='CASCADE'), nullable=False),
         sa.Column('location_name', sa.String(255), nullable=False),
         sa.Column('location_type', sa.String(50), nullable=False, server_default='any'),
-        sa.Column('relocation_willing', sa.Boolean(), nullable=False, server_default=sa.text('0')),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('relocation_willing', sa.Boolean(), nullable=False, server_default=sa.text('false')),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
     op.create_index('ix_target_locations_account_id', 'target_locations', ['account_id'])
     op.create_index('ix_target_locations_profile_id', 'target_locations', ['profile_id'])
@@ -90,8 +90,8 @@ def upgrade() -> None:
         sa.Column('max_salary', sa.Float(), nullable=True),
         sa.Column('currency', sa.String(10), nullable=False, server_default='USD'),
         sa.Column('period', sa.String(20), nullable=False, server_default='yearly'),
-        sa.Column('is_negotiable', sa.Boolean(), nullable=False, server_default=sa.text('1')),
-        sa.Column('is_sensitive', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('is_negotiable', sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column('is_sensitive', sa.Boolean(), nullable=False, server_default=sa.text('true')),
     )
     op.create_index('ix_compensation_expectations_account_id', 'compensation_expectations', ['account_id'])
     op.create_index('ix_compensation_expectations_profile_id', 'compensation_expectations', ['profile_id'])
@@ -120,7 +120,7 @@ def upgrade() -> None:
         sa.Column('good_for_tags', sa.Text(), nullable=False, server_default=''),
         sa.Column('company', sa.String(255), nullable=True),
         sa.Column('role', sa.String(255), nullable=True),
-        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         sa.Column('sort_order', sa.Integer(), nullable=False, server_default='0'),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),

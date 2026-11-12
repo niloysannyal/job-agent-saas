@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_account
-from app.core.crypto import encrypt_secret, decrypt_secret
+from app.core.crypto import encrypt_oauth_token, decrypt_oauth_token
 from app.db.session import get_db
 from app.models.account import Account
 from app.models.oauth import OAuthConnection
@@ -97,17 +97,17 @@ async def google_oauth_callback(
             account_id=current_account.id,
             provider="google",
             email=token_info.get("email"),
-            encrypted_access_token=encrypt_secret(token_info.get("access_token")),
-            encrypted_refresh_token=encrypt_secret(token_info.get("refresh_token")),
+            encrypted_access_token=encrypt_oauth_token(token_info.get("access_token")),
+            encrypted_refresh_token=encrypt_oauth_token(token_info.get("refresh_token")),
             token_expires_at=expires_at,
             scope=token_info.get("scope"),
         )
         db.add(conn)
     else:
         conn.email = token_info.get("email") or conn.email
-        conn.encrypted_access_token = encrypt_secret(token_info.get("access_token"))
+        conn.encrypted_access_token = encrypt_oauth_token(token_info.get("access_token"))
         if token_info.get("refresh_token"):
-            conn.encrypted_refresh_token = encrypt_secret(token_info.get("refresh_token"))
+            conn.encrypted_refresh_token = encrypt_oauth_token(token_info.get("refresh_token"))
         conn.token_expires_at = expires_at
         conn.scope = token_info.get("scope") or conn.scope
 
@@ -189,7 +189,7 @@ async def create_gmail_draft(
         )
 
     # Check token expiry and refresh if needed
-    access_token = decrypt_secret(conn.encrypted_access_token)
+    access_token = decrypt_oauth_token(conn.encrypted_access_token)
     now = datetime.now(timezone.utc)
     expires_at = conn.token_expires_at
     if expires_at and expires_at.tzinfo is None:
@@ -197,7 +197,7 @@ async def create_gmail_draft(
     if expires_at and expires_at <= now:
         if conn.encrypted_refresh_token:
             new_token = await GoogleIntegrationService.refresh_access_token(conn.encrypted_refresh_token)
-            conn.encrypted_access_token = encrypt_secret(new_token)
+            conn.encrypted_access_token = encrypt_oauth_token(new_token)
             conn.token_expires_at = now + timedelta(seconds=3600)
             db.commit()
             access_token = new_token

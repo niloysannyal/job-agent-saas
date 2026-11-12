@@ -615,7 +615,9 @@ export const AgentProvider = ({ children }) => {
                 ...m.ui_widget,
                 props: {
                   ...m.ui_widget.props,
-                  status: 'executed',
+                  status: result.status || 'queued',
+                  undo_expires_at: result.undo_expires_at,
+                  hold_queue_item_id: result.hold_queue_item_id,
                 },
               },
             };
@@ -675,6 +677,52 @@ export const AgentProvider = ({ children }) => {
     }
   }, [effectiveAccountId, getHeaders, fetchProposals]);
 
+  // Human-in-the-loop Cancel during Undo Window
+  const cancelProposal = useCallback(async (proposalId) => {
+    try {
+      const url = effectiveAccountId
+        ? `/api/v1/agent/proposals/${proposalId}/cancel?account_id=${effectiveAccountId}`
+        : `/api/v1/agent/proposals/${proposalId}/cancel`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: getHeaders(),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Failed to cancel dispatch');
+      }
+
+      const result = await res.json();
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.ui_widget?.type === 'SendApprovalGate' && m.ui_widget.props?.proposal_id === proposalId) {
+            return {
+              ...m,
+              ui_widget: {
+                ...m.ui_widget,
+                props: {
+                  ...m.ui_widget.props,
+                  status: 'aborted',
+                  abort_reason: 'user_cancelled',
+                },
+              },
+            };
+          }
+          return m;
+        })
+      );
+
+      fetchProposals();
+      return result;
+    } catch (err) {
+      console.error('Error cancelling proposal:', err);
+      throw err;
+    }
+  }, [effectiveAccountId, getHeaders, fetchProposals]);
+
   const toggleDock = useCallback(() => setIsDockOpen((prev) => !prev), []);
   const openDock = useCallback(() => setIsDockOpen(true), []);
   const closeDock = useCallback(() => setIsDockOpen(false), []);
@@ -698,6 +746,7 @@ export const AgentProvider = ({ children }) => {
     uploadFiles,
     approveProposal,
     rejectProposal,
+    cancelProposal,
     fetchProposals,
     fetchConversations,
     toggleDock,

@@ -1,3 +1,23 @@
+from app.models.model_pricing import ModelPricing
+from app.models.admin_audit_log import AdminAuditLog
+from app.models.dispatch import (
+    AccountDispatchSettings,
+    UserCommand,
+    SendAuthorization,
+    ApplicationPdfPayload,
+    HoldQueueItem,
+    SendEvidence,
+    DispatchedAction,
+    TrustedRecipient,
+    JobFeedback,
+)
+from app.models.metering import (
+    AccountSubscription,
+    AccountUsageCounter,
+    QuotaReservation,
+    UsageEvent,
+    AccountQuotaOverride,
+)
 from app.models.account import (
     Account,
     AccountBase,
@@ -250,4 +270,21 @@ __all__ = [
     "AgentMessageRead",
     "AgentChatRequest",
     "ProposalApprovalRequest",
+    # M1 Real Dispatch & Metering
+    "ModelPricing",
+    "AdminAuditLog",
+    "AccountDispatchSettings",
+    "UserCommand",
+    "SendAuthorization",
+    "ApplicationPdfPayload",
+    "HoldQueueItem",
+    "SendEvidence",
+    "DispatchedAction",
+    "TrustedRecipient",
+    "JobFeedback",
+    "AccountSubscription",
+    "AccountUsageCounter",
+    "QuotaReservation",
+    "UsageEvent",
+    "AccountQuotaOverride",
 ]

@@ -17,9 +17,11 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "`n[2/3] Verifying Dev Servers..." -ForegroundColor Yellow
 Write-Host "  Backend  -> http://127.0.0.1:8000 (FastAPI Docs: /docs)" -ForegroundColor Cyan
 Write-Host "  Frontend -> http://127.0.0.1:5173 (React 19 App)" -ForegroundColor Cyan
+Write-Host "  Poller   -> python -m app.workers.dispatch_poller (Outbox Dispatcher)" -ForegroundColor Cyan
 
 # 3. Ready
 Write-Host "`n[3/3] Development Environment Online!" -ForegroundColor Green
 Write-Host "Tip: Run 'python scripts/verify.py' before committing changes." -ForegroundColor Gray
+Write-Host "Tip: Run 'python scripts/export_db.py' before switching to your desktop on Nov 15th." -ForegroundColor Magenta
 Write-Host "=================================================================" -ForegroundColor Cyan
 

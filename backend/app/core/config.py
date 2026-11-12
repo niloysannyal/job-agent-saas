@@ -43,10 +43,16 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     OTP_EXPIRE_MINUTES: int = 10
 
-    # Google OAuth 2.0 Credentials (for Gmail Draft composition)
+    # Google OAuth 2.0 Credentials (for Gmail Draft composition and verified outbound dispatch)
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_REDIRECT_URI: str = "http://localhost:5173/auth/google/callback"
+
+    # Dedicated OAuth Encryption Key for Worker Process Isolation (MultiFernet: comma-separated base64 Fernet keys)
+    OAUTH_ENCRYPTION_KEY: Optional[str] = None
+
+    # Global Emergency Kill Switch for Dispatch Operations
+    DISPATCH_GLOBAL_KILL_SWITCH: bool = False
 
     # Redis URL (for background async worker Arq)
     REDIS_URL: str = "redis://localhost:6379/0"

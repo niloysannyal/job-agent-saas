@@ -99,11 +99,11 @@ class Entitlement(Base):
         nullable=False,
         default="free",
     )
-    # Per ARCHITECTURE.md §7: all-access by default for Phase 0/1
+    # Phase 1 Inversion: default False, superadmin backfilled with True
     all_access: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
-        default=True,
+        default=False,
     )
     max_active_applications: Mapped[Optional[int]] = mapped_column(
         Integer,
