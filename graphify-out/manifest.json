@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1794470836.5200756,
-    "seen": 1794471365.0816865,
-    "ast_hash": "48a9da41575aacff509cc414fabef780",
+    "mtime": 1794480296.1963408,
+    "seen": 1794480542.1742077,
+    "ast_hash": "77a0820e0afed8399a4a64639387185c",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
@@ -1626,9 +1626,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ResumeBuilderView.jsx": {
-    "mtime": 1794477763.054597,
-    "seen": 1794477941.5703297,
-    "ast_hash": "27142f5390cd03a04b7b85bb63428f1e",
+    "mtime": 1794480445.9496768,
+    "seen": 1794480542.1743374,
+    "ast_hash": "b1036a9c22a854a9f3730a36d8730f7a",
     "semantic_hash": ""
   },
   "frontend/src/components/profile/SavedResumesTab.jsx": {

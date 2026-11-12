@@ -11431,7 +11431,7 @@
       "file_type": "code",
       "norm_label": "resumebuilderview()",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L35"
+      "source_location": "L36"
     },
     {
       "id": "frontend_src_components_resumebuilderview_resumebuilderview_handleclickoutside",
@@ -39564,7 +39564,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L221",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -39576,7 +39576,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L226",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -39588,7 +39588,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L230",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -39600,7 +39600,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L257",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -39612,7 +39612,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L478",
+      "source_location": "L497",
       "weight": 1.0
     },
     {
@@ -39624,7 +39624,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L500",
+      "source_location": "L519",
       "weight": 1.0
     },
     {
@@ -91770,7 +91770,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/components/ResumeBuilderView.jsx",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -114729,5 +114729,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "cdef962e57fd141667e3cc656e7b384b5bffbe8a"
+  "built_at_commit": "6d914f0b4a25f6356acd9c679b7d2cc2094a8024"
 }

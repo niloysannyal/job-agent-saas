@@ -27,7 +27,8 @@ import { compactLatex, parseLatexDocument, paginateParsedDocument, decodeHtmlEnt
 import { downloadLatexSource, downloadPdfDocument } from './studio/studioExportUtils';
 
 const TEMPLATES = [
-  { id: '01_MODERN_TECH', label: '01_MODERN_TECH (Default)' },
+  { id: 'custom', label: 'Custom' },
+  { id: '01_MODERN_TECH', label: '01_MODERN_TECH' },
   { id: '02_CLASSIC_CORPORATE', label: '02_CLASSIC_CORPORATE' },
   { id: '03_MINIMALIST_COMPACT', label: '03_MINIMALIST_COMPACT' },
 ];
@@ -44,6 +45,8 @@ export default function ResumeBuilderView({
 }) {
   const isFromStudio = Boolean(builderContext?.fromStudio || builderContext?.returnTo === 'studio');
 
+  const [savedResumeId, setSavedResumeId] = useState(() => builderContext?.resumeId || null);
+
   const [resumeTitle, setResumeTitle] = useState(() => {
     if (builderContext?.resumeName) return builderContext.resumeName;
     if (builderContext?.company && builderContext?.role) {
@@ -57,10 +60,7 @@ export default function ResumeBuilderView({
     if (builderContext?.templateId && TEMPLATES.some((t) => t.id === builderContext.templateId)) {
       return builderContext.templateId;
     }
-    if (builderContext?.tailoredLatex || builderContext?.resumeLatex || builderContext?.resumeId) {
-      return 'custom';
-    }
-    return '01_MODERN_TECH';
+    return 'custom';
   });
   const [editedLatex, setEditedLatex] = useState('');
   const [initialLatex, setInitialLatex] = useState('');
@@ -93,7 +93,7 @@ export default function ResumeBuilderView({
     };
   }, [isDownloadOpen]);
 
-  // Load initial LaTeX: from context (Studio / saved resume), or compile template with profile
+  // Load initial LaTeX: from context (Studio / saved resume), or compile baseline with profile
   useEffect(() => {
     if (builderContext?.tailoredLatex || builderContext?.resumeLatex) {
       const src = builderContext.tailoredLatex || builderContext.resumeLatex;
@@ -123,17 +123,25 @@ export default function ResumeBuilderView({
           } else {
             setActiveTemplate('custom');
           }
+          if (data?.id) setSavedResumeId(data.id);
         })
         .catch(() => {});
       return;
     }
 
-    // Default: compile from candidate profile
-    fetchTemplatePreview(activeTemplate === 'custom' ? '01_MODERN_TECH' : activeTemplate);
+    // Default: compile baseline template into Custom workspace
+    if (profile?.master_cv_latex) {
+      setEditedLatex(profile.master_cv_latex);
+      setInitialLatex(profile.master_cv_latex);
+      setActiveTemplate('custom');
+    } else {
+      fetchTemplatePreview('01_MODERN_TECH', false);
+      setActiveTemplate('custom');
+    }
   }, [builderContext, accountId]);
 
   // Fetch compiled LaTeX for a template from backend TeX compiler
-  const fetchTemplatePreview = async (templateId) => {
+  const fetchTemplatePreview = async (templateId, setAsActive = true) => {
     try {
       setIsCompiling(true);
       const url = `/api/v1/profile/preview-cv?account_id=${accountId}&template_id=${templateId}`;
@@ -142,7 +150,9 @@ export default function ResumeBuilderView({
         const data = await res.json();
         setEditedLatex(data.latex_source);
         setInitialLatex(data.latex_source);
-        setActiveTemplate(templateId);
+        if (setAsActive) {
+          setActiveTemplate(templateId);
+        }
         showToast?.(`Loaded ${templateId} with profile data.`);
       }
     } catch {
@@ -272,6 +282,12 @@ export default function ResumeBuilderView({
     setTimeout(() => setIsCopied(false), 2000);
   };
 
+  // Handle editor source changes: typing switches template state to Custom
+  const handleLatexChange = useCallback((newVal) => {
+    setEditedLatex(newVal);
+    setActiveTemplate((prev) => (prev !== 'custom' ? 'custom' : prev));
+  }, []);
+
   // Save to Profile Keeper (user_resumes)
   const handleSaveToProfile = async () => {
     if (!editedLatex.trim()) {
@@ -282,9 +298,10 @@ export default function ResumeBuilderView({
       setIsSaving(true);
       const payload = {
         account_id: accountId,
-        resume_id: builderContext?.resumeId || null,
+        resume_id: savedResumeId || builderContext?.resumeId || null,
         name: resumeTitle.trim() || 'Custom LaTeX Resume',
         latex_source: editedLatex,
+        template_id: activeTemplate,
       };
 
       const res = await fetch('/api/v1/profile/resumes/save-builder', {
@@ -295,6 +312,9 @@ export default function ResumeBuilderView({
 
       if (res.ok) {
         const saved = await res.json();
+        if (saved?.id) {
+          setSavedResumeId(saved.id);
+        }
         showToast?.(`Saved "${saved.name}" to My Resumes!`);
         return saved;
       } else {
@@ -327,8 +347,8 @@ export default function ResumeBuilderView({
     <div
       className={`split-workspace-panel panel-card overleaf-workspace ${isFullscreen ? 'overleaf-fullscreen-mode' : ''}`}
       style={{
-        height: isFullscreen ? '100vh' : 'calc(100vh - 120px)',
-        minHeight: '700px',
+        height: isFullscreen ? '100vh' : 'calc(100vh - 24px)',
+        minHeight: '850px',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -406,7 +426,6 @@ export default function ResumeBuilderView({
                     {tmpl.label}
                   </option>
                 ))}
-                <option value="custom">Custom (Bespoke LaTeX)</option>
               </select>
               <ChevronDown size={11} className="template-select-arrow" />
             </div>
@@ -540,7 +559,7 @@ export default function ResumeBuilderView({
             <LatexCodeEditor
               ref={editorRef}
               value={editedLatex}
-              onChange={setEditedLatex}
+              onChange={handleLatexChange}
               onCompile={handleManualCompile}
               extraActions={
                 <>
@@ -580,14 +599,6 @@ export default function ResumeBuilderView({
                     title="Copy LaTeX source"
                   >
                     {isCopied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                  </button>
-                  <button
-                    type="button"
-                    className="editor-tool-btn"
-                    onClick={() => setIsFullscreen((prev) => !prev)}
-                    title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
-                  >
-                    {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                   </button>
                 </>
               }
@@ -706,63 +717,6 @@ export default function ResumeBuilderView({
                 </div>
               )}
 
-              {/* Overleaf Download Dropdown (PDF & LaTeX) */}
-              <div className="cv-download-dropdown-wrapper" ref={downloadRef}>
-                <button
-                  type="button"
-                  className="overleaf-toolbar-btn overleaf-toolbar-btn-download"
-                  onClick={() => setIsDownloadOpen((prev) => !prev)}
-                  aria-haspopup="true"
-                  aria-expanded={isDownloadOpen}
-                  title="Download CV as PDF or LaTeX"
-                >
-                  <Download size={13} />
-                  <span>Download</span>
-                  <ChevronDown size={11} className={`cv-dropdown-arrow ${isDownloadOpen ? 'open' : ''}`} />
-                </button>
-                {isDownloadOpen && (
-                  <div className="cv-download-dropdown-menu">
-                    <button
-                      type="button"
-                      className="cv-dropdown-item"
-                      onClick={() => {
-                        setIsDownloadOpen(false);
-                        downloadPdfDocument({
-                          parsedDoc,
-                          customCompany: resumeTitle,
-                          profile: profileForm,
-                          showToast,
-                        });
-                      }}
-                    >
-                      <div className="cv-dropdown-icon-box pdf-badge">
-                        <FileText size={14} />
-                      </div>
-                      <div className="cv-dropdown-text-box">
-                        <span className="cv-dropdown-item-title">Download PDF</span>
-                        <span className="cv-dropdown-item-desc">Pixel-perfect Overleaf PDF (.pdf)</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      className="cv-dropdown-item"
-                      onClick={() => {
-                        setIsDownloadOpen(false);
-                        downloadLatexSource(editedLatex, profileForm, resumeTitle, showToast);
-                      }}
-                    >
-                      <div className="cv-dropdown-icon-box tex-badge">
-                        <FileCode size={14} />
-                      </div>
-                      <div className="cv-dropdown-text-box">
-                        <span className="cv-dropdown-item-title">Download LaTeX</span>
-                        <span className="cv-dropdown-item-desc">Raw Overleaf TeX source (.tex)</span>
-                      </div>
-                    </button>
-                  </div>
-                )}
-              </div>
-
               {/* Print Button */}
               <button
                 type="button"
@@ -772,15 +726,6 @@ export default function ResumeBuilderView({
               >
                 <Printer size={13} />
                 <span>Print</span>
-              </button>
-
-              <button
-                type="button"
-                className="overleaf-toolbar-btn overleaf-toolbar-icon-btn"
-                onClick={() => setIsFullscreen((prev) => !prev)}
-                title={isFullscreen ? 'Exit Full Screen' : 'Full Screen Focus Mode'}
-              >
-                {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
               </button>
             </div>
           </div>
@@ -796,7 +741,7 @@ export default function ResumeBuilderView({
               style={{
                 zoom: zoomLevel / 100,
                 margin: '0 auto',
-                padding: '24px 0',
+                padding: '0 0 36px 0',
               }}
             >
               {paginatedPages.map((page, pIdx) => (
