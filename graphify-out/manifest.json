@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1794470242.604925,
-    "seen": 1794470565.4307494,
-    "ast_hash": "3aa22e2446867564d41429d7c9fed7d9",
+    "mtime": 1794474969.4252334,
+    "seen": 1794475272.7699702,
+    "ast_hash": "26107608764a9fab8a05fa6279955aa0",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1794471304.9382913,
-    "seen": 1794471365.0817094,
-    "ast_hash": "4119b310932f981a5abfa8fe0cd02fb0",
+    "mtime": 1794474708.5683692,
+    "seen": 1794475272.7699957,
+    "ast_hash": "4e9200f5f4e1226f1d00347414ecc3bc",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -1626,9 +1626,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ResumeBuilderView.jsx": {
-    "mtime": 1794471304.813134,
-    "seen": 1794471365.081708,
-    "ast_hash": "885270eb0a4202676f17d270f4118a70",
+    "mtime": 1794474797.130448,
+    "seen": 1794475272.7699943,
+    "ast_hash": "c3d43fc8e9a777f33be1ab2419cf0260",
     "semantic_hash": ""
   },
   "frontend/src/components/profile/SavedResumesTab.jsx": {
@@ -1641,6 +1641,12 @@
     "mtime": 1794470651.1543336,
     "seen": 1794470692.216752,
     "ast_hash": "93a691b6699a480aabe15d2c4de468e7",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/studio/ResumePreviewModal.jsx": {
+    "mtime": 1794475198.9122958,
+    "seen": 1794475272.770035,
+    "ast_hash": "851b99b41f9a49d7ea69474eb57a282c",
     "semantic_hash": ""
   }
 }

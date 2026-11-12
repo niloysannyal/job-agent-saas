@@ -184,14 +184,14 @@ export default function Sidebar({
         icon: Briefcase,
       },
       {
-        id: 'studio',
-        label: 'Application Studio',
-        icon: FileEdit,
-      },
-      {
         id: 'builder',
         label: 'Resume Builder',
         icon: FileText,
+      },
+      {
+        id: 'studio',
+        label: 'Application Studio',
+        icon: FileEdit,
       },
       {
         id: 'pipeline',
