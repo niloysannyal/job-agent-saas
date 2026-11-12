@@ -35,6 +35,7 @@ from app.models.agent import (
     AgentMessageRead,
     AgentChatRequest,
     ProposalApprovalRequest,
+    ThreadAccount,
 )
 from app.models.application import (
     Application,

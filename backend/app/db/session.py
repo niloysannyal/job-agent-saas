@@ -30,6 +30,7 @@ def get_engine():
         else:
             _engine = create_engine(
                 db_url,
+                connect_args={"connect_timeout": 3},
                 pool_pre_ping=True,
                 pool_recycle=300,
                 pool_size=10,

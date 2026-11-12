@@ -10,6 +10,7 @@ from app.api.interview import router as interview_router
 from app.api.integrations import router as integrations_router
 from app.api.jobs import router as jobs_router
 from app.api.profile import router as profile_router
+from app.api.tools import router as tools_router
 from app.db.base import Base
 from app.db.seed import seed_initial_data
 from app.db.session import get_engine
@@ -18,8 +19,13 @@ from app.db.session import get_engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure database tables exist on startup
-    Base.metadata.create_all(bind=get_engine())
-    seed_initial_data()
+    try:
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        seed_initial_data()
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Startup database synchronization skipped: %s", exc)
     yield
 
 
@@ -57,6 +63,7 @@ def create_app() -> FastAPI:
     app.include_router(interview_router, prefix=settings.API_V1_PREFIX)
     app.include_router(integrations_router, prefix=settings.API_V1_PREFIX)
     app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(tools_router, prefix=settings.API_V1_PREFIX)
 
     return app
 

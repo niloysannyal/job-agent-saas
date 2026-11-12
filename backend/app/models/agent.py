@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Boolean, DateTime, ForeignKey, JSON, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -205,6 +205,46 @@ class AgentMessage(Base):
     conversation: Mapped["AgentConversation"] = relationship(
         "AgentConversation",
         back_populates="messages",
+    )
+
+
+class ThreadAccount(Base):
+    """
+    Tenant ownership registry for LangGraph state threads.
+    Guarantees strict multi-tenant boundary over LangGraph internal checkpoint tables.
+    """
+    __tablename__ = "thread_accounts"
+
+    thread_id: Mapped[str] = mapped_column(
+        String(128),
+        primary_key=True,
+        doc="LangGraph thread_id identifier (e.g. copilot-{uuid} or apply-{uuid})",
+    )
+    account_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    graph_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        doc="'copilot' | 'apply'",
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_thread_accounts_account_thread", "account_id", "thread_id"),
     )
 
 
