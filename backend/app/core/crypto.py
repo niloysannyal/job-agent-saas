@@ -50,7 +50,12 @@ def get_oauth_fernet(keys_override: Optional[List[str]] = None) -> MultiFernet:
                 fernet_instances.append(Fernet(derived))
 
     if not fernet_instances:
-        # Fallback to JWT-derived key with dev-only fallback
+        if getattr(settings, "ENVIRONMENT", "development").lower() in ("production", "staging"):
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION ERROR: OAUTH_ENCRYPTION_KEY must be set in production/staging. "
+                "Silent fallback to JWT_SECRET_KEY is strictly disallowed."
+            )
+        # Fallback to JWT-derived key for local dev and unit testing only
         fernet_instances.append(_get_legacy_fernet())
 
     return MultiFernet(fernet_instances)

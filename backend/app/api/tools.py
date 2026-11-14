@@ -122,7 +122,10 @@ class WorkflowStartRequest(BaseModel):
 
 class WorkflowResumeRequest(BaseModel):
     thread_id: str
-    action: str = "approve"  # "approve" | "reject"
+    action: str = "approve"  # "approve" | "reject" | "edit"
+    edited_body: Optional[str] = None
+    edited_subject: Optional[str] = None
+    edited_latex: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -351,7 +354,8 @@ async def start_apply_workflow(
     Streams real-time SSE frames.
     """
     tenant_id = resolve_tenant_id(current_account, account_id)
-    thread_id = f"thread-apply-{payload.job_id[:8]}-{tenant_id[:8]}"
+    import uuid
+    thread_id = f"apply-{tenant_id}-{uuid.uuid4().hex[:12]}"
 
     # Fetch job context if available
     job = db.query(Job).filter_by(id=payload.job_id).first()
@@ -361,7 +365,7 @@ async def start_apply_workflow(
     apply_url = payload.apply_url or (job.apply_link if job else None)
 
     graph = build_apply_graph(checkpointer=_ACTIVE_CHECKPOINTER)
-    thread_config = {"configurable": {"thread_id": thread_id}}
+    thread_config = {"configurable": {"thread_id": thread_id, "account_id": tenant_id}}
 
     initial_state = {
         "account_id": tenant_id,
@@ -374,10 +378,30 @@ async def start_apply_workflow(
         "apply_url": apply_url,
     }
 
+    import asyncio
+    queue = asyncio.Queue()
+
+    async def run_apply_background():
+        try:
+            stream = graph.astream(initial_state, config=thread_config, stream_mode="updates")
+            async for sse_frame in LangGraphSSEAdapter.stream_apply_graph(stream, conversation_id=thread_id):
+                await queue.put(sse_frame)
+        except Exception as e:
+            logger.error(f"Error executing ApplyGraph workflow: {e}")
+            import json
+            await queue.put(f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n")
+        finally:
+            await queue.put(None)
+
+    # Decouple execution from client disconnect (Contract 4)
+    asyncio.create_task(run_apply_background())
+
     async def event_generator():
-        stream = graph.astream(initial_state, config=thread_config, stream_mode="updates")
-        async for sse_frame in LangGraphSSEAdapter.stream_apply_graph(stream, conversation_id=thread_id):
-            yield sse_frame
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            yield item
 
     return StreamingResponse(
         event_generator(),
@@ -398,17 +422,45 @@ async def resume_apply_workflow(
 ):
     """
     Resumes an interrupted ApplyGraph thread at the SendApprovalGate.
-    Delivers Command(resume={'action': payload.action}) and streams remaining execution.
+    Supports action: 'approve' (dispatch), 'edit' (G3 loopback to re-audit), or 'reject'.
+    Executes in decoupled background task so client disconnect cannot corrupt state.
     """
+    tenant_id = resolve_tenant_id(current_account, account_id)
     graph = build_apply_graph(checkpointer=_ACTIVE_CHECKPOINTER)
-    thread_config = {"configurable": {"thread_id": payload.thread_id}}
+    thread_config = {"configurable": {"thread_id": payload.thread_id, "account_id": tenant_id}}
 
-    resume_command = Command(resume={"action": payload.action, "notes": payload.notes})
+    resume_payload_dict = {
+        "action": payload.action,
+        "edited_body": payload.edited_body,
+        "edited_subject": payload.edited_subject,
+        "edited_latex": payload.edited_latex,
+        "notes": payload.notes,
+    }
+    resume_command = Command(resume=resume_payload_dict)
+
+    import asyncio
+    queue = asyncio.Queue()
+
+    async def run_resume_background():
+        try:
+            stream = graph.astream(resume_command, config=thread_config, stream_mode="updates")
+            async for sse_frame in LangGraphSSEAdapter.stream_apply_graph(stream, conversation_id=payload.thread_id):
+                await queue.put(sse_frame)
+        except Exception as e:
+            logger.error(f"Error resuming ApplyGraph workflow: {e}")
+            import json
+            await queue.put(f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n")
+        finally:
+            await queue.put(None)
+
+    asyncio.create_task(run_resume_background())
 
     async def event_generator():
-        stream = graph.astream(resume_command, config=thread_config, stream_mode="updates")
-        async for sse_frame in LangGraphSSEAdapter.stream_apply_graph(stream, conversation_id=payload.thread_id):
-            yield sse_frame
+        while True:
+            item = await queue.get()
+            if item is None:
+                break
+            yield item
 
     return StreamingResponse(
         event_generator(),

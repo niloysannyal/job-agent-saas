@@ -15,6 +15,14 @@ from app.services.cv_tailor.reviewer import CVReviewOutput
 from app.services.outreach.drafter_service import OutreachDrafterOutput
 
 
+class ApprovalGateResumePayload(BaseModel):
+    action: Literal["approve", "reject", "edit"]
+    edited_body: Optional[str] = None
+    edited_subject: Optional[str] = None
+    edited_latex: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class ApplicationPackageRef(BaseModel):
     application_id: str
     job_id: str
@@ -57,10 +65,13 @@ class ApplyState(BaseModel):
     command_id: Optional[str] = None
     authorization_id: Optional[str] = None
     proposal_id: Optional[str] = None
-    review_iteration: int = 0  # Bounded self-correction loop: max 1 iteration
+    review_iteration: int = 0  # Bounded self-correction loop: max 1 retry
     audit_flags: List[str] = Field(default_factory=list)
     downgrade_reason: Optional[str] = None
     approval_decision: Optional[Dict[str, Any]] = None
+    send_authorization_id: Optional[str] = None
+    hold_queue_item_id: Optional[str] = None
+    is_recipient_trusted: bool = False
     
     # Status
     status: Literal[
@@ -69,10 +80,12 @@ class ApplyState(BaseModel):
         "detecting_method",
         "drafting_cv",
         "reviewing_cv",
+        "needs_edit",
         "drafting_outreach",
         "assembling_package",
         "waiting_approval",
-        "enqueued_hold",
+        "queued_in_hold",
+        "failed_quota",
         "dispatched",
         "skipped",
         "failed",

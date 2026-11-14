@@ -202,6 +202,17 @@ class LangGraphSSEAdapter:
                         },
                     })
 
+                elif node_name == "needs_edit":
+                    last_status = "needs_edit"
+                    yield format_sse_frame({
+                        "type": "thought",
+                        "content": "Fact audit verification flagged unverified statements after self-correction retry. Halting workflow for human review.",
+                    })
+                    yield format_sse_frame({
+                        "type": "error",
+                        "error": "CV tailoring failed fact audit: unverified claims detected after self-correction retry.",
+                    })
+
                 elif node_name == "hitl_gate":
                     yield format_sse_frame({
                         "type": "thought",
@@ -209,10 +220,10 @@ class LangGraphSSEAdapter:
                     })
 
                 elif node_name == "dispatch":
-                    last_status = "enqueued_hold"
+                    last_status = "queued_in_hold"
                     yield format_sse_frame({
                         "type": "thought",
-                        "content": "Application approved. Enqueued for dispatch with hold-delay window.",
+                        "content": "Application authorized. Successfully enqueued into Outbox hold queue.",
                     })
 
         # Final termination frame

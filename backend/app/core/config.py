@@ -10,6 +10,7 @@ CANONICAL_DB_FILE = (REPO_ROOT / "backend" / "job_agent.db").as_posix()
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Job Application Agent SaaS"
     API_V1_PREFIX: str = "/api/v1"
+    ENVIRONMENT: str = "development"
 
     # Adzuna API credentials
     ADZUNA_APP_ID: Optional[str] = None

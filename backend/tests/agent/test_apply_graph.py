@@ -100,7 +100,7 @@ async def test_apply_graph_resume_with_approval(mock_llm_responses):
     # 3. Verify workflow completed to dispatch
     state_after = await graph.aget_state(thread_config)
     assert state_after.next == ()  # Reached END
-    assert state_after.values["status"] == "enqueued_hold"
+    assert state_after.values["status"] == "queued_in_hold"
     assert state_after.values["package_ref"] is not None
 
 
@@ -132,7 +132,7 @@ async def test_apply_graph_resume_with_reject(mock_llm_responses):
 
 @pytest.mark.asyncio
 async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
-    """Verifies legitimate corporate email application executes autonomously without interrupt."""
+    """Verifies legitimate corporate email with trusted recipient executes autonomously without interrupt."""
     checkpointer = MemorySaver()
     graph = build_apply_graph(checkpointer=checkpointer)
 
@@ -147,8 +147,15 @@ async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
         "autonomy_mode": "autonomous",
     }
 
-    # Patch review_cv to return strong ATS score (88%) and 1 page
-    with patch("app.services.cv_tailor.reviewer.CVReviewerService.review_cv", new_callable=AsyncMock) as mock_review:
+    from unittest.mock import MagicMock
+    mock_db = MagicMock()
+    mock_tr = MagicMock()
+    mock_tr.email = "jobs@deepmind.com"
+    mock_db.query.return_value.filter.return_value.first.return_value = mock_tr
+
+    # Patch review_cv to return strong ATS score (88%) and 1 page, and DB to return trusted recipient
+    with patch("app.services.cv_tailor.reviewer.CVReviewerService.review_cv", new_callable=AsyncMock) as mock_review, \
+         patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
         mock_review.return_value = CVReviewOutput(
             is_valid=True,
             final_tailored_latex="\\documentclass{article}\\begin{document}Tailored CV\\end{document}",
@@ -168,8 +175,49 @@ async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
     state = await graph.aget_state(thread_config)
     # Autonomy barrier satisfied -> bypassed hitl_gate directly to dispatch -> END
     assert state.next == ()
-    assert state.values["status"] == "enqueued_hold"
+    assert state.values["status"] == "queued_in_hold"
     assert state.values["downgrade_reason"] is None
+
+
+@pytest.mark.asyncio
+async def test_apply_graph_autonomous_downgrades_on_untrusted_tofu(mock_llm_responses):
+    """Verifies that an autonomous attempt to email an untrusted corporate recipient triggers TOFU downgrade."""
+    checkpointer = MemorySaver()
+    graph = build_apply_graph(checkpointer=checkpointer)
+
+    thread_config = {"configurable": {"thread_id": "thread-test-auto-tofu"}}
+    initial_state = {
+        "account_id": "acc-tenant-1",
+        "job_id": "job-203",
+        "user_email": "candidate@example.com",
+        "company_name": "DeepMind",
+        "role_title": "Lead AI Engineer",
+        "job_description": "Send CV to careers@deepmind.com with Python and FastAPI experience.",
+        "autonomy_mode": "autonomous",
+    }
+
+    from unittest.mock import MagicMock
+    mock_db = MagicMock()
+    # Return None for TrustedRecipient query to simulate first-time recipient (TOFU)
+    mock_db.query.return_value.filter.return_value.first.return_value = None
+
+    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
+        await graph.ainvoke(initial_state, config=thread_config)
+
+    state = await graph.aget_state(thread_config)
+    # Must halt at hitl_gate because recipient is not in trusted_recipients
+    assert state.next == ("hitl_gate",)
+    assert state.values["downgrade_reason"] is not None
+    assert "TOFU" in state.values["downgrade_reason"]
+
+    # Resuming with approve confirms trust and dispatches
+    resume_command = Command(resume={"action": "approve"})
+    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
+        await graph.ainvoke(resume_command, config=thread_config)
+
+    state_after = await graph.aget_state(thread_config)
+    assert state_after.next == ()
+    assert state_after.values["status"] == "queued_in_hold"
 
 
 @pytest.mark.asyncio
@@ -293,3 +341,140 @@ async def test_apply_graph_self_correction_redraft(mock_llm_responses):
     assert review_call_count == 2
     assert state.values["review_iteration"] == 2
     assert state.next == ("hitl_gate",)
+
+
+@pytest.mark.asyncio
+async def test_apply_graph_fact_audit_failure_hard_stops_at_needs_edit(mock_llm_responses):
+    """Verifies S1: Persistent fact audit failure after retry terminates at needs_edit node."""
+    checkpointer = MemorySaver()
+    graph = build_apply_graph(checkpointer=checkpointer)
+
+    thread_config = {"configurable": {"thread_id": "thread-test-hardstop-1"}}
+    initial_state = {
+        "account_id": "acc-tenant-1",
+        "job_id": "job-501",
+        "user_email": "candidate@example.com",
+        "company_name": "OpenAI",
+        "role_title": "Research Scientist",
+        "job_description": "LLM pretraining and alignment.",
+        "autonomy_mode": "supervised",
+    }
+
+    failed_review = CVReviewOutput(
+        is_valid=False,
+        final_tailored_latex="\\documentclass{article}\\begin{document}Unverified claim\\end{document}",
+        final_summary_bullet="\\resumeItem{Unverified}",
+        final_cover_letter="Cover",
+        confirmed_gaps=[],
+        ats_score=50.0,
+        fact_audit_passed=False,
+        hallucination_detected=True,
+        hallucination_reasons=["Unverified claim persists"],
+        line_count=60,
+        computed_page_count=1,
+        reviewer_notes="Failed fact check persistently",
+    )
+
+    with patch("app.services.cv_tailor.reviewer.CVReviewerService.review_cv", return_value=failed_review):
+        await graph.ainvoke(initial_state, config=thread_config)
+
+    state = await graph.aget_state(thread_config)
+    # Exceeded max_retries=1 -> S1 Hard Stop -> transitions to needs_edit -> END
+    assert state.next == ()
+    assert state.values["status"] == "needs_edit"
+    assert "CV tailoring failed fact audit" in (state.values.get("error") or "")
+
+
+@pytest.mark.asyncio
+async def test_apply_graph_approval_gate_edit_loop(mock_llm_responses):
+    """Verifies G3: In-place edits at approval gate loop back to assemble_package to re-audit & re-hash."""
+    checkpointer = MemorySaver()
+    graph = build_apply_graph(checkpointer=checkpointer)
+
+    thread_config = {"configurable": {"thread_id": "thread-test-edit-loop"}}
+    initial_state = {
+        "account_id": "acc-tenant-1",
+        "job_id": "job-601",
+        "user_email": "candidate@example.com",
+        "company_name": "Anthropic",
+        "role_title": "Safety Engineer",
+        "job_description": "Safety evaluation and alignment testing.",
+        "autonomy_mode": "supervised",
+    }
+
+    # 1. First run halts at hitl_gate
+    await graph.ainvoke(initial_state, config=thread_config)
+    state_step1 = await graph.aget_state(thread_config)
+    assert state_step1.next == ("hitl_gate",)
+    initial_hash = state_step1.values["package_ref"].content_hash
+
+    # 2. User provides in-place edits (G3 edit loop)
+    edit_command = Command(resume={
+        "action": "edit",
+        "edited_body": "Custom edited email body by candidate.",
+        "edited_subject": "Application for Safety Engineer - Custom",
+        "edited_latex": "\\documentclass{article}\\begin{document}Custom Tailored LaTeX\\end{document}",
+    })
+    await graph.ainvoke(edit_command, config=thread_config)
+
+    # 3. Graph loops through assemble_package and pauses AGAIN at hitl_gate with new hash
+    state_step2 = await graph.aget_state(thread_config)
+    assert state_step2.next == ("hitl_gate",)
+    new_package = state_step2.values["package_ref"]
+    assert new_package.content_hash != initial_hash
+    assert state_step2.values["outreach"].body_content == "Custom edited email body by candidate."
+    assert state_step2.values["outreach"].subject_line == "Application for Safety Engineer - Custom"
+    assert state_step2.values["cv_draft"].draft_assembled_latex == "\\documentclass{article}\\begin{document}Custom Tailored LaTeX\\end{document}"
+
+    # 4. Final approval releases package to dispatch
+    approve_command = Command(resume={"action": "approve"})
+    await graph.ainvoke(approve_command, config=thread_config)
+
+    state_step3 = await graph.aget_state(thread_config)
+    assert state_step3.next == ()
+    assert state_step3.values["status"] == "queued_in_hold"
+
+
+@pytest.mark.asyncio
+async def test_apply_graph_dispatch_contract3_database_records(mock_llm_responses):
+    """Verifies Contract 3 / G4: dispatch_node reserves quota and enqueues HoldQueueItem with correct delay."""
+    checkpointer = MemorySaver()
+    graph = build_apply_graph(checkpointer=checkpointer)
+
+    thread_config = {"configurable": {"thread_id": "thread-test-dispatch-contract"}}
+    initial_state = {
+        "account_id": "acc-tenant-1",
+        "job_id": "job-701",
+        "user_email": "candidate@example.com",
+        "company_name": "Microsoft",
+        "role_title": "AI Systems Engineer",
+        "job_description": "Azure AI systems engineering.",
+        "autonomy_mode": "supervised",
+    }
+
+    from unittest.mock import MagicMock
+    mock_db = MagicMock()
+    # Mock query responses
+    mock_db.query.return_value.filter_by.return_value.first.return_value = None
+    mock_db.query.return_value.filter.return_value.first.return_value = None
+
+    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
+        # 1. Run to gate
+        await graph.ainvoke(initial_state, config=thread_config)
+        # 2. Approve
+        await graph.ainvoke(Command(resume={"action": "approve"}), config=thread_config)
+
+    # Verify db_session.add was called for QuotaReservation, HoldQueueItem, TrustedRecipient
+    added_instances = [call.args[0] for call in mock_db.add.call_args_list]
+    types_added = [type(inst).__name__ for inst in added_instances]
+
+    assert "TrustedRecipient" in types_added
+    assert "QuotaReservation" in types_added
+    assert "HoldQueueItem" in types_added
+
+    # Verify hold queue item parameters
+    hold_item = next(inst for inst in added_instances if type(inst).__name__ == "HoldQueueItem")
+    assert hold_item.account_id == "acc-tenant-1"
+    assert hold_item.status == "pending"
+    assert hold_item.hold_kind == "review_required"  # Supervised -> 30s review_required
+    mock_db.commit.assert_called()

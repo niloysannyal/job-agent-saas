@@ -74,6 +74,7 @@ class CVDraftInput(BaseModel):
     job_company: str
     job_description: str
     target_angle: Optional[str] = None
+    audit_feedback: Optional[List[str]] = None
     career_context: Optional[CandidateCareerContext] = None
 
 

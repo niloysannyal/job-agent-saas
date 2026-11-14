@@ -11,7 +11,45 @@ import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
+
+# Safe environment variables allowed in child TeX compiler process (G1 Sandbox)
+SAFE_ENV_VARS: Set[str] = {
+    "PATH",
+    "SYSTEMROOT",
+    "WINDIR",
+    "TEMP",
+    "TMP",
+    "TEXMFCNF",
+    "TEXMFHOME",
+    "TEXMFDIST",
+    "TEXMFLOCAL",
+    "TEXMFVAR",
+    "TEXMFCONFIG",
+    "USERPROFILE",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+}
+
+
+def build_sandboxed_tex_env(temp_dir: str) -> Dict[str, str]:
+    """
+    Construct scrubbed environment for TeX compilation child processes.
+    - Strips all secrets, database credentials, API keys, and JWT tokens.
+    - Enforces openin_any=p (paranoid) and openout_any=p to block reading/writing outside cwd.
+    - Sets TEXMFOUTPUT to isolated temporary directory.
+    """
+    clean_env: Dict[str, str] = {
+        k: v for k, v in os.environ.items() if k.upper() in SAFE_ENV_VARS
+    }
+    # Enforce paranoid file access restriction (blocks /etc/passwd, .env, parent directory traversal)
+    clean_env["openin_any"] = "p"
+    clean_env["OPENIN_ANY"] = "p"
+    clean_env["openout_any"] = "p"
+    clean_env["OPENOUT_ANY"] = "p"
+    clean_env["TEXMFOUTPUT"] = temp_dir
+    return clean_env
 
 
 class TeXLiveCompilerService:
@@ -35,10 +73,10 @@ class TeXLiveCompilerService:
         latex_source: str,
         account_id: str = "anon",
         compiler: Optional[str] = None,
-        timeout_seconds: int = 25,
+        timeout_seconds: int = 15,
     ) -> Dict[str, Any]:
         """
-        Compile LaTeX source into PDF using system TeX Live engine.
+        Compile LaTeX source into PDF using system TeX Live engine with strict sandboxing.
         Returns dict with success flag, log output, duration, and pdf bytes if successful.
         """
         active_compiler = compiler if (compiler and shutil.which(compiler)) else cls.find_compiler()
@@ -61,7 +99,7 @@ class TeXLiveCompilerService:
             with open(tex_path, "w", encoding="utf-8") as f:
                 f.write(latex_source)
 
-            # Build command args matching Overleaf CLSI batchmode flags
+            # Build command args with strict sandboxing flags (-no-shell-escape)
             if active_compiler == "latexmk":
                 cmd = [
                     "latexmk",
@@ -69,6 +107,7 @@ class TeXLiveCompilerService:
                     "-cd",
                     "-interaction=batchmode",
                     "-halt-on-error",
+                    '-pdflatex=pdflatex -interaction=batchmode -no-shell-escape -halt-on-error',
                     f"-outdir={temp_dir}",
                     tex_path,
                 ]
@@ -76,10 +115,13 @@ class TeXLiveCompilerService:
                 cmd = [
                     active_compiler,
                     "-interaction=batchmode",
+                    "-no-shell-escape",
                     "-halt-on-error",
                     f"-output-directory={temp_dir}",
                     tex_path,
                 ]
+
+            sandboxed_env = build_sandboxed_tex_env(temp_dir)
 
             result = subprocess.run(
                 cmd,
@@ -87,6 +129,7 @@ class TeXLiveCompilerService:
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
+                env=sandboxed_env,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)
