@@ -3,10 +3,13 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.crypto import decrypt_secret
 from app.db.session import get_session_factory
 from app.models.llm_provider import LLMProviderConfig
 from app.services.llm.base import LLMProvider
 from app.services.llm.openai_provider import OpenAIProvider
+from app.services.llm.anthropic_provider import AnthropicProvider
+from app.services.llm.gemini_provider import GeminiProvider
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +59,12 @@ class LLMService:
             configs = query.order_by(LLMProviderConfig.priority.asc()).all()
 
             for cfg in configs:
-                api_key = cfg.encrypted_api_key or settings.OPENAI_API_KEY
-                if cfg.provider.lower() == "openai":
+                prov_name = cfg.provider.lower()
+                raw_key = cfg.encrypted_api_key
+                decrypted_key = decrypt_secret(raw_key) if raw_key else None
+
+                if prov_name == "openai":
+                    api_key = decrypted_key or settings.OPENAI_API_KEY
                     providers.append(
                         OpenAIProvider(
                             api_key=api_key,
@@ -65,7 +72,26 @@ class LLMService:
                             default_config=cfg.config or {},
                         )
                     )
-                # Additional providers (Anthropic, Gemini) can be registered here as rows in the table
+                elif prov_name in ("anthropic", "claude"):
+                    api_key = decrypted_key or settings.ANTHROPIC_API_KEY
+                    providers.append(
+                        AnthropicProvider(
+                            api_key=api_key,
+                            model_name=cfg.model_name,
+                            default_config=cfg.config or {},
+                        )
+                    )
+                elif prov_name in ("gemini", "google"):
+                    api_key = decrypted_key or settings.GEMINI_API_KEY
+                    providers.append(
+                        GeminiProvider(
+                            api_key=api_key,
+                            model_name=cfg.model_name,
+                            default_config=cfg.config or {},
+                        )
+                    )
+                else:
+                    logger.warning(f"Unsupported LLM provider '{cfg.provider}' in configuration row {cfg.id}.")
         except Exception as e:
             logger.warning(f"Could not load providers from DB ({e}), falling back to default OpenAI provider.")
         finally:

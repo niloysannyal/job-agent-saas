@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_account, require_superadmin
 from app.core.config import settings
+from app.core.crypto import encrypt_secret, decrypt_secret
 from app.db.session import get_db
 from app.models.account import Account, AccountRead
 from app.models.application import Application
@@ -16,7 +17,12 @@ from app.models.job import Job, JobRead
 from app.models.llm_provider import LLMProviderConfig, LLMProviderRead
 from app.services.job_ingestion import JobIngestionService
 from app.services.job_sources import get_available_sources
-from app.services.llm.service import LLMService
+from app.services.llm import (
+    LLMService,
+    OpenAIProvider,
+    AnthropicProvider,
+    GeminiProvider,
+)
 
 
 
@@ -326,7 +332,12 @@ def impersonate_tenant(
 
 def _build_provider_read(p: LLMProviderConfig) -> LLMProviderRead:
     has_db_key = bool(p.encrypted_api_key)
-    has_env_key = bool(settings.OPENAI_API_KEY) and p.provider.lower() == "openai"
+    prov = p.provider.lower()
+    has_env_key = (
+        (prov == "openai" and bool(settings.OPENAI_API_KEY))
+        or (prov in ("anthropic", "claude") and bool(settings.ANTHROPIC_API_KEY))
+        or (prov in ("gemini", "google") and bool(settings.GEMINI_API_KEY))
+    )
     key_source = "db_encrypted" if has_db_key else ("env_fallback" if has_env_key else "missing")
     return LLMProviderRead(
         id=p.id,
@@ -358,6 +369,7 @@ def create_llm_provider(
     db: Session = Depends(get_db),
     admin: Account = Depends(require_superadmin),
 ) -> LLMProviderRead:
+    encrypted_key = encrypt_secret(data.api_key) if data.api_key else None
     new_provider = LLMProviderConfig(
         provider=data.provider,
         model_name=data.model_name,
@@ -365,7 +377,7 @@ def create_llm_provider(
         is_active=data.is_active,
         priority=data.priority,
         config=data.config or {},
-        encrypted_api_key=data.api_key,  # In production, encrypt with secret key
+        encrypted_api_key=encrypted_key,
     )
     db.add(new_provider)
     db.commit()
@@ -407,7 +419,7 @@ def update_llm_provider(
     if data.priority is not None:
         p.priority = data.priority
     if data.api_key is not None:
-        p.encrypted_api_key = data.api_key
+        p.encrypted_api_key = encrypt_secret(data.api_key) if data.api_key else None
     if data.config is not None:
         p.config = data.config
 
@@ -443,8 +455,25 @@ async def test_llm_provider(
         raise HTTPException(status_code=404, detail="Provider config not found")
 
     try:
-        service = LLMService(db_session=db)
-        test_reply = await service.generate(
+        prov_name = p.provider.lower()
+        raw_key = p.encrypted_api_key
+        decrypted_key = decrypt_secret(raw_key) if raw_key else None
+
+        provider_instance = None
+        if prov_name == "openai":
+            api_key = decrypted_key or settings.OPENAI_API_KEY
+            provider_instance = OpenAIProvider(api_key=api_key, model_name=p.model_name, default_config=p.config or {})
+        elif prov_name in ("anthropic", "claude"):
+            api_key = decrypted_key or settings.ANTHROPIC_API_KEY
+            provider_instance = AnthropicProvider(api_key=api_key, model_name=p.model_name, default_config=p.config or {})
+        elif prov_name in ("gemini", "google"):
+            api_key = decrypted_key or settings.GEMINI_API_KEY
+            provider_instance = GeminiProvider(api_key=api_key, model_name=p.model_name, default_config=p.config or {})
+
+        if not provider_instance:
+            raise ValueError(f"Unsupported provider type '{p.provider}'")
+
+        test_reply = await provider_instance.generate(
             prompt="Respond with 'OK' if you can read this.",
             context="System health check",
         )

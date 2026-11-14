@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-6-luna"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
 
+    # Anthropic & Gemini LLM Settings
+    ANTHROPIC_API_KEY: Optional[str] = None
+    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+
     # Vector Database
     QDRANT_URL: str = "http://localhost:6333"
 
