@@ -110,6 +110,85 @@ async def detect_method_node(state: ApplyState) -> Dict[str, Any]:
     }
 
 
+def resolve_candidate_career_context(account_id: str) -> CandidateCareerContext:
+    """
+    Resolve CandidateCareerContext from database UserProfile/UserResume or fallback to 01_MASTER_CV.tex.
+    Ensures CV drafter and reviewer always evaluate real career facts and master LaTeX.
+    """
+    import os
+    import sqlalchemy as sa
+    from app.db.session import SessionLocal
+
+    candidate_name = "Niloy Sannyal"
+    headline = "AI Systems Engineer"
+    master_latex = ""
+    skills = ["Python", "FastAPI", "Docker", "LLMs", "RAG"]
+    verified_facts_str = (
+        "- 600+ salespersons (Betopia Sales Agent in Odoo CRM)\n"
+        "- 10,000+ fights, 80+ features (UFC ML platform)\n"
+        "- University of Rajshahi, B.Sc. ICE"
+    )
+
+    try:
+        with SessionLocal() as db_session:
+            from app.models.profile import UserProfile, UserResume
+            profile = db_session.query(UserProfile).filter_by(account_id=account_id).first()
+            if profile:
+                if profile.full_name:
+                    candidate_name = profile.full_name
+                if profile.headline:
+                    headline = profile.headline
+
+            # Look for candidate's master resume with LaTeX source
+            resume = (
+                db_session.query(UserResume)
+                .filter(
+                    UserResume.account_id == account_id,
+                    UserResume.latex_source.isnot(None),
+                    sa.func.length(UserResume.latex_source) > 200,
+                )
+                .order_by(UserResume.is_default.desc(), UserResume.updated_at.desc())
+                .first()
+            )
+            if resume and resume.latex_source:
+                master_latex = resume.latex_source
+                logger.info(f"Loaded master LaTeX from UserResume '{resume.name}' ({len(master_latex)} chars).")
+    except Exception as ex:
+        logger.debug(f"Unable to query DB for candidate context: {ex}")
+
+    # Fallback to 01_MASTER_CV.tex on filesystem
+    if not master_latex or len(master_latex) < 200:
+        template_paths = [
+            "cv_templates/01_MASTER_CV.tex",
+            "backend/cv_templates/01_MASTER_CV.tex",
+            os.path.join(os.path.dirname(__file__), "../../../../../cv_templates/01_MASTER_CV.tex"),
+        ]
+        for p in template_paths:
+            if os.path.exists(p):
+                try:
+                    with open(p, "r", encoding="utf-8") as tf:
+                        master_latex = tf.read()
+                        logger.info(f"Loaded master LaTeX from file '{p}' ({len(master_latex)} chars).")
+                        break
+                except Exception:
+                    pass
+
+    if not master_latex:
+        master_latex = (
+            "\\documentclass{article}\n\\begin{document}\n\\section{SUMMARY}\n"
+            "\\resumeItemListStart\\resumeItem{Base}\\resumeItemListEnd\n\\end{document}"
+        )
+
+    return CandidateCareerContext(
+        account_id=account_id,
+        candidate_name=candidate_name,
+        headline=headline,
+        master_latex=master_latex,
+        skills=skills,
+        verified_facts_str=verified_facts_str,
+    )
+
+
 async def cv_drafter_node(state: ApplyState) -> Dict[str, Any]:
     """Executes Pass 1 (Senior Recruiter Drafter) with dynamic section budgeting."""
     fit = state.fit_result
@@ -118,14 +197,7 @@ async def cv_drafter_node(state: ApplyState) -> Dict[str, Any]:
     desc = state.job_description or f"{role} at {company}"
 
     drafter = CVDrafterService()
-    context = CandidateCareerContext(
-        account_id=state.account_id,
-        candidate_name="Niloy Sannyal",
-        headline="AI Systems Engineer",
-        master_latex="\\documentclass{article}\n\\begin{document}\n\\section{SUMMARY}\n\\resumeItemListStart\\resumeItem{Base}\\resumeItemListEnd\n\\end{document}",
-        skills=["Python", "FastAPI", "Docker", "LLMs", "RAG"],
-        verified_facts_str="- 600+ salespersons (Betopia Sales Agent in Odoo CRM)\n- 10,000+ fights, 80+ features (UFC ML platform)",
-    )
+    context = resolve_candidate_career_context(state.account_id)
 
     # S12 Feedback: Pass reviewer audit flags into redraft prompt
     audit_notes: List[str] = []
@@ -160,13 +232,7 @@ async def cv_reviewer_node(state: ApplyState) -> Dict[str, Any]:
     desc = state.job_description or f"{role} at {company}"
 
     reviewer = CVReviewerService()
-    context = CandidateCareerContext(
-        account_id=state.account_id,
-        candidate_name="Niloy Sannyal",
-        headline="AI Systems Engineer",
-        master_latex="",
-        verified_facts_str="- 600+ salespersons (Betopia Sales Agent in Odoo CRM)",
-    )
+    context = resolve_candidate_career_context(state.account_id)
 
     review = await reviewer.review_cv(
         params=CVReviewInput(
@@ -328,10 +394,38 @@ async def assemble_package_node(state: ApplyState) -> Dict[str, Any]:
     if target_latex and TeXLiveCompilerService.is_available():
         try:
             res = TeXLiveCompilerService.compile_latex(target_latex, account_id=state.account_id)
-            if res.get("success") and res.get("pdf_bytes"):
+            if res.get("success") and res.get("pdf_bytes") and len(res["pdf_bytes"]) >= 1000:
                 pdf_bytes = res["pdf_bytes"]
         except Exception as e:
-            logger.warning(f"TeXLive compilation failed, falling back to deterministic PDF bytes: {e}")
+            logger.warning(f"TeXLive compilation failed, checking stored resume fallback: {e}")
+
+    # Fallback to candidate's stored resume PDF if compilation failed or produced no output
+    if not pdf_bytes or len(pdf_bytes) < 1000:
+        try:
+            with SessionLocal() as db_session:
+                from app.models.profile import UserResume
+                stored_resume = (
+                    db_session.query(UserResume)
+                    .filter(
+                        UserResume.account_id == state.account_id,
+                        UserResume.pdf_data.isnot(None),
+                    )
+                    .order_by(UserResume.is_default.desc(), UserResume.updated_at.desc())
+                    .first()
+                )
+                if stored_resume and stored_resume.pdf_data:
+                    import base64
+                    try:
+                        decoded = base64.b64decode(stored_resume.pdf_data)
+                        if decoded.startswith(b"%PDF") and len(decoded) >= 1000:
+                            pdf_bytes = decoded
+                            logger.info(f"Loaded verified stored PDF resume '{stored_resume.name}' ({len(pdf_bytes)} bytes) as fallback attachment.")
+                    except Exception:
+                        pass
+        except Exception as ex:
+            logger.warning(f"Could not load fallback PDF from UserResume: {ex}")
+
+    is_real_pdf = bool(pdf_bytes and pdf_bytes.startswith(b"%PDF") and len(pdf_bytes) >= 1000)
 
     if not pdf_bytes:
         safe_role = role or "Role"
@@ -431,7 +525,12 @@ async def assemble_package_node(state: ApplyState) -> Dict[str, Any]:
                 )
 
                 # 5. Pre-Send Verification Barrier Evaluation (Decision D1 + TOFU)
-                if state.autonomy_mode == "autonomous":
+                if not is_real_pdf:
+                    downgrade_reason = (
+                        "Missing compiled PDF artifact: LaTeX compilation failed and no verified PDF is attached. "
+                        "Human review required before dispatch."
+                    )
+                elif state.autonomy_mode == "autonomous":
                     recipient_domain = (recipient or "").split("@")[-1].lower()
                     if channel not in ("email", "direct_email"):
                         downgrade_reason = f"Channel '{channel}' requires human confirmation."

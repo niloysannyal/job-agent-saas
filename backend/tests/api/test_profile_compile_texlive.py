@@ -10,8 +10,9 @@ client = TestClient(app)
 
 
 def test_compile_texlive_endpoint_when_compiler_unavailable():
-    """When TeX Live is not on PATH, the endpoint gracefully returns compiler_available=False."""
-    with patch("app.services.cv_tailor.texlive_compiler.TeXLiveCompilerService.find_compiler", return_value=None):
+    """When TeX Live is not on PATH or Docker, the endpoint gracefully returns compiler_available=False."""
+    with patch("app.services.cv_tailor.texlive_compiler.TeXLiveCompilerService.find_compiler", return_value=None), \
+         patch("app.services.cv_tailor.texlive_compiler.TeXLiveCompilerService.find_docker_compiler", return_value=None):
         resp = client.post(
             "/api/v1/profile/compile-texlive",
             json={

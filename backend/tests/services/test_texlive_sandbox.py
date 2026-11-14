@@ -91,3 +91,38 @@ def test_compile_latex_command_latexmk_propagates_no_shell_escape():
             # latexmk must wrap pdflatex call with -no-shell-escape
             assert any("-no-shell-escape" in arg for arg in call_args)
 
+
+def test_compile_latex_docker_fallback():
+    """When host compiler is missing, compile_latex invokes Docker with -no-shell-escape and nonstopmode."""
+    with patch("app.services.cv_tailor.texlive_compiler.TeXLiveCompilerService.find_compiler", return_value=None), \
+         patch("app.services.cv_tailor.texlive_compiler.TeXLiveCompilerService.find_docker_compiler", return_value="job-agent-saas-worker-1"), \
+         patch("subprocess.run") as mock_run:
+        fake_pdf = b"%PDF-1.4 docker generated pdf content"
+
+        def fake_run(cmd, *args, **kwargs):
+            m = MagicMock()
+            m.returncode = 0
+            if "which" in cmd:
+                m.stdout = "/usr/bin/pdflatex\n"
+            elif "cat" in cmd and "document.pdf" in cmd[-1]:
+                m.stdout = fake_pdf
+            elif "cat" in cmd and "document.log" in cmd[-1]:
+                m.stdout = "Output written on document.pdf (1 page).\n"
+            else:
+                m.stdout = ""
+                m.stderr = ""
+            return m
+
+        mock_run.side_effect = fake_run
+
+        res = TeXLiveCompilerService.compile_latex(
+            latex_source=r"\documentclass{article}\begin{document}Hello Docker\end{document}",
+            account_id="acc_docker",
+        )
+
+        assert res["success"] is True
+        assert res["compiler_available"] is True
+        assert "docker:job-agent-saas-worker-1:pdflatex" in res["compiler"]
+        assert res["pdf_bytes"] == fake_pdf
+
+

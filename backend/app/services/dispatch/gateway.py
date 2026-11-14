@@ -232,6 +232,15 @@ class SendGateway:
                         )
                         return False
 
+        # Guard: Prohibit sending without valid PDF artifact
+        if not pdf_bytes or not pdf_bytes.startswith(b"%PDF"):
+            cls._handle_hard_failure(
+                db, hold_item.id, action_id, auth_id, app_id,
+                abort_reason="missing_pdf",
+                error_message="Dispatch aborted: Missing or invalid PDF attachment.",
+            )
+            return False
+
         # Build MIME payload
         try:
             raw_mime = MimeBuilder.build_message(

@@ -157,7 +157,7 @@ def prune_and_budget_latex(
             + "\n\\resumeSubHeadingListEnd{}\n"
         )
         body = remove_section(body, "Projects")
-        body = re.sub(r"(\\section\{EDUCATION\}|$)", projects_section + r"\1", body, count=1)
+        body = re.sub(r"(\\section\{EDUCATION\}|$)", lambda m: projects_section + m.group(1), body, count=1)
 
     return body
 
@@ -289,7 +289,7 @@ Provide your response in this exact format:
         # 6. Assemble draft LaTeX
         assembled_body = re.sub(
             r"\\resumeItemListStart\s*\\resumeItem\{.*?\}\s*\\resumeItemListEnd",
-            f"\\\\resumeItemListStart\n  {chosen_summary}\n\\\\resumeItemListEnd",
+            lambda _: f"\\resumeItemListStart\n  {chosen_summary}\n\\resumeItemListEnd",
             budgeted_body,
             count=1,
             flags=re.DOTALL,

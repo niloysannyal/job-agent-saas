@@ -282,15 +282,15 @@
     "semantic_hash": ""
   },
   "backend/app/services/llm/openai_provider.py": {
-    "mtime": 1794643454.0578313,
-    "seen": 1794644003.6837888,
-    "ast_hash": "cbc0e429614193975257ae04a22544db",
+    "mtime": 1794644022.57716,
+    "seen": 1794646862.6814103,
+    "ast_hash": "de15eede44ab2d63a2dcbd069d7b6939",
     "semantic_hash": ""
   },
   "backend/app/services/llm/service.py": {
-    "mtime": 1794643472.9221392,
-    "seen": 1794644003.68379,
-    "ast_hash": "154190af93f55670b22234a57e0536e8",
+    "mtime": 1794645655.3469107,
+    "seen": 1794646862.6814127,
+    "ast_hash": "b4ea753577c17bff56a3fe301be879bd",
     "semantic_hash": ""
   },
   "backend/app/services/matching/__init__.py": {
@@ -426,9 +426,9 @@
     "semantic_hash": ""
   },
   "backend/tests/services/llm/test_llm.py": {
-    "mtime": 1794643489.108002,
-    "seen": 1794644003.683868,
-    "ast_hash": "e7a13505ff685391cd2b1021ed98b146",
+    "mtime": 1794645655.3963306,
+    "seen": 1794646862.6815455,
+    "ast_hash": "0febeba337983a6646ad100a38bd5fd7",
     "semantic_hash": ""
   },
   "backend/tests/services/matching/test_matching.py": {
@@ -1446,15 +1446,15 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/texlive_compiler.py": {
-    "mtime": 1794641621.4064476,
-    "seen": 1794641731.8888838,
-    "ast_hash": "f6b0d62a87f58f8bebfcc63835612fb5",
+    "mtime": 1794646318.1102734,
+    "seen": 1794646862.681337,
+    "ast_hash": "3656039a5f36e3f246ae63f2cefeab74",
     "semantic_hash": ""
   },
   "backend/tests/api/test_profile_compile_texlive.py": {
-    "mtime": 1794641621.4176056,
-    "seen": 1794641731.88894,
-    "ast_hash": "cc30e2a20062b459bb8b5e2c5422a961",
+    "mtime": 1794646340.296951,
+    "seen": 1794646862.6815045,
+    "ast_hash": "f0dde2216dc49dbc7fe1bd621218f6e9",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/CompilerDiagnosticsDrawer.jsx": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/dispatch/gateway.py": {
-    "mtime": 1794641621.407472,
-    "seen": 1794641731.8888845,
-    "ast_hash": "9fcc3b5e7de8f5fe898ba52e77a215d3",
+    "mtime": 1794646510.0965345,
+    "seen": 1794646862.68134,
+    "ast_hash": "c57e2cf421afe4ab5046f92e89126e48",
     "semantic_hash": ""
   },
   "backend/app/services/dispatch/hash_utils.py": {
@@ -1668,9 +1668,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/apply_graph.py": {
-    "mtime": 1794641621.403945,
-    "seen": 1794641731.8888729,
-    "ast_hash": "cd1a71c9450954e79ec6a46f64b1cb8c",
+    "mtime": 1794646500.8354726,
+    "seen": 1794646862.6813052,
+    "ast_hash": "608c01a84ade7288aa99ad6c99beb36b",
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/sse_adapter.py": {
@@ -1686,9 +1686,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/drafter.py": {
-    "mtime": 1794641621.4049346,
-    "seen": 1794641731.8888776,
-    "ast_hash": "143074996a3b0e6417d9d2cb096a0acc",
+    "mtime": 1794646549.5907283,
+    "seen": 1794646862.6813188,
+    "ast_hash": "d4431e406e6599958bb3eb4fdc426e37",
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/reviewer.py": {
@@ -1746,9 +1746,9 @@
     "semantic_hash": ""
   },
   "backend/tests/services/test_texlive_sandbox.py": {
-    "mtime": 1794641621.4221187,
-    "seen": 1794641731.8889678,
-    "ast_hash": "68ef6d38ce3e415ab9084c62d5865c27",
+    "mtime": 1794646349.2187343,
+    "seen": 1794646862.6815758,
+    "ast_hash": "2d5c378dd282c3538653db9db5ff3dc1",
     "semantic_hash": ""
   },
   "backend/tests/agent/test_apply_to_gateway_e2e.py": {
@@ -1764,27 +1764,51 @@
     "semantic_hash": ""
   },
   "backend/app/services/llm/anthropic_provider.py": {
-    "mtime": 1794643447.127857,
-    "seen": 1794644003.6837826,
+    "mtime": 1794644812.8591073,
+    "seen": 1794646862.6814,
     "ast_hash": "dfa4d0bc86eadb7b1bc39e484187c9dc",
     "semantic_hash": ""
   },
   "backend/app/services/llm/gemini_provider.py": {
-    "mtime": 1794643442.3862147,
-    "seen": 1794644003.683786,
+    "mtime": 1794644812.86651,
+    "seen": 1794646862.6814055,
     "ast_hash": "01b28e32996bf624d6e95b3121823462",
     "semantic_hash": ""
   },
   "scripts/preflight_check.py": {
-    "mtime": 1794643592.744938,
-    "seen": 1794644003.6839862,
-    "ast_hash": "474808027e5bd14f6756eabcf4924eda",
+    "mtime": 1794644022.5781603,
+    "seen": 1794646862.681749,
+    "ast_hash": "f4454d459665c0dd072f3e2cf4dd2c39",
     "semantic_hash": ""
   },
   "scripts/run_live_dogfooding_tests.py": {
-    "mtime": 1794643881.606413,
-    "seen": 1794644003.683994,
-    "ast_hash": "4c7a90cc98ce885fa1947d9f0ed27cf5",
+    "mtime": 1794644022.579159,
+    "seen": 1794646862.6817563,
+    "ast_hash": "7252f1b083bfa5e9e39da75258e25eb6",
+    "semantic_hash": ""
+  },
+  "scripts/cleanup_synthetic_tests.py": {
+    "mtime": 1794645106.105175,
+    "seen": 1794646862.6817358,
+    "ast_hash": "6291d4f3dc299e45b83803aafea254f4",
+    "semantic_hash": ""
+  },
+  "scripts/diagnose_candidate_account.py": {
+    "mtime": 1794645106.1061726,
+    "seen": 1794646862.6817408,
+    "ast_hash": "8038b5e72173c52dd846261c9cdda5d9",
+    "semantic_hash": ""
+  },
+  "real_master_cv.pdf": {
+    "mtime": 1794645739.343089,
+    "seen": 1794646862.6818385,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "test_output.pdf": {
+    "mtime": 1794645728.6992743,
+    "seen": 1794646862.68184,
+    "ast_hash": "60083a79a28a4abe4491123560e4179f",
     "semantic_hash": ""
   }
 }
