@@ -264,6 +264,16 @@ class TenantScopedAsyncPostgresSaver(AsyncPostgresSaver):
                     logger.warning(f"Could not enable RLS on {tbl}: {e}")
 
 
+def normalize_libpq_url(conninfo: str) -> str:
+    """Normalize SQLAlchemy or psycopg URL schemes to standard libpq connection URI."""
+    if not conninfo:
+        return conninfo
+    for prefix in ("postgresql+psycopg://", "postgres+psycopg://", "postgresql+psycopg2://"):
+        if conninfo.startswith(prefix):
+            return "postgresql://" + conninfo[len(prefix):]
+    return conninfo
+
+
 def create_checkpointer_pool(
     conninfo: str,
     min_size: int = 1,
@@ -274,6 +284,7 @@ def create_checkpointer_pool(
     Factory creating a psycopg_pool.AsyncConnectionPool calibrated for Supabase
     transaction poolers (port 6543) and LangGraph index migrations.
     """
+    conninfo = normalize_libpq_url(conninfo)
     return AsyncConnectionPool(
         conninfo=conninfo,
         min_size=min_size,
@@ -293,7 +304,7 @@ async def init_tenant_checkpointer(pool: AsyncConnectionPool) -> TenantScopedAsy
     """
     Initializes and sets up the TenantScopedAsyncPostgresSaver.
     """
-    if not pool.opened:
+    if pool.closed:
         await pool.open()
 
     checkpointer = TenantScopedAsyncPostgresSaver(pool)

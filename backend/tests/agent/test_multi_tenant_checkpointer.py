@@ -16,6 +16,7 @@ from app.services.agent.checkpointer import (
     TenantScopedAsyncPostgresSaver,
     TenantSecurityException,
     create_checkpointer_pool,
+    normalize_libpq_url,
 )
 
 
@@ -165,3 +166,11 @@ def test_pool_configuration():
     pool = create_checkpointer_pool("postgresql://test:test@localhost:5432/test_db")
     assert pool.kwargs.get("autocommit") is True
     assert pool.kwargs.get("prepare_threshold") is None
+
+
+def test_normalize_libpq_url():
+    assert normalize_libpq_url("postgresql+psycopg://user:pass@localhost:5432/db") == "postgresql://user:pass@localhost:5432/db"
+    assert normalize_libpq_url("postgres+psycopg://user:pass@localhost:5432/db") == "postgresql://user:pass@localhost:5432/db"
+    assert normalize_libpq_url("postgresql+psycopg2://user:pass@localhost:5432/db") == "postgresql://user:pass@localhost:5432/db"
+    assert normalize_libpq_url("postgresql://user:pass@localhost:5432/db") == "postgresql://user:pass@localhost:5432/db"
+
