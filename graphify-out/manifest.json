@@ -1302,9 +1302,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/agent/widgets/SendApprovalGate.jsx": {
-    "mtime": 1794462897.7826858,
-    "seen": 1794463533.8749707,
-    "ast_hash": "99b748659a5cda33d28a63be46bf9c75",
+    "mtime": 1794637719.6850479,
+    "seen": 1794639255.312316,
+    "ast_hash": "06d51fe09b568224cc49f82ee0905ff9",
     "semantic_hash": ""
   },
   "frontend/src/components/agent/widgets/TailorDiffReview.jsx": {
@@ -1392,9 +1392,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioApprovalGate.jsx": {
-    "mtime": 1794462897.8554912,
-    "seen": 1794463533.8761969,
-    "ast_hash": "72e90bb8cbaedd631ebdadc4521c3bd3",
+    "mtime": 1794637719.7593758,
+    "seen": 1794639255.3123407,
+    "ast_hash": "1c347d489543f9c87df4d196a247fc3e",
     "semantic_hash": ""
   },
   "frontend/src/components/studio/StudioDrafterWorkspace.jsx": {
@@ -1650,9 +1650,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/tools.py": {
-    "mtime": 1794636074.2490282,
-    "seen": 1794636613.3696017,
-    "ast_hash": "97c1695cb3ea599115d59a4f326fc8ac",
+    "mtime": 1794638901.311097,
+    "seen": 1794639255.3120277,
+    "ast_hash": "f8e3cb5efd435642a2cc1756da4f9fca",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/a8f3b2c1d9e0_add_thread_accounts_for_langgraph.py": {
@@ -1662,26 +1662,26 @@
     "semantic_hash": ""
   },
   "backend/app/services/agent/checkpointer.py": {
-    "mtime": 1794635815.1826344,
-    "seen": 1794636613.3696473,
+    "mtime": 1794636948.6388528,
+    "seen": 1794637593.8945189,
     "ast_hash": "192b2f88cbf563830a86ba0d6b098818",
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/apply_graph.py": {
-    "mtime": 1794636657.6198647,
-    "seen": 1794636675.8330722,
-    "ast_hash": "13940db7997ea92dadadf4ed6cfae7c0",
+    "mtime": 1794638888.4300468,
+    "seen": 1794639255.312118,
+    "ast_hash": "3505446d98c5abbd9289f0676eaa39c1",
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/sse_adapter.py": {
-    "mtime": 1794636043.9814904,
-    "seen": 1794636613.3696594,
+    "mtime": 1794636948.7448978,
+    "seen": 1794637593.894531,
     "ast_hash": "b5723d5a37f4a405a37f18b84281e8d7",
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/state.py": {
-    "mtime": 1794635921.3361247,
-    "seen": 1794636613.3696604,
+    "mtime": 1794636948.8161807,
+    "seen": 1794637593.8945324,
     "ast_hash": "1d30c69a1bfb6d1ac171064682e5527c",
     "semantic_hash": ""
   },
@@ -1710,14 +1710,14 @@
     "semantic_hash": ""
   },
   "backend/tests/agent/test_apply_graph.py": {
-    "mtime": 1794636379.3296335,
-    "seen": 1794636613.3697157,
-    "ast_hash": "dbf93070815c5cd4153bcb5419ad61fe",
+    "mtime": 1794638756.8163583,
+    "seen": 1794639255.3122094,
+    "ast_hash": "8bb1a33d5e9f5a6b0b1147ed89ad637d",
     "semantic_hash": ""
   },
   "backend/tests/agent/test_multi_tenant_checkpointer.py": {
-    "mtime": 1794635843.984023,
-    "seen": 1794636613.3697166,
+    "mtime": 1794636948.9284961,
+    "seen": 1794637593.8945887,
     "ast_hash": "b724da9c506ed65a5e667012d2e693db",
     "semantic_hash": ""
   },
@@ -1728,9 +1728,9 @@
     "semantic_hash": ""
   },
   "backend/tests/api/test_tools_api.py": {
-    "mtime": 1794627792.2559414,
-    "seen": 1794636613.3697293,
-    "ast_hash": "e5cbd9613014a832864063ed463007d7",
+    "mtime": 1794637349.57144,
+    "seen": 1794637593.8946006,
+    "ast_hash": "c890c5de00ea161330d6542d8bcec559",
     "semantic_hash": ""
   },
   "backend/tests/services/test_decoupled_tools.py": {
@@ -1749,6 +1749,12 @@
     "mtime": 1794635388.7932563,
     "seen": 1794636613.3697546,
     "ast_hash": "15ec66b16f18f56561f63d575e5c265e",
+    "semantic_hash": ""
+  },
+  "backend/tests/agent/test_apply_to_gateway_e2e.py": {
+    "mtime": 1794639079.289356,
+    "seen": 1794639255.3122118,
+    "ast_hash": "1b9598d34595212a539c901087a81bfc",
     "semantic_hash": ""
   }
 }

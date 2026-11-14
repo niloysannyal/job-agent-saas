@@ -373,13 +373,26 @@ async def start_apply_workflow(
         thread_updated = existing_active.updated_at
         if thread_updated and thread_updated.tzinfo is None:
             thread_updated = thread_updated.replace(tzinfo=timezone.utc)
-        if thread_updated and thread_updated >= stale_cutoff:
+
+        # Inspect actual state from checkpointer to ensure completed/terminal threads do NOT block
+        is_terminal = False
+        try:
+            check_graph = build_apply_graph(checkpointer=_ACTIVE_CHECKPOINTER)
+            existing_state = await check_graph.aget_state({"configurable": {"thread_id": existing_active.thread_id, "account_id": tenant_id}})
+            if existing_state and existing_state.values:
+                cur_status = existing_state.values.get("status")
+                if cur_status in ("queued_in_hold", "failed", "failed_quota", "needs_edit", "skipped", "completed") or not existing_state.next:
+                    is_terminal = True
+        except Exception as e:
+            logger.warning(f"Could not check existing thread state: {e}")
+
+        if not is_terminal and thread_updated and thread_updated >= stale_cutoff:
             raise HTTPException(
                 status_code=409,
                 detail=f"An active workflow for job '{payload.job_id}' is currently in progress (thread: {existing_active.thread_id}). Please resume the existing thread or wait for the 10-minute timeout.",
             )
         else:
-            logger.info(f"Reclaiming stale workflow thread {existing_active.thread_id} older than 10 minutes.")
+            logger.info(f"Reclaiming stale or completed workflow thread {existing_active.thread_id}.")
 
     thread_id = f"{target_thread_prefix}-{uuid.uuid4().hex[:6]}"
 

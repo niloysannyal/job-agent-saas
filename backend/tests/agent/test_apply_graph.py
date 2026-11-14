@@ -15,11 +15,54 @@ from unittest.mock import AsyncMock, patch
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
+from app.models.account import Account
+from app.models.job import Job
+from app.models.dispatch import HoldQueueItem, SendAuthorization, TrustedRecipient
+from app.models.metering import QuotaReservation
 from app.services.agent.workflows.state import ApplyState
 from app.services.agent.workflows.apply_graph import build_apply_graph
 from app.services.matching.fit_analyzer import FitAnalyzerOutput, DimensionDiagnostic
 from app.services.cv_tailor.reviewer import CVReviewOutput
 from app.services.outreach.drafter_service import OutreachDrafterOutput, FormAnswerPair
+
+
+@pytest.fixture(autouse=True)
+def seed_test_apply_graph_fixtures(test_db_session):
+    """Seeds test account and jobs in PostgreSQL to satisfy relational foreign key constraints."""
+    acc = test_db_session.query(Account).filter_by(id="acc-tenant-1").first()
+    if not acc:
+        acc = Account(id="acc-tenant-1", email="candidate@example.com")
+        test_db_session.add(acc)
+        test_db_session.commit()
+
+    jobs = [
+        ("job-101", "Lead AI Engineer", "DeepMind"),
+        ("job-102", "Lead AI Engineer", "DeepMind"),
+        ("job-103", "Lead AI Engineer", "DeepMind"),
+        ("job-201", "Lead AI Engineer", "DeepMind"),
+        ("job-202", "Lead AI Engineer", "StartupLab"),
+        ("job-203", "Lead AI Engineer", "DeepMind"),
+        ("job-301", "Senior Clinical Nurse", "BioPharma"),
+        ("job-401", "Lead AI Engineer", "DeepMind"),
+        ("job-501", "Research Scientist", "OpenAI"),
+        ("job-601", "Safety Engineer", "Anthropic"),
+        ("job-701", "AI Systems Engineer", "Microsoft"),
+    ]
+    for jid, role, company in jobs:
+        j = test_db_session.query(Job).filter_by(id=jid).first()
+        if not j:
+            j = Job(
+                id=jid,
+                account_id="acc-tenant-1",
+                role=role,
+                company=company,
+                source="test",
+                apply_link=f"https://{company.lower().replace(' ', '')}.com/apply",
+                is_active=True,
+            )
+            test_db_session.add(j)
+    test_db_session.commit()
+    yield
 
 
 @pytest.fixture
@@ -131,10 +174,17 @@ async def test_apply_graph_resume_with_reject(mock_llm_responses):
 
 
 @pytest.mark.asyncio
-async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
+async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses, test_db_session):
     """Verifies legitimate corporate email with trusted recipient executes autonomously without interrupt."""
     checkpointer = MemorySaver()
     graph = build_apply_graph(checkpointer=checkpointer)
+
+    # Seed trusted recipient for jobs@deepmind.com
+    tr = test_db_session.query(TrustedRecipient).filter_by(account_id="acc-tenant-1", email="jobs@deepmind.com").first()
+    if not tr:
+        tr = TrustedRecipient(account_id="acc-tenant-1", email="jobs@deepmind.com", source="manual_approval")
+        test_db_session.add(tr)
+        test_db_session.commit()
 
     thread_config = {"configurable": {"thread_id": "thread-test-auto-1"}}
     initial_state = {
@@ -147,16 +197,8 @@ async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
         "autonomy_mode": "autonomous",
     }
 
-    from unittest.mock import MagicMock
-    mock_db = MagicMock()
-    mock_tr = MagicMock()
-    mock_tr.id = "tr-mock-123"
-    mock_tr.email = "jobs@deepmind.com"
-    mock_db.query.return_value.filter.return_value.first.return_value = mock_tr
-
-    # Patch review_cv to return strong ATS score (88%) and 1 page, and DB to return trusted recipient
-    with patch("app.services.cv_tailor.reviewer.CVReviewerService.review_cv", new_callable=AsyncMock) as mock_review, \
-         patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
+    # Patch review_cv to return strong ATS score (88%) and 1 page
+    with patch("app.services.cv_tailor.reviewer.CVReviewerService.review_cv", new_callable=AsyncMock) as mock_review:
         mock_review.return_value = CVReviewOutput(
             is_valid=True,
             final_tailored_latex="\\documentclass{article}\\begin{document}Tailored CV\\end{document}",
@@ -181,10 +223,14 @@ async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
 
 
 @pytest.mark.asyncio
-async def test_apply_graph_autonomous_downgrades_on_untrusted_tofu(mock_llm_responses):
+async def test_apply_graph_autonomous_downgrades_on_untrusted_tofu(mock_llm_responses, test_db_session):
     """Verifies that an autonomous attempt to email an untrusted corporate recipient triggers TOFU downgrade."""
     checkpointer = MemorySaver()
     graph = build_apply_graph(checkpointer=checkpointer)
+
+    # Ensure careers@deepmind.com is untrusted initially
+    test_db_session.query(TrustedRecipient).filter_by(account_id="acc-tenant-1", email="careers@deepmind.com").delete()
+    test_db_session.commit()
 
     thread_config = {"configurable": {"thread_id": "thread-test-auto-tofu"}}
     initial_state = {
@@ -197,13 +243,7 @@ async def test_apply_graph_autonomous_downgrades_on_untrusted_tofu(mock_llm_resp
         "autonomy_mode": "autonomous",
     }
 
-    from unittest.mock import MagicMock
-    mock_db = MagicMock()
-    # Return None for TrustedRecipient query to simulate first-time recipient (TOFU)
-    mock_db.query.return_value.filter.return_value.first.return_value = None
-
-    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
-        await graph.ainvoke(initial_state, config=thread_config)
+    await graph.ainvoke(initial_state, config=thread_config)
 
     state = await graph.aget_state(thread_config)
     # Must halt at hitl_gate because recipient is not in trusted_recipients
@@ -213,8 +253,7 @@ async def test_apply_graph_autonomous_downgrades_on_untrusted_tofu(mock_llm_resp
 
     # Resuming with approve confirms trust and dispatches
     resume_command = Command(resume={"action": "approve"})
-    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
-        await graph.ainvoke(resume_command, config=thread_config)
+    await graph.ainvoke(resume_command, config=thread_config)
 
     state_after = await graph.aget_state(thread_config)
     assert state_after.next == ()
@@ -437,7 +476,7 @@ async def test_apply_graph_approval_gate_edit_loop(mock_llm_responses):
 
 
 @pytest.mark.asyncio
-async def test_apply_graph_dispatch_contract3_database_records(mock_llm_responses):
+async def test_apply_graph_dispatch_contract3_database_records(mock_llm_responses, test_db_session):
     """Verifies Contract 3 / G4: dispatch_node reserves quota and enqueues HoldQueueItem with correct delay."""
     checkpointer = MemorySaver()
     graph = build_apply_graph(checkpointer=checkpointer)
@@ -453,29 +492,25 @@ async def test_apply_graph_dispatch_contract3_database_records(mock_llm_response
         "autonomy_mode": "supervised",
     }
 
-    from unittest.mock import MagicMock
-    mock_db = MagicMock()
-    # Mock query responses
-    mock_db.query.return_value.filter_by.return_value.first.return_value = None
-    mock_db.query.return_value.filter.return_value.first.return_value = None
+    # 1. Run to gate
+    await graph.ainvoke(initial_state, config=thread_config)
+    # 2. Approve
+    await graph.ainvoke(Command(resume={"action": "approve"}), config=thread_config)
 
-    with patch("app.db.session.SessionLocal", return_value=MagicMock(__enter__=MagicMock(return_value=mock_db))):
-        # 1. Run to gate
-        await graph.ainvoke(initial_state, config=thread_config)
-        # 2. Approve
-        await graph.ainvoke(Command(resume={"action": "approve"}), config=thread_config)
+    state_after = await graph.aget_state(thread_config)
+    assert state_after.next == ()
+    assert state_after.values["status"] == "queued_in_hold"
 
-    # Verify db_session.add was called for QuotaReservation, HoldQueueItem, TrustedRecipient
-    added_instances = [call.args[0] for call in mock_db.add.call_args_list]
-    types_added = [type(inst).__name__ for inst in added_instances]
+    # Verify real DB records in test_db_session
+    hold_item = test_db_session.query(HoldQueueItem).filter(
+        HoldQueueItem.account_id == "acc-tenant-1",
+        HoldQueueItem.status == "pending",
+        HoldQueueItem.hold_kind == "review_required",
+    ).order_by(HoldQueueItem.created_at.desc()).first()
 
-    assert "TrustedRecipient" in types_added
-    assert "QuotaReservation" in types_added
-    assert "HoldQueueItem" in types_added
-
-    # Verify hold queue item parameters
-    hold_item = next(inst for inst in added_instances if type(inst).__name__ == "HoldQueueItem")
+    assert hold_item is not None
     assert hold_item.account_id == "acc-tenant-1"
     assert hold_item.status == "pending"
     assert hold_item.hold_kind == "review_required"  # Supervised -> 30s review_required
-    mock_db.commit.assert_called()
+    assert hold_item.reservation_id is not None
+    assert hold_item.authorization_id is not None
