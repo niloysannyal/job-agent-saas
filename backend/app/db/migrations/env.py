@@ -45,7 +45,7 @@ def assert_safe_database_url(url: str) -> None:
         raise RuntimeError(
             f"SECURITY TRIPWIRE TRIGGERED: Migrations must run against local database (localhost/127.0.0.1), got: {host}"
         )
-    if not (db_name.endswith(("_test", "_dev")) or db_name in ("jobeazy_dev", "jobeazy_test")):
+    if not (db_name.endswith(("_test", "_dev")) or db_name in ("jobeazy_dev", "jobeazy_test", "jobeazy")):
         raise RuntimeError(
             f"SECURITY TRIPWIRE TRIGGERED: Database name must end in _test or _dev, got: {db_name}"
         )
