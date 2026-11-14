@@ -115,9 +115,10 @@ async def test_gemini_provider_generate_success():
         res = await prov.generate(prompt="Score alignment", context="Senior Backend Engineer")
         assert res == "Gemini analyzed fit: 92/100"
 
-        # Check call arguments
+        # Check call arguments: key must be in HTTP header, NEVER in URL query params
         call_kwargs = mock_post.call_args.kwargs
-        assert call_kwargs["params"]["key"] == "ai-za-test-key"
+        assert call_kwargs["headers"]["x-goog-api-key"] == "ai-za-test-key"
+        assert "params" not in call_kwargs or not call_kwargs["params"]
         assert call_kwargs["json"]["systemInstruction"] == {"parts": [{"text": "Senior Backend Engineer"}]}
         assert call_kwargs["json"]["contents"] == [{"role": "user", "parts": [{"text": "Score alignment"}]}]
 
@@ -126,14 +127,17 @@ async def test_gemini_provider_generate_success():
 async def test_llm_service_gemini_claude_openai_failover():
     """Verify 3-tier failover: Gemini (priority 1 fails) -> Claude (priority 2 fails) -> OpenAI succeeds."""
     class FailingGemini(LLMProvider):
+        model_name = "gemini-2.5-flash"
         async def generate(self, prompt: str, context=None, **kwargs):
             raise RuntimeError("Gemini 429 quota exhausted")
 
     class FailingClaude(LLMProvider):
+        model_name = "claude-3-5-sonnet"
         async def generate(self, prompt: str, context=None, **kwargs):
             raise RuntimeError("Claude 529 overloaded")
 
     class BedrockOpenAI(LLMProvider):
+        model_name = "gpt-4o"
         async def generate(self, prompt: str, context=None, **kwargs):
             return "OpenAI Bedrock saved the run"
 
@@ -142,6 +146,13 @@ async def test_llm_service_gemini_claude_openai_failover():
 
     result = await service.generate(prompt="Generate outreach")
     assert result == "OpenAI Bedrock saved the run"
+
+    # Verify execution metadata for metering & cost auditing
+    meta = service.get_last_execution_metadata()
+    assert meta["provider"] == "BedrockOpenAI"
+    assert meta["model"] == "gpt-4o"
+    assert meta["attempt_index"] == 3
+    assert meta["total_providers"] == 3
 
 
 def test_llm_service_db_provider_decryption_and_resolution():

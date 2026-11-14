@@ -30,6 +30,11 @@ class LLMService:
         self._explicit_provider = provider
         self._db_session = db_session
         self.account_id = account_id
+        self.last_execution_metadata: Dict[str, Any] = {}
+
+    def get_last_execution_metadata(self) -> Dict[str, Any]:
+        """Return execution metadata from the last successful LLM call for metering/auditing."""
+        return self.last_execution_metadata.copy()
 
     def _resolve_providers(self) -> List[LLMProvider]:
         """Resolve ordered list of active providers from database or defaults."""
@@ -135,7 +140,20 @@ class LLMService:
 
         for idx, provider in enumerate(providers):
             try:
-                return await provider.generate(prompt=prompt, context=context, **kwargs)
+                result = await provider.generate(prompt=prompt, context=context, **kwargs)
+                model_used = getattr(provider, "model_name", "unknown")
+                provider_type = provider.__class__.__name__
+                self.last_execution_metadata = {
+                    "provider": provider_type,
+                    "model": model_used,
+                    "attempt_index": idx + 1,
+                    "total_providers": len(providers),
+                    "account_id": self.account_id,
+                }
+                logger.info(
+                    f"LLM generation succeeded via {provider_type} (model={model_used}, attempt={idx + 1}/{len(providers)})"
+                )
+                return result
             except Exception as e:
                 logger.warning(
                     f"LLM provider #{idx + 1} ({provider.__class__.__name__}) failed: {e}. Trying fallback if available."

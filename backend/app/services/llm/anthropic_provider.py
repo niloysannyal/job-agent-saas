@@ -55,8 +55,9 @@ class AnthropicProvider(LLMProvider):
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
+        timeout = httpx.Timeout(60.0, connect=10.0)
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.post(self.base_url, json=payload, headers=headers)
                 response.raise_for_status()

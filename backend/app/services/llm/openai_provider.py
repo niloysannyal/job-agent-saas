@@ -72,8 +72,9 @@ class OpenAIProvider(LLMProvider):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        timeout = httpx.Timeout(60.0, connect=10.0)
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             try:
                 response = await client.post(self.base_url, json=payload, headers=headers)
                 response.raise_for_status()
