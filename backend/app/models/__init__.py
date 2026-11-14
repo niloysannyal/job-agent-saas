@@ -53,6 +53,9 @@ from app.models.oauth import (
     OAuthConnectionBase,
     OAuthConnectionCreate,
     OAuthConnectionRead,
+    PlatformOAuthAppConfig,
+    PlatformOAuthAppConfigRead,
+    PlatformOAuthAppConfigInput,
 )
 from app.models.cv_template import (
     AccountCvVersion,
@@ -186,6 +189,9 @@ __all__ = [
     "OAuthConnectionBase",
     "OAuthConnectionCreate",
     "OAuthConnectionRead",
+    "PlatformOAuthAppConfig",
+    "PlatformOAuthAppConfigRead",
+    "PlatformOAuthAppConfigInput",
     # CV Template & Versions
     "CvTemplate",
     "CvTemplateBase",

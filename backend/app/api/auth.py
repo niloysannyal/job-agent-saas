@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.auth import create_access_token, get_current_account
@@ -366,3 +366,49 @@ def get_me(
     Retrieve authenticated account profile and permissions from validated token.
     """
     return current_account
+
+
+# --- Google OAuth Aliases ---
+
+@router.get("/google/authorize", summary="Google OAuth authorization URL redirect or link")
+def auth_google_authorize(
+    state: Optional[str] = "state_oauth_google",
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    from app.services.integrations.google_service import GoogleIntegrationService
+    creds = GoogleIntegrationService.resolve_platform_credentials(db=db, account_id=current_account.id)
+    client_id = creds.get("client_id")
+    if not client_id and getattr(settings, "ENVIRONMENT", "development").lower() in ("production", "staging"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google OAuth application is not configured on this platform.",
+        )
+    url = GoogleIntegrationService.get_authorization_url(
+        state=f"{current_account.id}:{state}",
+        db=db,
+        account_id=current_account.id,
+    )
+    return {"auth_url": url}
+
+
+@router.get("/google/callback", summary="Google OAuth browser redirect callback")
+async def auth_google_callback_get(
+    code: str = Query(...),
+    state: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    from app.api.integrations import google_oauth_get_callback
+    return await google_oauth_get_callback(code=code, state=state, db=db)
+
+
+@router.post("/google/callback", summary="Google OAuth code exchange callback")
+async def auth_google_callback_post(
+    data: dict,
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    from app.api.integrations import google_oauth_callback, GoogleCallbackRequest
+    req = GoogleCallbackRequest(code=data.get("code", ""), state=data.get("state"))
+    return await google_oauth_callback(data=req, current_account=current_account, db=db)
+

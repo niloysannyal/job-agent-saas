@@ -227,6 +227,48 @@ function CareerAppInner() {
     }
   }, [accountId, viewMode, isSuperadmin, isImpersonating]);
 
+  // Handle Google OAuth Redirect / Popup Callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const isGoogleConnected = params.get('google_connected');
+
+    if (code) {
+      if (window.opener && window.opener !== window) {
+        // Child popup: send message to opener window and close
+        window.opener.postMessage({ type: 'GOOGLE_OAUTH_CODE', code, state }, window.location.origin);
+        window.close();
+      } else {
+        // Full page redirect: exchange authorization code for tokens
+        const exchangeCode = async () => {
+          try {
+            const res = await fetch(`${API_BASE}/integrations/google/callback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...authHeaders },
+              body: JSON.stringify({ code, state }),
+            });
+            if (res.ok) {
+              showToast('✨ Google Gmail account connected successfully!');
+              setActiveSection('settings');
+            } else {
+              showToast('Failed to exchange Google OAuth authorization code.');
+            }
+          } catch (err) {
+            console.error('OAuth exchange error:', err);
+          } finally {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        };
+        exchangeCode();
+      }
+    } else if (isGoogleConnected === 'true') {
+      showToast('✨ Google Gmail account connected successfully!');
+      setActiveSection('settings');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [authHeaders]);
+
   // Fetch Jobs
   const fetchJobs = async () => {
     try {
@@ -988,8 +1030,8 @@ function CareerAppInner() {
           />
         )}
 
-        {/* SECTION 2: PROFILE & GROUNDING */}
-        {effectiveSection === 'profile' && (
+        {/* SECTION 2: PROFILE & SETTINGS */}
+        {(effectiveSection === 'profile' || effectiveSection === 'settings') && (
           <ProfileView
             profile={profile}
             profileForm={profileForm}
@@ -1015,6 +1057,7 @@ function CareerAppInner() {
             onOpenOnboarding={() => setIsOnboardingModalOpen(true)}
             onRefreshProfile={fetchProfile}
             onNavigate={handleNavigate}
+            initialTab={effectiveSection === 'settings' ? 'integrations' : 'identity'}
           />
         )}
 

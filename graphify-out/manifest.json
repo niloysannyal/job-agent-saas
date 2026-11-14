@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/__init__.py": {
-    "mtime": 1794641621.390345,
-    "seen": 1794641731.8888476,
-    "ast_hash": "1baade832659df1b4c70d1a25a25c08a",
+    "mtime": 1794648671.9500427,
+    "seen": 1794649406.3359601,
+    "ast_hash": "0cba0d878b32a490efa95aa7bf6a1aa2",
     "semantic_hash": ""
   },
   "backend/app/models/account.py": {
@@ -468,15 +468,15 @@
     "semantic_hash": ""
   },
   "frontend/src/App.jsx": {
-    "mtime": 1794641621.4306474,
-    "seen": 1794641731.8889728,
-    "ast_hash": "77a0820e0afed8399a4a64639387185c",
+    "mtime": 1794649280.5819244,
+    "seen": 1794649406.336092,
+    "ast_hash": "ec0ce1ba9f0db6d57984a20e1b287031",
     "semantic_hash": ""
   },
   "frontend/src/components/ApplicationStudio.jsx": {
-    "mtime": 1794641621.432657,
-    "seen": 1794641731.8889747,
-    "ast_hash": "debd465496dc776624a8e411bf97da03",
+    "mtime": 1794649337.2082815,
+    "seen": 1794649406.3360937,
+    "ast_hash": "5af5a94ed01baa1a99f702257546e01d",
     "semantic_hash": ""
   },
   "frontend/src/components/DashboardView.jsx": {
@@ -522,15 +522,15 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ProfileView.jsx": {
-    "mtime": 1794641621.4352808,
-    "seen": 1794641731.8889854,
-    "ast_hash": "5703f67add9cb2600bfb0b067a0f5d64",
+    "mtime": 1794649112.0926125,
+    "seen": 1794649406.3361044,
+    "ast_hash": "b5b00fd5b3d138901232dfa4be41d887",
     "semantic_hash": ""
   },
   "frontend/src/components/Sidebar.jsx": {
-    "mtime": 1794641621.436372,
-    "seen": 1794641731.8889868,
-    "ast_hash": "4e9200f5f4e1226f1d00347414ecc3bc",
+    "mtime": 1794649141.2328346,
+    "seen": 1794649406.336106,
+    "ast_hash": "d5f3a0e05f5cdf7cf9c927a4a0a93d6e",
     "semantic_hash": ""
   },
   "frontend/src/components/Toast.jsx": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/admin.py": {
-    "mtime": 1794643356.0783927,
-    "seen": 1794644003.6836114,
-    "ast_hash": "8fb81a6e1ddffca22e06c10def9ae36a",
+    "mtime": 1794648730.488746,
+    "seen": 1794649406.3359194,
+    "ast_hash": "f923f68b829fa80fdabe9afbf9ed3fff",
     "semantic_hash": ""
   },
   "backend/app/core/auth.py": {
@@ -720,9 +720,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/AdminView.jsx": {
-    "mtime": 1793697779.193704,
-    "seen": 1793697824.0613408,
-    "ast_hash": "d95e10fe1caf038f92d9f14b617bcd2c",
+    "mtime": 1794649257.008761,
+    "seen": 1794649406.336093,
+    "ast_hash": "62124d897b950288ae81485243dd5544",
     "semantic_hash": ""
   },
   "frontend/src/components/CommandPalette.jsx": {
@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/auth.py": {
-    "mtime": 1793597195.9039881,
-    "seen": 1793597679.109258,
-    "ast_hash": "0699d833e93b7a492464d3f4df4676d1",
+    "mtime": 1794649570.5492022,
+    "seen": 1794649781.6869993,
+    "ast_hash": "440bd80946c9fb54f6df3a28d0fec398",
     "semantic_hash": ""
   },
   "backend/app/db/migrations/versions/e57e51d71b2e_add_hashed_password_to_accounts.py": {
@@ -1020,9 +1020,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/integrations.py": {
-    "mtime": 1794641621.3814862,
-    "seen": 1794641731.8888164,
-    "ast_hash": "bb3284f81d2c5dbf59191af2dd7fb365",
+    "mtime": 1794649560.7662323,
+    "seen": 1794649781.6870022,
+    "ast_hash": "3b4244878cf0ee3eedf339fe34416826",
     "semantic_hash": ""
   },
   "backend/app/core/crypto.py": {
@@ -1038,9 +1038,9 @@
     "semantic_hash": ""
   },
   "backend/app/models/oauth.py": {
-    "mtime": 1793276344.7302394,
-    "seen": 1793276419.248407,
-    "ast_hash": "5d5c99e4f61a38a7a3f601694b2c075c",
+    "mtime": 1794648652.1200438,
+    "seen": 1794649406.335972,
+    "ast_hash": "47c06463bde62606918f7975f300456f",
     "semantic_hash": ""
   },
   "backend/app/services/integrations/__init__.py": {
@@ -1050,9 +1050,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/integrations/google_service.py": {
-    "mtime": 1794641621.4084601,
-    "seen": 1794641731.8888931,
-    "ast_hash": "1bc95570fe54360fc944061572049630",
+    "mtime": 1794648705.134284,
+    "seen": 1794649406.3360093,
+    "ast_hash": "3ccc51cf6ebc3090689dd4d9f091e059",
     "semantic_hash": ""
   },
   "backend/app/services/matching/experience_reflector.py": {
@@ -1446,8 +1446,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/texlive_compiler.py": {
-    "mtime": 1794647227.0061338,
-    "seen": 1794647296.6517847,
+    "mtime": 1794647626.3119292,
+    "seen": 1794649406.3359995,
     "ast_hash": "565398dcd6d898c1876b1e944603b192",
     "semantic_hash": ""
   },
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/dispatch/gateway.py": {
-    "mtime": 1794647154.344561,
-    "seen": 1794647296.6517875,
-    "ast_hash": "c57e2cf421afe4ab5046f92e89126e48",
+    "mtime": 1794648856.3791423,
+    "seen": 1794649406.3360004,
+    "ast_hash": "8b63c5f384bbf8140042d3007d472038",
     "semantic_hash": ""
   },
   "backend/app/services/dispatch/hash_utils.py": {
@@ -1746,8 +1746,8 @@
     "semantic_hash": ""
   },
   "backend/tests/services/test_texlive_sandbox.py": {
-    "mtime": 1794647236.0979538,
-    "seen": 1794647296.6520395,
+    "mtime": 1794647626.5032506,
+    "seen": 1794649406.3360868,
     "ast_hash": "a805c0b2774ebc234648b29efef2abda",
     "semantic_hash": ""
   },
@@ -1797,6 +1797,24 @@
     "mtime": 1794645106.1061726,
     "seen": 1794646862.6817408,
     "ast_hash": "8038b5e72173c52dd846261c9cdda5d9",
+    "semantic_hash": ""
+  },
+  "backend/app/db/migrations/versions/91c3682cdda2_add_platform_oauth_configs_table.py": {
+    "mtime": 1794648617.9682748,
+    "seen": 1794649406.3359451,
+    "ast_hash": "a7eec7b2ff7754fd0f544ef861dfdbca",
+    "semantic_hash": ""
+  },
+  "backend/tests/api/test_oauth_integrations.py": {
+    "mtime": 1794649700.2896705,
+    "seen": 1794649781.687213,
+    "ast_hash": "fb7220627591eb548bdb18f651d745ba",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/profile/ProfileIntegrationsTab.jsx": {
+    "mtime": 1794649701.1655054,
+    "seen": 1794649781.6873093,
+    "ast_hash": "88e381988a6b0a43b86e2a52d4e726a5",
     "semantic_hash": ""
   }
 }

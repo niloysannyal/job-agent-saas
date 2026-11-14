@@ -18,6 +18,7 @@ import {
   Layers,
   FileCode,
   FileText,
+  Mail,
   Search,
   Moon,
   Sun,
@@ -168,6 +169,12 @@ export default function Sidebar({
         id: 'flagged',
         label: 'Posting Guard Flags',
         icon: ShieldAlert,
+        isAdminTab: true,
+      },
+      {
+        id: 'integrations',
+        label: 'OAuth & Email Config',
+        icon: Mail,
         isAdminTab: true,
       },
     );
@@ -622,6 +629,15 @@ export default function Sidebar({
             >
               <User className="popover-icon" />
               <span>Career Profile</span>
+            </button>
+
+            <button
+              type="button"
+              className={`popover-item ${activeSection === 'settings' ? 'active' : ''}`}
+              onClick={() => handleSelectOption('settings')}
+            >
+              <Mail className="popover-icon" />
+              <span>Email & Integrations</span>
             </button>
 
             {isSuperadmin && (

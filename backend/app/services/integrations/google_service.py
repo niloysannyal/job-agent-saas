@@ -60,16 +60,103 @@ class GoogleIntegrationService:
     """
     Manages Google OAuth 2.0 authentication, human-in-the-loop Gmail Draft creation,
     and verified outbound email dispatch via official Gmail API.
+    Supports dynamic DB-configured platform credentials with fallback to .env settings.
     """
 
-    @staticmethod
-    def get_authorization_url(state: str) -> str:
+    @classmethod
+    def resolve_platform_credentials(
+        cls,
+        db: Optional[Any] = None,
+        account_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Dynamically resolve platform Google OAuth 2.0 app credentials:
+        1. Query 'platform_oauth_configs' for provider='google' and is_active=True.
+           (Tenant override first if account_id is provided, then platform-wide account_id=NULL).
+        2. If not found or incomplete in DB, fall back to backend/.env (settings.GOOGLE_CLIENT_ID, settings.GOOGLE_CLIENT_SECRET).
+        """
+        from app.core.crypto import decrypt_secret
+        from app.models.oauth import PlatformOAuthAppConfig
+
+        db_created = False
+        if db is None:
+            try:
+                from app.db.session import SessionLocal
+                db = SessionLocal()
+                db_created = True
+            except Exception:
+                db = None
+
+        if db is not None:
+            try:
+                query = db.query(PlatformOAuthAppConfig).filter(
+                    PlatformOAuthAppConfig.provider == "google",
+                    PlatformOAuthAppConfig.is_active.is_(True),
+                )
+                if account_id:
+                    query = query.filter(
+                        (PlatformOAuthAppConfig.account_id == account_id) |
+                        (PlatformOAuthAppConfig.account_id.is_(None))
+                    ).order_by(PlatformOAuthAppConfig.account_id.desc().nulls_last())
+                else:
+                    query = query.filter(PlatformOAuthAppConfig.account_id.is_(None))
+
+                config_row = query.first()
+                if config_row and config_row.client_id:
+                    secret = (
+                        decrypt_secret(config_row.encrypted_client_secret)
+                        if config_row.encrypted_client_secret
+                        else None
+                    )
+                    effective_secret = secret or settings.GOOGLE_CLIENT_SECRET
+                    effective_redirect = config_row.redirect_uri or settings.GOOGLE_REDIRECT_URI
+                    return {
+                        "client_id": config_row.client_id,
+                        "client_secret": effective_secret,
+                        "redirect_uri": effective_redirect,
+                        "source": "db",
+                        "has_secret": bool(effective_secret),
+                        "is_active": config_row.is_active,
+                    }
+            except Exception as e:
+                logger.warning("Could not query platform_oauth_configs from DB: %s", e)
+            finally:
+                if db_created:
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
+
+        # Fallback to .env settings
+        client_id = settings.GOOGLE_CLIENT_ID
+        client_secret = settings.GOOGLE_CLIENT_SECRET
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+        has_secret = bool(client_secret)
+        source = "env" if (client_id and client_secret) else ("partial_env" if client_id else "none")
+
+        return {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
+            "source": source,
+            "has_secret": has_secret,
+            "is_active": True,
+        }
+
+    @classmethod
+    def get_authorization_url(
+        cls,
+        state: str,
+        db: Optional[Any] = None,
+        account_id: Optional[str] = None,
+    ) -> str:
         """
         Generate the Google OAuth 2.0 consent URL requesting offline access
         and full permissions (gmail.send, gmail.compose, userinfo.email).
         """
-        client_id = settings.GOOGLE_CLIENT_ID or "mock-google-client-id.apps.googleusercontent.com"
-        redirect_uri = settings.GOOGLE_REDIRECT_URI
+        creds = cls.resolve_platform_credentials(db=db, account_id=account_id)
+        client_id = creds.get("client_id") or "mock-google-client-id.apps.googleusercontent.com"
+        redirect_uri = creds.get("redirect_uri") or settings.GOOGLE_REDIRECT_URI
 
         params = {
             "client_id": client_id,
@@ -82,13 +169,23 @@ class GoogleIntegrationService:
         }
         return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
 
-    @staticmethod
-    async def exchange_code_for_tokens(code: str) -> Dict[str, Any]:
+    @classmethod
+    async def exchange_code_for_tokens(
+        cls,
+        code: str,
+        db: Optional[Any] = None,
+        account_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Exchange an OAuth authorization code for access and refresh tokens.
         Fetches the user's primary email address.
         """
-        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        creds = cls.resolve_platform_credentials(db=db, account_id=account_id)
+        client_id = creds.get("client_id")
+        client_secret = creds.get("client_secret")
+        redirect_uri = creds.get("redirect_uri") or settings.GOOGLE_REDIRECT_URI
+
+        if not client_id or not client_secret:
             # Mock exchange for local development/testing without live credentials
             logger.info("Using mock Google OAuth token exchange (no GCP credentials configured)")
             return {
@@ -102,9 +199,9 @@ class GoogleIntegrationService:
         async with httpx.AsyncClient(timeout=15.0) as client:
             token_payload = {
                 "code": code,
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
                 "grant_type": "authorization_code",
             }
             resp = await client.post(GOOGLE_TOKEN_URL, data=token_payload)
@@ -130,20 +227,29 @@ class GoogleIntegrationService:
                 "email": email_addr,
             }
 
-    @staticmethod
-    async def refresh_access_token(encrypted_refresh_token: str) -> str:
+    @classmethod
+    async def refresh_access_token(
+        cls,
+        encrypted_refresh_token: str,
+        db: Optional[Any] = None,
+        account_id: Optional[str] = None,
+    ) -> str:
         """
         Refresh an expired access token using the stored encrypted refresh token.
         Uses MultiFernet for decryption.
         """
         refresh_token = decrypt_oauth_token(encrypted_refresh_token)
-        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET or (refresh_token and refresh_token.startswith("mock_")):
+        creds = cls.resolve_platform_credentials(db=db, account_id=account_id)
+        client_id = creds.get("client_id")
+        client_secret = creds.get("client_secret")
+
+        if not client_id or not client_secret or (refresh_token and refresh_token.startswith("mock_")):
             return "mock_refreshed_access_token"
 
         async with httpx.AsyncClient(timeout=15.0) as client:
             payload = {
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "client_id": client_id,
+                "client_secret": client_secret,
                 "refresh_token": refresh_token,
                 "grant_type": "refresh_token",
             }

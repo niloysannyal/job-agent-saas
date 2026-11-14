@@ -29,6 +29,9 @@ import {
   Database,
   Activity,
   Zap,
+  Mail,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const API_BASE = '/api/v1';
@@ -105,6 +108,23 @@ export default function AdminView({
   const [loadingFlagged, setLoadingFlagged] = useState(false);
   const [inspectingJob, setInspectingJob] = useState(null);
 
+  // Platform Google OAuth Config State
+  const [oauthConfig, setOauthConfig] = useState({
+    configured: false,
+    client_id: '',
+    redirect_uri: '',
+    has_secret: false,
+    source: 'none',
+  });
+  const [loadingOAuthConfig, setLoadingOAuthConfig] = useState(false);
+  const [isSavingOAuth, setIsSavingOAuth] = useState(false);
+  const [oauthForm, setOauthForm] = useState({
+    client_id: '',
+    client_secret: '',
+    redirect_uri: 'http://localhost:5173/auth/google/callback',
+  });
+  const [showOAuthSecret, setShowOAuthSecret] = useState(false);
+
   const closeAllModals = () => {
     setShowInviteModal(false);
     setShowEditTenantModal(false);
@@ -135,6 +155,7 @@ export default function AdminView({
     if (currentTab === 'sources' || currentTab === 'overview') fetchSources();
     if (currentTab === 'templates') fetchTemplates();
     if (currentTab === 'flagged' || currentTab === 'overview') fetchFlaggedJobs();
+    if (currentTab === 'integrations' || currentTab === 'overview') fetchOAuthConfig();
   }, [currentTab]);
 
   useEffect(() => {
@@ -191,6 +212,81 @@ export default function AdminView({
       console.error('Failed to fetch providers:', err);
     } finally {
       setLoadingProviders(false);
+    }
+  };
+
+  const fetchOAuthConfig = async () => {
+    try {
+      setLoadingOAuthConfig(true);
+      const res = await fetch(`${API_BASE}/admin/integrations/google`, {
+        headers: { ...authHeaders },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOauthConfig(data);
+        setOauthForm({
+          client_id: data.client_id || '',
+          client_secret: '',
+          redirect_uri: data.redirect_uri || 'http://localhost:5173/auth/google/callback',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch platform OAuth config:', err);
+    } finally {
+      setLoadingOAuthConfig(false);
+    }
+  };
+
+  const handleSaveOAuthConfig = async (e) => {
+    e.preventDefault();
+    if (!oauthForm.client_id.trim()) {
+      showToast?.('Please enter a Google Client ID.');
+      return;
+    }
+    try {
+      setIsSavingOAuth(true);
+      const payload = {
+        client_id: oauthForm.client_id.trim(),
+        client_secret: oauthForm.client_secret.trim() || undefined,
+        redirect_uri: oauthForm.redirect_uri.trim() || undefined,
+      };
+      const res = await fetch(`${API_BASE}/admin/integrations/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOauthConfig(data);
+        setOauthForm((prev) => ({ ...prev, client_secret: '' }));
+        showToast?.('✨ Platform Google OAuth credentials saved in database (Encrypted at rest)!');
+      } else {
+        const err = await res.json();
+        showToast?.(err.detail || 'Failed to save Google OAuth credentials.');
+      }
+    } catch (err) {
+      showToast?.(err.message || 'Error saving Google OAuth credentials.');
+    } finally {
+      setIsSavingOAuth(false);
+    }
+  };
+
+  const handleResetOAuthConfig = async () => {
+    if (!confirm('Revert platform Google OAuth credentials back to .env fallback?')) return;
+    try {
+      setIsSavingOAuth(true);
+      const res = await fetch(`${API_BASE}/admin/integrations/google`, {
+        method: 'DELETE',
+        headers: { ...authHeaders },
+      });
+      if (res.ok) {
+        showToast?.('Reverted platform Google OAuth to .env defaults.');
+        await fetchOAuthConfig();
+      }
+    } catch (err) {
+      showToast?.('Error resetting platform Google OAuth.');
+    } finally {
+      setIsSavingOAuth(false);
     }
   };
 
@@ -1548,6 +1644,183 @@ export default function AdminView({
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 7: PLATFORM GOOGLE OAUTH & OUTBOUND DISPATCH */}
+      {currentTab === 'integrations' && (
+        <div className="admin-view-content animate-fadeIn">
+          <div className="admin-section-header">
+            <div>
+              <div className="admin-badge-wrap">
+                <span className={`badge-tier ${oauthConfig.configured ? 'text-emerald' : 'text-amber'}`} style={{ fontSize: 12 }}>
+                  {oauthConfig.configured ? '✓ Platform OAuth Configured' : '⚠️ Action Required: Setup Google OAuth'}
+                </span>
+              </div>
+              <h2 className="admin-title">Platform Google OAuth & Outbound Dispatch</h2>
+              <p className="admin-subtitle">
+                Configure Google Cloud OAuth 2.0 app credentials for candidate Gmail draft creation and outbound dispatch. Values are stored securely encrypted at rest in the database with dynamic fallback to <code>.env</code>.
+              </p>
+            </div>
+            <button className="btn-secondary" onClick={fetchOAuthConfig} disabled={loadingOAuthConfig}>
+              <RefreshCw size={14} className={loadingOAuthConfig ? 'spin' : ''} /> Refresh
+            </button>
+          </div>
+
+          <div className="admin-grid-2col">
+            {/* LEFT COLUMN: CONFIGURATION FORM */}
+            <div className="admin-card-panel">
+              <h3 className="card-panel-title flex-align-center gap-2 mb-4">
+                <Key size={18} className="text-emerald" />
+                <span>Google OAuth 2.0 App Credentials</span>
+              </h3>
+
+              {/* Status Banner */}
+              <div className="status-indicator-banner mb-5 p-3 rounded" style={{ background: 'var(--bg-surface-subtle)', border: '1px solid var(--border-subtle)' }}>
+                <div className="flex-between items-center text-xs mb-1">
+                  <span className="text-muted">Configuration State:</span>
+                  <span className={`badge-chip ${oauthConfig.source === 'db' ? 'badge-chip-green' : oauthConfig.source === 'env' ? 'badge-chip-blue' : 'badge-chip-amber'}`}>
+                    {oauthConfig.source === 'db'
+                      ? '● Stored Encrypted in Database'
+                      : oauthConfig.source === 'env'
+                      ? '⚡ Falling back to .env'
+                      : '○ Not Configured'}
+                  </span>
+                </div>
+                {oauthConfig.client_id && (
+                  <div className="text-xs text-secondary mt-1">
+                    Active Client ID: <code className="text-emerald">{oauthConfig.client_id}</code>
+                  </div>
+                )}
+                {oauthConfig.has_secret && (
+                  <div className="text-xs text-muted mt-1">
+                    Client Secret: 🔒 <em>Encrypted at rest (never displayed in plaintext)</em>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveOAuthConfig}>
+                <div className="form-group mb-4">
+                  <label className="form-label text-xs">GOOGLE_CLIENT_ID</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="1234567890-abcdefgh.apps.googleusercontent.com"
+                    value={oauthForm.client_id}
+                    onChange={(e) => setOauthForm({ ...oauthForm, client_id: e.target.value })}
+                    required
+                  />
+                  <span className="text-muted text-xs mt-1 block">
+                    Google Cloud Web Client ID from APIs & Services → Credentials.
+                  </span>
+                </div>
+
+                <div className="form-group mb-4">
+                  <label className="form-label text-xs">GOOGLE_CLIENT_SECRET</label>
+                  <div className="input-with-icon-right">
+                    <input
+                      type={showOAuthSecret ? 'text' : 'password'}
+                      className="form-control"
+                      placeholder={oauthConfig.has_secret ? '•••••••••••••••••••• (Leave blank to keep current)' : 'Enter Client Secret...'}
+                      value={oauthForm.client_secret}
+                      onChange={(e) => setOauthForm({ ...oauthForm, client_secret: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="btn-icon-inside"
+                      onClick={() => setShowOAuthSecret(!showOAuthSecret)}
+                    >
+                      {showOAuthSecret ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  <span className="text-muted text-xs mt-1 block">
+                    Encrypted with MultiFernet before writing to database.
+                  </span>
+                </div>
+
+                <div className="form-group mb-5">
+                  <label className="form-label text-xs">GOOGLE_REDIRECT_URI</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="http://localhost:5173/auth/google/callback"
+                    value={oauthForm.redirect_uri}
+                    onChange={(e) => setOauthForm({ ...oauthForm, redirect_uri: e.target.value })}
+                  />
+                  <span className="text-muted text-xs mt-1 block">
+                    Must match the Authorized Redirect URI registered in Google Cloud Console.
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    className="btn-primary flex items-center gap-2 px-5 py-2"
+                    disabled={isSavingOAuth}
+                  >
+                    <Save size={15} />
+                    <span>{isSavingOAuth ? 'Saving in Database...' : 'Save OAuth Credentials'}</span>
+                  </button>
+
+                  {oauthConfig.source === 'db' && (
+                    <button
+                      type="button"
+                      className="btn-secondary flex items-center gap-2 px-4 py-2"
+                      onClick={handleResetOAuthConfig}
+                      disabled={isSavingOAuth}
+                    >
+                      <span>Revert to .env</span>
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* RIGHT COLUMN: GOOGLE CLOUD INSTRUCTIONS */}
+            <div className="admin-card-panel">
+              <h3 className="card-panel-title flex-align-center gap-2 mb-3">
+                <ShieldCheck size={18} className="text-primary" />
+                <span>Google Cloud Console Setup Checklist</span>
+              </h3>
+              <p className="text-secondary text-xs mb-4">
+                Follow these 4 steps in your Google Cloud Project to activate 1-click candidate Gmail connections:
+              </p>
+
+              <div className="instruction-step-list text-xs space-y-3">
+                <div className="p-3 rounded bg-surface-subtle border-subtle">
+                  <strong>1. Enable Gmail API</strong>
+                  <p className="text-muted mt-1">
+                    Navigate to <strong>APIs & Services → Library</strong>, search for <strong>Gmail API</strong>, and click <strong>Enable</strong>.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded bg-surface-subtle border-subtle">
+                  <strong>2. Configure OAuth Consent Screen</strong>
+                  <p className="text-muted mt-1">
+                    Set User Type to <strong>External</strong>, provide your App name ("JobEazy"), and add scopes: <code>gmail.compose</code> and <code>gmail.send</code>.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded bg-surface-subtle border-subtle">
+                  <strong>3. Create Credentials (OAuth 2.0 Web Client)</strong>
+                  <p className="text-muted mt-1">
+                    Go to <strong>Credentials → Create Credentials → OAuth client ID</strong>. Select application type: <strong>Web application</strong>.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded bg-surface-subtle border-subtle">
+                  <strong>4. Authorized Redirect URIs</strong>
+                  <p className="text-muted mt-1">Add both URIs to the Authorized redirect URIs list:</p>
+                  <code className="block mt-1 p-1 bg-black rounded text-emerald">
+                    http://localhost:5173/auth/google/callback
+                  </code>
+                  <code className="block mt-1 p-1 bg-black rounded text-emerald">
+                    http://localhost:8000/api/v1/integrations/google/callback
+                  </code>
+                </div>
+              </div>
             </div>
           </div>
         </div>

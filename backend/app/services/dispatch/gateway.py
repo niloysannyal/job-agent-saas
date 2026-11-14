@@ -197,40 +197,63 @@ class SendGateway:
         # --- Phase 2: External Transmission (No Database Lock Held) ---
         oauth_conn = (
             db.query(OAuthConnection)
-            .filter_by(account_id=hold_item.account_id, provider="google")
+            .filter(
+                OAuthConnection.account_id == hold_item.account_id,
+                OAuthConnection.provider.in_(["google", "smtp"]),
+            )
             .first()
         )
         if not oauth_conn or not oauth_conn.encrypted_access_token:
             cls._handle_hard_failure(
                 db, hold_item.id, action_id, auth_id, app_id,
                 abort_reason="permanent_failure",
-                error_message="Google OAuth account is not connected.",
+                error_message="Email dispatch account (Google OAuth or SMTP) is not connected.",
             )
             return False
 
-        access_token = decrypt_oauth_token(oauth_conn.encrypted_access_token)
-        now = datetime.now(timezone.utc)
+        access_token = None
+        smtp_password = None
+        smtp_host = "smtp.gmail.com"
+        smtp_port = 587
 
-        # Refresh token if expired
-        if oauth_conn.token_expires_at:
-            exp_tz = oauth_conn.token_expires_at
-            if exp_tz.tzinfo is None:
-                exp_tz = exp_tz.replace(tzinfo=timezone.utc)
-            if exp_tz <= now:
-                if oauth_conn.encrypted_refresh_token:
-                    try:
-                        new_token = await GoogleIntegrationService.refresh_access_token(oauth_conn.encrypted_refresh_token)
-                        oauth_conn.encrypted_access_token = encrypt_oauth_token(new_token)
-                        oauth_conn.token_expires_at = now + timedelta(seconds=3600)
-                        db.commit()
-                        access_token = new_token
-                    except Exception as e:
-                        cls._handle_hard_failure(
-                            db, hold_item.id, action_id, auth_id, app_id,
-                            abort_reason="permanent_failure",
-                            error_message=f"Failed to refresh Google OAuth token: {e}",
-                        )
-                        return False
+        if oauth_conn.provider == "google":
+            access_token = decrypt_oauth_token(oauth_conn.encrypted_access_token)
+            now = datetime.now(timezone.utc)
+
+            # Refresh token if expired
+            if oauth_conn.token_expires_at:
+                exp_tz = oauth_conn.token_expires_at
+                if exp_tz.tzinfo is None:
+                    exp_tz = exp_tz.replace(tzinfo=timezone.utc)
+                if exp_tz <= now:
+                    if oauth_conn.encrypted_refresh_token:
+                        try:
+                            new_token = await GoogleIntegrationService.refresh_access_token(
+                                oauth_conn.encrypted_refresh_token,
+                                db=db,
+                                account_id=hold_item.account_id,
+                            )
+                            oauth_conn.encrypted_access_token = encrypt_oauth_token(new_token)
+                            oauth_conn.token_expires_at = now + timedelta(seconds=3600)
+                            db.commit()
+                            access_token = new_token
+                        except Exception as e:
+                            cls._handle_hard_failure(
+                                db, hold_item.id, action_id, auth_id, app_id,
+                                abort_reason="permanent_failure",
+                                error_message=f"Failed to refresh Google OAuth token: {e}",
+                            )
+                            return False
+        elif oauth_conn.provider == "smtp":
+            from app.core.crypto import decrypt_secret
+            smtp_password = decrypt_secret(oauth_conn.encrypted_access_token)
+            if oauth_conn.scope and ":" in oauth_conn.scope:
+                try:
+                    parts = oauth_conn.scope.split(":")
+                    smtp_host = parts[0]
+                    smtp_port = int(parts[1])
+                except Exception:
+                    pass
 
         # Guard: Prohibit sending without valid PDF artifact
         if not pdf_bytes or not pdf_bytes.startswith(b"%PDF"):
@@ -259,29 +282,58 @@ class SendGateway:
             )
             return False
 
-        # Invoke Google Gmail API
-        try:
-            send_result = await GoogleIntegrationService.send_gmail_message(
-                access_token=access_token,
-                raw_mime_bytes=raw_mime,
-                timeout=30.0,
-            )
-        except (GmailRateLimitException, GmailServerErrorException) as e:
-            logger.warning("Retryable Gmail API error for hold item %s: %s", hold_item.id, e)
-            cls._handle_retryable_failure(db, hold_item.id, action_id, str(e))
-            return False
-        except (GmailApiNotConfiguredException, GmailInsufficientPermissionsException, GmailApiException) as e:
-            logger.error("Non-retryable Gmail API error for hold item %s: %s", hold_item.id, e)
-            cls._handle_hard_failure(
-                db, hold_item.id, action_id, auth_id, app_id,
-                abort_reason="permanent_failure",
-                error_message=str(e),
-            )
-            return False
-        except GmailNetworkTimeoutException as e:
-            logger.error("Gmail API timeout for hold item %s: %s. Leaving in sending for sweeper.", hold_item.id, e)
-            # Item remains in 'sending'; periodic sweeper will transition to 'unknown'
-            return False
+        # External dispatch transmission
+        if oauth_conn.provider == "google":
+            # Invoke Google Gmail API
+            try:
+                send_result = await GoogleIntegrationService.send_gmail_message(
+                    access_token=access_token,
+                    raw_mime_bytes=raw_mime,
+                    timeout=30.0,
+                )
+            except (GmailRateLimitException, GmailServerErrorException) as e:
+                logger.warning("Retryable Gmail API error for hold item %s: %s", hold_item.id, e)
+                cls._handle_retryable_failure(db, hold_item.id, action_id, str(e))
+                return False
+            except (GmailApiNotConfiguredException, GmailInsufficientPermissionsException, GmailApiException) as e:
+                logger.error("Non-retryable Gmail API error for hold item %s: %s", hold_item.id, e)
+                cls._handle_hard_failure(
+                    db, hold_item.id, action_id, auth_id, app_id,
+                    abort_reason="permanent_failure",
+                    error_message=str(e),
+                )
+                return False
+            except GmailNetworkTimeoutException as e:
+                logger.error("Gmail API timeout for hold item %s: %s. Leaving in sending for sweeper.", hold_item.id, e)
+                # Item remains in 'sending'; periodic sweeper will transition to 'unknown'
+                return False
+        else:
+            # Invoke SMTP Transmission
+            import smtplib
+            try:
+                if smtp_port == 465:
+                    server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30.0)
+                else:
+                    server = smtplib.SMTP(smtp_host, smtp_port, timeout=30.0)
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                server.login(oauth_conn.email, smtp_password)
+                server.sendmail(oauth_conn.email, [recipient_email], raw_mime)
+                server.quit()
+                send_result = {
+                    "id": f"smtp_{uuid.uuid4().hex[:12]}",
+                    "threadId": f"smtp_thread_{uuid.uuid4().hex[:12]}",
+                    "labelIds": ["SENT"],
+                }
+            except Exception as e:
+                logger.error("SMTP transmission error for hold item %s: %s", hold_item.id, e)
+                cls._handle_hard_failure(
+                    db, hold_item.id, action_id, auth_id, app_id,
+                    abort_reason="permanent_failure",
+                    error_message=f"SMTP transmission failed: {e}",
+                )
+                return False
 
         # --- Phase 3: Post-Call Settlement Transaction ---
         cls._settle_successful_dispatch(

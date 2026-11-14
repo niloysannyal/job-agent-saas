@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -101,4 +101,83 @@ class OAuthConnectionRead(OAuthConnectionBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PlatformOAuthAppConfig(Base):
+    """
+    Platform-wide or tenant-specific OAuth application credentials (e.g. Google Cloud OAuth).
+    Configurable via SuperAdmin UI without modifying .env files on the server.
+    """
+    __tablename__ = "platform_oauth_configs"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    account_id: Mapped[Optional[str]] = mapped_column(
+        String(36),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    provider: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="google",
+        index=True,
+    )
+    client_id: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    encrypted_client_secret: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    redirect_uri: Mapped[Optional[str]] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    account: Mapped[Optional["Account"]] = relationship("Account")
+
+
+class PlatformOAuthAppConfigRead(BaseModel):
+    id: str
+    account_id: Optional[str] = None
+    provider: str = "google"
+    client_id: str
+    redirect_uri: Optional[str] = None
+    has_secret: bool = False
+    source: str = "db"
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlatformOAuthAppConfigInput(BaseModel):
+    client_id: str
+    client_secret: Optional[str] = None
+    redirect_uri: Optional[str] = None
+    is_active: Optional[bool] = True
+
 

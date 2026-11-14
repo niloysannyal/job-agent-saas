@@ -739,3 +739,104 @@ def delete_admin_template(
     db.delete(tmpl)
     db.commit()
     return {"status": "deleted", "template_id": template_id}
+
+
+# --- Platform Integrations & Google OAuth Config ---
+
+class PlatformOAuthAppConfigRead(BaseModel):
+    configured: bool
+    client_id: Optional[str] = None
+    redirect_uri: Optional[str] = None
+    has_secret: bool = False
+    source: str = "none"  # "db" | "env" | "none"
+    is_active: bool = True
+    provider: str = "google"
+
+
+class PlatformOAuthAppConfigInput(BaseModel):
+    client_id: str
+    client_secret: Optional[str] = None
+    redirect_uri: Optional[str] = None
+    is_active: Optional[bool] = True
+
+
+@router.get("/integrations/google", response_model=PlatformOAuthAppConfigRead, summary="Get platform Google OAuth configuration")
+def get_admin_google_oauth_config(
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+) -> PlatformOAuthAppConfigRead:
+    from app.services.integrations.google_service import GoogleIntegrationService
+    creds = GoogleIntegrationService.resolve_platform_credentials(db=db)
+    client_id = creds.get("client_id")
+    return PlatformOAuthAppConfigRead(
+        configured=bool(client_id and creds.get("has_secret")),
+        client_id=client_id,
+        redirect_uri=creds.get("redirect_uri"),
+        has_secret=creds.get("has_secret", False),
+        source=creds.get("source", "none"),
+        is_active=creds.get("is_active", True),
+        provider="google",
+    )
+
+
+@router.post("/integrations/google", response_model=PlatformOAuthAppConfigRead, summary="Configure platform Google OAuth credentials")
+def save_admin_google_oauth_config(
+    data: PlatformOAuthAppConfigInput,
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+) -> PlatformOAuthAppConfigRead:
+    from app.models.oauth import PlatformOAuthAppConfig
+    row = db.query(PlatformOAuthAppConfig).filter(
+        PlatformOAuthAppConfig.provider == "google",
+        PlatformOAuthAppConfig.account_id.is_(None),
+    ).first()
+
+    if not row:
+        row = PlatformOAuthAppConfig(
+            account_id=None,
+            provider="google",
+            client_id=data.client_id.strip(),
+            redirect_uri=data.redirect_uri.strip() if data.redirect_uri else settings.GOOGLE_REDIRECT_URI,
+            is_active=data.is_active if data.is_active is not None else True,
+            encrypted_client_secret=encrypt_secret(data.client_secret.strip()) if data.client_secret else None,
+        )
+        db.add(row)
+    else:
+        row.client_id = data.client_id.strip()
+        if data.redirect_uri:
+            row.redirect_uri = data.redirect_uri.strip()
+        if data.is_active is not None:
+            row.is_active = data.is_active
+        if data.client_secret:
+            row.encrypted_client_secret = encrypt_secret(data.client_secret.strip())
+        row.updated_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(row)
+
+    return PlatformOAuthAppConfigRead(
+        configured=bool(row.client_id and row.encrypted_client_secret),
+        client_id=row.client_id,
+        redirect_uri=row.redirect_uri,
+        has_secret=bool(row.encrypted_client_secret),
+        source="db",
+        is_active=row.is_active,
+        provider="google",
+    )
+
+
+@router.delete("/integrations/google", summary="Reset platform Google OAuth to .env defaults")
+def delete_admin_google_oauth_config(
+    db: Session = Depends(get_db),
+    admin: Account = Depends(require_superadmin),
+):
+    from app.models.oauth import PlatformOAuthAppConfig
+    row = db.query(PlatformOAuthAppConfig).filter(
+        PlatformOAuthAppConfig.provider == "google",
+        PlatformOAuthAppConfig.account_id.is_(None),
+    ).first()
+    if row:
+        db.delete(row)
+        db.commit()
+    return {"status": "reverted_to_env", "message": "Platform Google OAuth config reset to .env fallback."}
+

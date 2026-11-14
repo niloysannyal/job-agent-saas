@@ -9,6 +9,7 @@ import {
   FileCode,
   FileText,
   Upload,
+  Mail,
 } from 'lucide-react';
 import { parseLatexDocument, paginateParsedDocument, compileParsedLatexToPdf } from '../utils/latexCompiler';
 import ProfileIdentityTab from './profile/ProfileIdentityTab';
@@ -19,6 +20,7 @@ import ProfileProjectsTab from './profile/ProfileProjectsTab';
 import ProfileTargetsTab from './profile/ProfileTargetsTab';
 import ProfileTemplatesTab from './profile/ProfileTemplatesTab';
 import SavedResumesTab from './profile/SavedResumesTab';
+import ProfileIntegrationsTab from './profile/ProfileIntegrationsTab';
 import ProfileExperienceModal from './profile/ProfileExperienceModal';
 import ProfileEducationModal from './profile/ProfileEducationModal';
 import ProfileProjectModal from './profile/ProfileProjectModal';
@@ -46,8 +48,15 @@ export default function ProfileView({
   onOpenOnboarding,
   onRefreshProfile,
   onNavigate,
+  initialTab = 'identity',
 }) {
-  const [activeTab, setActiveTab] = useState('identity'); // identity | experience | education | skills | projects | targets | resumes
+  const [activeTab, setActiveTab] = useState(initialTab || 'identity'); // identity | experience | education | skills | projects | targets | resumes | integrations
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Local state for modals/forms
   const [newRole, setNewRole] = useState('');
@@ -558,6 +567,13 @@ export default function ProfileView({
           <FileText size={16} />
           <span>My Resumes</span>
         </button>
+        <button
+          className={`sub-tab-btn ${activeTab === 'integrations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('integrations')}
+        >
+          <Mail size={16} />
+          <span>Email & Integrations</span>
+        </button>
       </div>
 
       {/* TAB 1: IDENTITY & CONTACT */}
@@ -643,6 +659,15 @@ export default function ProfileView({
           showToast={showToast}
           onNavigate={onNavigate}
           profileForm={profileForm}
+        />
+      )}
+
+      {/* TAB 8: EMAIL & OUTBOUND DISPATCH INTEGRATIONS */}
+      {activeTab === 'integrations' && (
+        <ProfileIntegrationsTab
+          authHeaders={authHeaders}
+          showToast={showToast}
+          accountId={accountId}
         />
       )}
 

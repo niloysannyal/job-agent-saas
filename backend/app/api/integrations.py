@@ -1,18 +1,23 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_account
-from app.core.crypto import encrypt_oauth_token, decrypt_oauth_token
+from app.core.config import settings
+from app.core.crypto import encrypt_oauth_token, decrypt_oauth_token, encrypt_secret, decrypt_secret
 from app.db.session import get_db
 from app.models.account import Account
 from app.models.oauth import OAuthConnection
 from app.models.application import Application, ApplicationFormAnswer
 from app.models.profile import UserProfile
 from app.services.integrations.google_service import GoogleIntegrationService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/integrations", tags=["Integrations"])
 
@@ -33,6 +38,21 @@ class IntegrationStatusResponse(BaseModel):
     provider: str = "google"
     email: Optional[str] = None
     token_expires_at: Optional[datetime] = None
+
+
+class UnifiedEmailStatusResponse(BaseModel):
+    connected: bool
+    provider: Optional[str] = None  # "google" | "smtp" | None
+    email: Optional[str] = None
+    token_expires_at: Optional[datetime] = None
+    platform_oauth_configured: bool = False
+
+
+class SmtpConnectRequest(BaseModel):
+    email: str = Field(..., description="Candidate Gmail or SMTP email address")
+    app_password: str = Field(..., description="16-character Google App Password or SMTP password")
+    host: str = Field("smtp.gmail.com", description="SMTP server host")
+    port: int = Field(587, description="SMTP server port")
 
 
 class CreateGmailDraftRequest(BaseModel):
@@ -63,12 +83,24 @@ class BookmarkletResponse(BaseModel):
 def get_google_auth_url(
     state: Optional[str] = "state_oauth_google",
     current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
 ):
     """
-    Generate Google OAuth 2.0 consent URL for Gmail Draft composition.
-    Scope is strictly restricted to gmail.compose (no send authority).
+    Generate Google OAuth 2.0 consent URL for Gmail Draft composition and outbound dispatch.
+    Dynamically checks platform credentials in DB, falling back to .env settings.
     """
-    url = GoogleIntegrationService.get_authorization_url(state=f"{current_account.id}:{state}")
+    creds = GoogleIntegrationService.resolve_platform_credentials(db=db, account_id=current_account.id)
+    client_id = creds.get("client_id")
+    if not client_id and getattr(settings, "ENVIRONMENT", "development").lower() in ("production", "staging"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google OAuth application is not configured on this platform. Please configure it in SuperAdmin Ops or connect your email via standard Gmail App Password / SMTP below.",
+        )
+    url = GoogleIntegrationService.get_authorization_url(
+        state=f"{current_account.id}:{state}",
+        db=db,
+        account_id=current_account.id,
+    )
     return GoogleAuthUrlResponse(auth_url=url)
 
 
@@ -81,7 +113,11 @@ async def google_oauth_callback(
     """
     Exchange authorization code for tokens, encrypt at rest, and upsert OAuthConnection.
     """
-    token_info = await GoogleIntegrationService.exchange_code_for_tokens(data.code)
+    token_info = await GoogleIntegrationService.exchange_code_for_tokens(
+        data.code,
+        db=db,
+        account_id=current_account.id,
+    )
 
     expires_in = token_info.get("expires_in", 3600)
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
@@ -120,6 +156,67 @@ async def google_oauth_callback(
         email=conn.email,
         token_expires_at=conn.token_expires_at,
     )
+
+
+@router.get("/google/callback")
+async def google_oauth_get_callback(
+    code: str = Query(..., description="Google authorization code"),
+    state: Optional[str] = Query(None, description="OAuth state carrying account_id"),
+    db: Session = Depends(get_db),
+):
+    """
+    Browser redirect callback endpoint for Google OAuth 2.0.
+    Extracts account_id from state, exchanges code for tokens, encrypts at rest,
+    and redirects user back to frontend settings.
+    """
+    account_id = None
+    if state and ":" in state:
+        account_id = state.split(":", 1)[0]
+
+    if not account_id:
+        raise HTTPException(status_code=400, detail="Invalid state parameter: missing account_id")
+
+    account = db.query(Account).filter_by(id=account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    token_info = await GoogleIntegrationService.exchange_code_for_tokens(
+        code, db=db, account_id=account.id
+    )
+
+    expires_in = token_info.get("expires_in", 3600)
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+    conn = (
+        db.query(OAuthConnection)
+        .filter_by(account_id=account.id, provider="google")
+        .first()
+    )
+
+    if not conn:
+        conn = OAuthConnection(
+            account_id=account.id,
+            provider="google",
+            email=token_info.get("email"),
+            encrypted_access_token=encrypt_oauth_token(token_info.get("access_token")),
+            encrypted_refresh_token=encrypt_oauth_token(token_info.get("refresh_token")),
+            token_expires_at=expires_at,
+            scope=token_info.get("scope"),
+        )
+        db.add(conn)
+    else:
+        conn.email = token_info.get("email") or conn.email
+        conn.encrypted_access_token = encrypt_oauth_token(token_info.get("access_token"))
+        if token_info.get("refresh_token"):
+            conn.encrypted_refresh_token = encrypt_oauth_token(token_info.get("refresh_token"))
+        conn.token_expires_at = expires_at
+        conn.scope = token_info.get("scope") or conn.scope
+
+    db.commit()
+
+    # Redirect back to frontend
+    frontend_url = "http://localhost:5173/?google_connected=true"
+    return RedirectResponse(url=frontend_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 @router.get("/google/status", response_model=IntegrationStatusResponse)
@@ -165,6 +262,143 @@ def disconnect_google(
         db.commit()
 
     return {"success": True, "message": "Google integration successfully disconnected."}
+
+
+@router.get("/email/status", response_model=UnifiedEmailStatusResponse)
+def get_email_status(
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """
+    Unified email connection status for the candidate: checks both Google OAuth and SMTP.
+    """
+    google_conn = (
+        db.query(OAuthConnection)
+        .filter_by(account_id=current_account.id, provider="google")
+        .first()
+    )
+    smtp_conn = (
+        db.query(OAuthConnection)
+        .filter_by(account_id=current_account.id, provider="smtp")
+        .first()
+    )
+
+    creds = GoogleIntegrationService.resolve_platform_credentials(db=db, account_id=current_account.id)
+    platform_oauth_configured = bool(creds.get("client_id") and creds.get("has_secret"))
+
+    if google_conn and google_conn.encrypted_access_token:
+        return UnifiedEmailStatusResponse(
+            connected=True,
+            provider="google",
+            email=google_conn.email,
+            token_expires_at=google_conn.token_expires_at,
+            platform_oauth_configured=platform_oauth_configured,
+        )
+    elif smtp_conn and smtp_conn.encrypted_access_token:
+        return UnifiedEmailStatusResponse(
+            connected=True,
+            provider="smtp",
+            email=smtp_conn.email,
+            token_expires_at=None,
+            platform_oauth_configured=platform_oauth_configured,
+        )
+
+    return UnifiedEmailStatusResponse(
+        connected=False,
+        provider=None,
+        email=None,
+        token_expires_at=None,
+        platform_oauth_configured=platform_oauth_configured,
+    )
+
+
+@router.post("/smtp/connect")
+def connect_smtp(
+    data: SmtpConnectRequest,
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """
+    Connect email dispatch via direct SMTP / Gmail App Password.
+    Tests SMTP authentication against the server before saving encrypted password at rest.
+    """
+    clean_password = data.app_password.replace(" ", "").strip()
+    clean_email = data.email.strip()
+
+    # Test SMTP credentials live
+    import smtplib
+    try:
+        server = smtplib.SMTP(data.host, data.port, timeout=12)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login(clean_email, clean_password)
+        server.quit()
+    except smtplib.SMTPAuthenticationError as e:
+        logger.warning("SMTP auth failed for %s: %s", clean_email, e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="SMTP Authentication failed. For Gmail, please ensure 2-Step Verification is enabled and generate a dedicated 16-character App Password.",
+        )
+    except Exception as e:
+        logger.error("SMTP connection error for %s (%s:%d): %s", clean_email, data.host, data.port, e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not connect to SMTP server ({data.host}:{data.port}): {e}",
+        )
+
+    # Upsert into oauth_connections with provider='smtp'
+    conn = (
+        db.query(OAuthConnection)
+        .filter_by(account_id=current_account.id, provider="smtp")
+        .first()
+    )
+    encrypted_pw = encrypt_secret(clean_password)
+
+    if not conn:
+        conn = OAuthConnection(
+            account_id=current_account.id,
+            provider="smtp",
+            email=clean_email,
+            encrypted_access_token=encrypted_pw,
+            scope=f"{data.host}:{data.port}",
+        )
+        db.add(conn)
+    else:
+        conn.email = clean_email
+        conn.encrypted_access_token = encrypted_pw
+        conn.scope = f"{data.host}:{data.port}"
+
+    db.commit()
+    db.refresh(conn)
+
+    return {
+        "success": True,
+        "message": f"Successfully connected email dispatch via {data.host}.",
+        "email": conn.email,
+        "provider": "smtp",
+    }
+
+
+@router.post("/smtp/disconnect")
+def disconnect_smtp(
+    current_account: Account = Depends(get_current_account),
+    db: Session = Depends(get_db),
+):
+    """
+    Disconnect and remove SMTP credentials for the current account.
+    """
+    conn = (
+        db.query(OAuthConnection)
+        .filter_by(account_id=current_account.id, provider="smtp")
+        .first()
+    )
+    if conn:
+        db.delete(conn)
+        db.commit()
+
+    return {"success": True, "message": "SMTP connection successfully disconnected."}
+
 
 
 @router.post("/google/create-draft", response_model=CreateGmailDraftResponse)

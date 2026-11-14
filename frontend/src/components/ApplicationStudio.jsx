@@ -18,6 +18,7 @@ import {
   ChevronUp,
   Copy,
   Check,
+  CheckCircle2,
   ShieldCheck,
   Send,
   Zap,
@@ -258,11 +259,11 @@ ${candidateEmail} | ${candidateLinkedin}`;
     }
   }, [tailorResult]);
 
-  // Check Google OAuth status
+  // Check Email / Google OAuth status
   useEffect(() => {
     const checkGoogleStatus = async () => {
       try {
-        const res = await fetch('/api/v1/integrations/google/status', {
+        const res = await fetch('/api/v1/integrations/email/status', {
           headers: { ...(authHeaders || {}), 'X-Account-ID': profile?.account_id || '' },
         });
         if (res.ok) {
@@ -1149,6 +1150,22 @@ ${candidateEmail} | ${candidateLinkedin}`;
                     📎 Tailored_CV_{customRole || 'Role'}.pdf automatically attached
                   </span>
                   <div className="outreach-toolbar-actions">
+                    {googleConnected ? (
+                      <span className="badge-chip-green text-xs flex items-center gap-1" title="Email dispatch connected">
+                        <CheckCircle2 size={12} />
+                        <span>Email Connected</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="action-btn-secondary text-amber"
+                        onClick={() => onNavigate?.('settings')}
+                        title="Connect your email account in Settings"
+                      >
+                        <Mail size={13} />
+                        <span>Connect Email</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="action-btn-secondary"
