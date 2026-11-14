@@ -308,19 +308,24 @@ class SendGateway:
                 # Item remains in 'sending'; periodic sweeper will transition to 'unknown'
                 return False
         else:
-            # Invoke SMTP Transmission
+            # Invoke SMTP Transmission with non-blocking worker thread, timeout=15s, and sanitized password
             import smtplib
             try:
-                if smtp_port == 465:
-                    server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30.0)
-                else:
-                    server = smtplib.SMTP(smtp_host, smtp_port, timeout=30.0)
-                    server.ehlo()
-                    server.starttls()
-                    server.ehlo()
-                server.login(oauth_conn.email, smtp_password)
-                server.sendmail(oauth_conn.email, [recipient_email], raw_mime)
-                server.quit()
+                clean_smtp_pw = (smtp_password or "").replace(" ", "").strip()
+
+                def _do_smtp_send():
+                    if smtp_port == 465:
+                        server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15.0)
+                    else:
+                        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15.0)
+                        server.ehlo()
+                        server.starttls()
+                        server.ehlo()
+                    server.login(oauth_conn.email, clean_smtp_pw)
+                    server.sendmail(oauth_conn.email, [recipient_email], raw_mime)
+                    server.quit()
+
+                await asyncio.to_thread(_do_smtp_send)
                 send_result = {
                     "id": f"smtp_{uuid.uuid4().hex[:12]}",
                     "threadId": f"smtp_thread_{uuid.uuid4().hex[:12]}",

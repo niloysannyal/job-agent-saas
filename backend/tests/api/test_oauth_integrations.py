@@ -177,9 +177,11 @@ def test_smtp_connect_and_disconnect(tenant_client: TestClient, oauth_test_db: S
 
 def test_google_oauth_callback_flow(tenant_client: TestClient, oauth_test_db: Session, tenant_account: Account):
     """Verify code exchange and callback upsert into oauth_connections."""
+    from app.api.integrations import generate_oauth_state
+    signed_state = generate_oauth_state(tenant_account.id)
     res = tenant_client.post(
         "/api/v1/integrations/google/callback",
-        json={"code": "4/0AfDfakecode12345", "state": "test_state"},
+        json={"code": "4/0AfDfakecode12345", "state": signed_state},
     )
     assert res.status_code == 200
     data = res.json()
@@ -197,4 +199,58 @@ def test_google_oauth_callback_flow(tenant_client: TestClient, oauth_test_db: Se
     disc = tenant_client.post("/api/v1/integrations/google/disconnect")
     assert disc.status_code == 200
     assert tenant_client.get("/api/v1/integrations/email/status").json()["connected"] is False
+
+
+def test_google_oauth_state_csrf_and_tenant_verification(tenant_client: TestClient, tenant_account: Account, oauth_test_db: Session):
+    """Verify state parameter is cryptographically signed and rejects tampering/spoofing."""
+    from urllib.parse import urlparse, parse_qs
+    from app.api.integrations import generate_oauth_state, verify_oauth_state
+
+    # 1. Generate auth URL
+    res = tenant_client.get("/api/v1/integrations/google/auth-url")
+    assert res.status_code == 200
+    auth_url = res.json()["auth_url"]
+
+    # 2. Extract state parameter
+    parsed = urlparse(auth_url)
+    qs = parse_qs(parsed.query)
+    assert "state" in qs
+    state_token = qs["state"][0]
+
+    # 3. Verify state resolves to the correct account_id
+    verified_id = verify_oauth_state(state_token)
+    assert verified_id == tenant_account.id
+
+    # 4. Tampered state must be rejected
+    with pytest.raises(Exception):
+        verify_oauth_state(state_token + "tampered")
+
+    # 5. GET callback with valid signed state executes redirect
+    with patch("app.services.integrations.google_service.GoogleIntegrationService.exchange_code_for_tokens") as mock_exchange:
+        mock_exchange.return_value = {
+            "access_token": "ya29.test_token",
+            "refresh_token": "1//test_refresh",
+            "email": "verified.user@gmail.com",
+            "expires_in": 3600,
+            "scope": "https://www.googleapis.com/auth/gmail.send",
+        }
+        cb_res = tenant_client.get(
+            f"/api/v1/integrations/google/callback?code=mock_code&state={state_token}",
+            follow_redirects=False,
+        )
+        assert cb_res.status_code == 307
+        assert "google_connected=true" in cb_res.headers["location"]
+
+        # Verify DB connection record
+        conn = oauth_test_db.query(OAuthConnection).filter_by(account_id=tenant_account.id).first()
+        assert conn is not None
+        assert conn.email == "verified.user@gmail.com"
+
+    # 6. GET callback with spoofed/tampered state fails with 400
+    forged_res = tenant_client.get(
+        "/api/v1/integrations/google/callback?code=mock_code&state=forged_state_token",
+        follow_redirects=False,
+    )
+    assert forged_res.status_code == 400
+
 

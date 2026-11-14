@@ -377,6 +377,7 @@ def auth_google_authorize(
     db: Session = Depends(get_db),
 ):
     from app.services.integrations.google_service import GoogleIntegrationService
+    from app.api.integrations import generate_oauth_state
     creds = GoogleIntegrationService.resolve_platform_credentials(db=db, account_id=current_account.id)
     client_id = creds.get("client_id")
     if not client_id and getattr(settings, "ENVIRONMENT", "development").lower() in ("production", "staging"):
@@ -384,8 +385,9 @@ def auth_google_authorize(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Google OAuth application is not configured on this platform.",
         )
+    signed_state = generate_oauth_state(account_id=current_account.id, extra=state)
     url = GoogleIntegrationService.get_authorization_url(
-        state=f"{current_account.id}:{state}",
+        state=signed_state,
         db=db,
         account_id=current_account.id,
     )
