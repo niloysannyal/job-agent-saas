@@ -37,14 +37,12 @@ from app.services.dispatch.hash_utils import compute_content_hash
 def e2e_account_and_job(test_db_session):
     """Seed real Account, Job, AccountDispatchSettings, and TrustedRecipient in test database."""
     import uuid
-    account_id = "acc-e2e-gateway-1"
+    account_id = f"acc-e2e-{uuid.uuid4().hex[:8]}"
     job_id = f"job-e2e-{uuid.uuid4().hex[:8]}"
 
     # 1. Account
-    acc = test_db_session.query(Account).filter_by(id=account_id).first()
-    if not acc:
-        acc = Account(id=account_id, email="candidate-e2e@example.com")
-        test_db_session.add(acc)
+    acc = Account(id=account_id, email=f"{account_id}@example.com")
+    test_db_session.add(acc)
 
     # 2. Job
     job = Job(
@@ -60,29 +58,25 @@ def e2e_account_and_job(test_db_session):
     test_db_session.add(job)
 
     # 3. AccountDispatchSettings
-    settings_row = test_db_session.query(AccountDispatchSettings).filter_by(account_id=account_id).first()
-    if not settings_row:
-        settings_row = AccountDispatchSettings(
-            account_id=account_id,
-            autonomy_mode="autonomous",
-            safety_daily_cap=50,
-            safety_hourly_cap=10,
-            autonomous_daily_cap=10,
-            autonomous_hourly_cap=5,
-            kill_switch=False,
-            is_suspended_by_admin=False,
-        )
-        test_db_session.add(settings_row)
+    settings_row = AccountDispatchSettings(
+        account_id=account_id,
+        autonomy_mode="autonomous",
+        safety_daily_cap=50,
+        safety_hourly_cap=10,
+        autonomous_daily_cap=10,
+        autonomous_hourly_cap=5,
+        kill_switch=False,
+        is_suspended_by_admin=False,
+    )
+    test_db_session.add(settings_row)
 
     # 4. TrustedRecipient
-    tr = test_db_session.query(TrustedRecipient).filter_by(account_id=account_id, email="careers@deepmind.com").first()
-    if not tr:
-        tr = TrustedRecipient(
-            account_id=account_id,
-            email="careers@deepmind.com",
-            source="manual_approval",
-        )
-        test_db_session.add(tr)
+    tr = TrustedRecipient(
+        account_id=account_id,
+        email="careers@deepmind.com",
+        source="manual_approval",
+    )
+    test_db_session.add(tr)
 
     test_db_session.commit()
     return {"account_id": account_id, "job_id": job_id}
