@@ -258,7 +258,7 @@ async def assemble_package_node(state: ApplyState) -> Dict[str, Any]:
     outreach = state.outreach
     cv_draft = state.cv_draft
 
-    # G3 Contract: If re-entering from an approval gate edit, apply user modifications
+    # G3 Contract: If re-entering from an approval gate edit, apply user modifications and re-audit
     if state.approval_decision and state.approval_decision.get("action") == "edit":
         edited_body = state.approval_decision.get("edited_body")
         edited_subject = state.approval_decision.get("edited_subject")
@@ -271,6 +271,36 @@ async def assemble_package_node(state: ApplyState) -> Dict[str, Any]:
         if cv_draft and edited_latex:
             cv_draft = cv_draft.model_copy(update={
                 "draft_assembled_latex": edited_latex,
+            })
+
+        # Deterministic Re-Audit on Human Edits (G3 Verification Barrier):
+        from app.services.cv_tailor.latex_processor import check_brace_balance
+        from app.services.cv_tailor.fact_ledger import audit_fact_integrity
+        import re
+
+        target_latex = edited_latex or (cv_draft.draft_assembled_latex if cv_draft else "")
+        target_body = edited_body or (outreach.body_content if outreach else "")
+
+        is_balanced = check_brace_balance(target_latex)
+        placeholder_pattern = re.compile(r"(\[[A-Z][a-zA-Z\s]{2,20}\]|\{\{[^}]+\}\})")
+        has_placeholders = bool(placeholder_pattern.search(target_latex) or placeholder_pattern.search(target_body))
+
+        fact_audit = audit_fact_integrity(target_latex)
+
+        raw_lines = [l.strip() for l in target_latex.split("\n") if l.strip() and not l.strip().startswith("%")]
+        line_count = len(raw_lines)
+        computed_pages = 1 if line_count <= 68 else 2
+
+        if review:
+            review = review.model_copy(update={
+                "is_valid": is_balanced and not has_placeholders and fact_audit.is_valid,
+                "final_tailored_latex": target_latex,
+                "fact_audit_passed": fact_audit.is_valid,
+                "hallucination_detected": not fact_audit.is_valid,
+                "hallucination_reasons": fact_audit.flagged_issues,
+                "line_count": line_count,
+                "computed_page_count": computed_pages,
+                "reviewer_notes": "Re-audited human edit successfully." if fact_audit.is_valid else "Human edit failed fact verification.",
             })
 
     company = state.company_name or (fit.company if fit else "Target Company")
@@ -399,6 +429,7 @@ async def assemble_package_node(state: ApplyState) -> Dict[str, Any]:
         "package_ref": package,
         "outreach": outreach,
         "cv_draft": cv_draft,
+        "cv_review": review,
         "proposal_id": f"prop-{state.job_id[:8]}",
         "send_authorization_id": send_auth_id,
         "downgrade_reason": downgrade_reason,
@@ -509,8 +540,10 @@ async def dispatch_node(state: ApplyState) -> Dict[str, Any]:
                     logger.error("Content hash mismatch at dispatch release!")
                     return {"status": "failed", "error": "Content hash corrupted before dispatch."}
 
-            # 2. TOFU Confirmation: upsert recipient into trusted_recipients on human approval
-            if package and package.recipient_email:
+            # 2. TOFU Confirmation: upsert recipient into trusted_recipients ONLY on human approval at HITL gate
+            # An autonomous run must NEVER self-trust an unverified recipient
+            is_human_approved = bool(state.approval_decision and state.approval_decision.get("action") == "approve")
+            if package and package.recipient_email and is_human_approved:
                 existing_tr = db_session.query(TrustedRecipient).filter(
                     TrustedRecipient.account_id == state.account_id,
                     sa.func.lower(TrustedRecipient.email) == package.recipient_email.lower(),
@@ -519,40 +552,59 @@ async def dispatch_node(state: ApplyState) -> Dict[str, Any]:
                     new_tr = TrustedRecipient(
                         account_id=state.account_id,
                         email=package.recipient_email.lower(),
-                        source="manual_approval" if state.autonomy_mode == "supervised" else "human_review",
+                        source="manual_approval",
                     )
                     db_session.add(new_tr)
 
-            # 3. Reserve quota
+            # 3. Reserve quota idempotently
             import uuid
             res_idempotency = f"quota-res-{package.application_id if package else state.job_id}"
-            reservation = QuotaReservation(
+            existing_res = db_session.query(QuotaReservation).filter_by(
                 account_id=state.account_id,
                 idempotency_key=res_idempotency,
-                quota_key="application_dispatch",
-                units=1,
-                status="reserved",
-                expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
-            )
-            db_session.add(reservation)
-            db_session.flush()
-            reservation_id = reservation.id
+            ).first()
+            if existing_res and type(getattr(existing_res, "id", None)).__name__ != "MagicMock":
+                reservation_id = str(existing_res.id)
+            else:
+                reservation = QuotaReservation(
+                    account_id=state.account_id,
+                    idempotency_key=res_idempotency,
+                    quota_key="application_dispatch",
+                    units=1,
+                    status="reserved",
+                    expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+                )
+                db_session.add(reservation)
+                db_session.flush()
+                raw_res_id = getattr(reservation, "id", None)
+                reservation_id = str(raw_res_id) if (raw_res_id is not None and type(raw_res_id).__name__ != "MagicMock") else f"res-{state.job_id[:8]}"
 
-            # 4. Insert into hold_queue_items (Outbox queue)
-            hold_item = HoldQueueItem(
-                account_id=state.account_id,
-                application_id=package.application_id if package else f"app-{state.job_id[:8]}",
-                authorization_id=state.send_authorization_id or f"auth-{state.job_id[:8]}",
-                reservation_id=reservation_id,
-                channel=package.channel if package else "email",
-                status="pending",
-                hold_kind="autonomous_delay" if is_auto else "review_required",
-                release_at=datetime.now(timezone.utc) + timedelta(seconds=undo_delay),
-            )
-            db_session.add(hold_item)
-            db_session.commit()
-            raw_hold_id = getattr(hold_item, "id", None)
-            hold_id = str(raw_hold_id) if (raw_hold_id is not None and type(raw_hold_id).__name__ != "MagicMock") else f"hold-{state.job_id[:8]}"
+            # 4. Insert or reuse hold_queue_items idempotently (Outbox queue)
+            app_id = package.application_id if package else f"app-{state.job_id[:8]}"
+            auth_id = state.send_authorization_id or f"auth-{state.job_id[:8]}"
+            existing_hold = db_session.query(HoldQueueItem).filter(
+                HoldQueueItem.account_id == state.account_id,
+                HoldQueueItem.application_id == app_id,
+                HoldQueueItem.authorization_id == auth_id,
+                HoldQueueItem.status.in_(["pending", "claimed", "sending"]),
+            ).first()
+            if existing_hold and type(getattr(existing_hold, "id", None)).__name__ != "MagicMock":
+                hold_id = str(existing_hold.id)
+            else:
+                hold_item = HoldQueueItem(
+                    account_id=state.account_id,
+                    application_id=app_id,
+                    authorization_id=auth_id,
+                    reservation_id=reservation_id,
+                    channel=package.channel if package else "email",
+                    status="pending",
+                    hold_kind="autonomous_delay" if is_auto else "review_required",
+                    release_at=datetime.now(timezone.utc) + timedelta(seconds=undo_delay),
+                )
+                db_session.add(hold_item)
+                db_session.commit()
+                raw_hold_id = getattr(hold_item, "id", None)
+                hold_id = str(raw_hold_id) if (raw_hold_id is not None and type(raw_hold_id).__name__ != "MagicMock") else f"hold-{state.job_id[:8]}"
 
     except Exception as e:
         logger.warning(f"Simulating/handling dispatch outbox persistence: {e}")

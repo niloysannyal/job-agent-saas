@@ -17,13 +17,19 @@ export default function SendApprovalGate({ props }) {
     draft_body,
     ats_score = 90,
     cv_sha256,
+    downgrade_reason,
+    is_trusted,
   } = props || {};
 
-  const isQueued = status === 'queued';
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedBody, setEditedBody] = useState(draft_body || '');
+
+  const isQueued = status === 'queued' || status === 'queued_in_hold';
+  const isNeedsEdit = status === 'needs_edit';
   const isExecuted = status === 'executed' || status === 'approved' || status === 'sent' || status === 'applied';
   const isRejected = status === 'rejected';
   const isAborted = status === 'aborted';
-  const isPending = status === 'pending';
+  const isPending = status === 'pending' || status === 'waiting_approval';
 
   // Calculate remaining seconds for the 30s countdown
   const [countdown, setCountdown] = useState(() => {
@@ -91,6 +97,23 @@ export default function SendApprovalGate({ props }) {
     }
   };
 
+  const handleEditSubmit = async () => {
+    if (!proposal_id || isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      await approveProposal(proposal_id, {
+        action: 'edit',
+        edited_body: editedBody,
+      });
+      setIsEditing(false);
+    } catch (err) {
+      setErrorMsg(err.message || 'Edit resubmission failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={`agent-widget send-approval-gate status-${status}`}>
       <div className="widget-header">
@@ -101,12 +124,27 @@ export default function SendApprovalGate({ props }) {
         <div className={`status-pill pill-${status}`}>
           {isPending && <Clock size={11} />}
           {isQueued && <Clock size={11} className="icon-pulse" />}
+          {isNeedsEdit && <AlertCircle size={11} className="text-coral" />}
           {isExecuted && <CheckCircle2 size={11} />}
           {isRejected && <XCircle size={11} />}
           {isAborted && <RotateCcw size={11} />}
           <span>{status.toUpperCase()}</span>
         </div>
       </div>
+
+      {downgrade_reason && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24', fontSize: '0.78rem', marginBottom: '0.75rem' }}>
+          <AlertCircle size={13} style={{ flexShrink: 0 }} />
+          <span><strong>Policy Guard:</strong> {downgrade_reason}</span>
+        </div>
+      )}
+
+      {isNeedsEdit && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', fontSize: '0.78rem', marginBottom: '0.75rem' }}>
+          <AlertCircle size={13} style={{ flexShrink: 0 }} />
+          <span><strong>Fact Verification:</strong> Unverified claims flagged after retry. Please edit below.</span>
+        </div>
+      )}
 
       <div className="proposal-body-card">
         <div className="proposal-entity">
@@ -117,7 +155,7 @@ export default function SendApprovalGate({ props }) {
         {recipient && (
           <div className="proposal-meta-row">
             <Mail size={12} className="text-muted" />
-            <span className="meta-text">{recipient}</span>
+            <span className="meta-text">{recipient} {is_trusted && <span style={{ color: '#34d399', fontSize: '0.72rem', marginLeft: '0.3rem' }}>(Trusted TOFU)</span>}</span>
           </div>
         )}
 
@@ -128,11 +166,41 @@ export default function SendApprovalGate({ props }) {
           </div>
         )}
 
-        {draft_body && (
-          <div className="draft-snapshot-box">
-            <div className="snapshot-header">Outreach Message Snapshot</div>
-            <p className="snapshot-text">{draft_body.slice(0, 240)}{draft_body.length > 240 ? '...' : ''}</p>
+        {isEditing ? (
+          <div style={{ marginTop: '0.6rem' }}>
+            <label style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.25rem' }}>Edit Outreach Message:</label>
+            <textarea
+              value={editedBody}
+              onChange={(e) => setEditedBody(e.target.value)}
+              rows={5}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.15)', color: '#f1f5f9', fontSize: '0.8rem', fontFamily: 'inherit', resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+              <button
+                type="button"
+                className="btn-gate-approve"
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                disabled={isSubmitting}
+                onClick={handleEditSubmit}
+              >
+                <span>Save & Re-Audit</span>
+              </button>
+              <button
+                type="button"
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#94a3b8', borderRadius: '6px', cursor: 'pointer' }}
+                onClick={() => setIsEditing(false)}
+              >
+                <span>Cancel</span>
+              </button>
+            </div>
           </div>
+        ) : (
+          draft_body && (
+            <div className="draft-snapshot-box">
+              <div className="snapshot-header">Outreach Message Snapshot</div>
+              <p className="snapshot-text">{draft_body.slice(0, 240)}{draft_body.length > 240 ? '...' : ''}</p>
+            </div>
+          )
         )}
       </div>
 
@@ -143,7 +211,7 @@ export default function SendApprovalGate({ props }) {
         </div>
       )}
 
-      {isPending && (
+      {isPending && !isEditing && (
         <div className="gate-actions-row">
           <button
             type="button"
@@ -153,6 +221,14 @@ export default function SendApprovalGate({ props }) {
           >
             <CheckCircle2 size={14} />
             <span>{isSubmitting ? 'Queuing...' : 'Approve & Send'}</span>
+          </button>
+          <button
+            type="button"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.75rem', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.35)', color: '#60a5fa', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+            disabled={isSubmitting}
+            onClick={() => setIsEditing(true)}
+          >
+            <span>Edit Copy</span>
           </button>
           <button
             type="button"

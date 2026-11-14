@@ -355,7 +355,33 @@ async def start_apply_workflow(
     """
     tenant_id = resolve_tenant_id(current_account, account_id)
     import uuid
-    thread_id = f"apply-{tenant_id}-{uuid.uuid4().hex[:12]}"
+    from datetime import datetime, timedelta, timezone
+    from app.models.agent import ThreadAccount
+
+    # Contract 4 / S8 / G7: Concurrency & Stale-Lock Check per (tenant_id, job_id)
+    # Enforces single active in-flight thread per (account_id, job_id) with 10-minute stale recovery
+    now = datetime.now(timezone.utc)
+    stale_cutoff = now - timedelta(minutes=10)
+    target_thread_prefix = f"apply-{tenant_id}-{payload.job_id[:8]}"
+
+    existing_active = db.query(ThreadAccount).filter(
+        ThreadAccount.account_id == tenant_id,
+        ThreadAccount.thread_id.like(f"{target_thread_prefix}%"),
+    ).order_by(ThreadAccount.updated_at.desc()).first()
+
+    if existing_active:
+        thread_updated = existing_active.updated_at
+        if thread_updated and thread_updated.tzinfo is None:
+            thread_updated = thread_updated.replace(tzinfo=timezone.utc)
+        if thread_updated and thread_updated >= stale_cutoff:
+            raise HTTPException(
+                status_code=409,
+                detail=f"An active workflow for job '{payload.job_id}' is currently in progress (thread: {existing_active.thread_id}). Please resume the existing thread or wait for the 10-minute timeout.",
+            )
+        else:
+            logger.info(f"Reclaiming stale workflow thread {existing_active.thread_id} older than 10 minutes.")
+
+    thread_id = f"{target_thread_prefix}-{uuid.uuid4().hex[:6]}"
 
     # Fetch job context if available
     job = db.query(Job).filter_by(id=payload.job_id).first()

@@ -16,8 +16,9 @@ export default function StudioApprovalGate({
     applications.find((a) => a.job_id === activeJobId)?.id;
 
   const activeApp = applications.find((a) => a.id === applicationId || a.job_id === activeJobId);
-  const isQueued = activeApp?.status === 'queued';
+  const isQueued = activeApp?.status === 'queued' || activeApp?.status === 'queued_in_hold';
   const isSent = activeApp?.status === 'sent' || activeApp?.status === 'applied';
+  const isNeedsEdit = activeApp?.status === 'needs_edit';
 
   const [countdown, setCountdown] = useState(30);
 
@@ -40,7 +41,9 @@ export default function StudioApprovalGate({
           <h4>Strict Human-in-the-Loop Send Gate</h4>
           <p>
             {isQueued ? (
-              <>Application is in the <strong>30-second Undo Window</strong>. Outbox worker will dispatch via Gmail upon expiration.</>
+              <>Application is in the <strong>Outbox Hold Queue (Undo Window)</strong>. Poller worker will dispatch via OAuth upon release.</>
+            ) : isNeedsEdit ? (
+              <span style={{ color: '#f87171' }}>Fact verification check flagged unverified statements. Please review the tailored CV above and edit facts before dispatching.</span>
             ) : isSent ? (
               <>Application was <strong>confirmed and dispatched</strong> to hiring team.</>
             ) : (

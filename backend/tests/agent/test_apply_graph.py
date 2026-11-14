@@ -150,6 +150,7 @@ async def test_apply_graph_autonomous_flow_passes_gates(mock_llm_responses):
     from unittest.mock import MagicMock
     mock_db = MagicMock()
     mock_tr = MagicMock()
+    mock_tr.id = "tr-mock-123"
     mock_tr.email = "jobs@deepmind.com"
     mock_db.query.return_value.filter.return_value.first.return_value = mock_tr
 

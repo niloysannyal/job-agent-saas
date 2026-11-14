@@ -212,3 +212,43 @@ Dear Hiring Team at DeepMind, I am thrilled to apply.
         assert "data: " in body_text
         assert "thought" in body_text
         assert "analyze_fit" in body_text
+
+
+def test_tools_apply_workflow_concurrency_and_stale_lock(client: TestClient, sample_job: Job, api_test_db: Session, account_a: Account):
+    """Test Contract 4 / S8 / G7: 409 Conflict on active concurrent run, and stale lock reclamation (>10 min)."""
+    from datetime import datetime, timedelta, timezone
+    from app.models.agent import ThreadAccount
+
+    now = datetime.now(timezone.utc)
+    thread_id = f"apply-{account_a.id}-{sample_job.id[:8]}-active"
+
+    # 1. Active thread (<10 min old) blocks new concurrent run
+    active_thread = ThreadAccount(
+        thread_id=thread_id,
+        account_id=account_a.id,
+        graph_type="apply",
+        created_at=now - timedelta(minutes=2),
+        updated_at=now - timedelta(minutes=2),
+    )
+    api_test_db.add(active_thread)
+    api_test_db.commit()
+
+    res_conflict = client.post(
+        "/api/v1/tools/apply-workflow/start",
+        json={"job_id": sample_job.id, "autonomy_mode": "supervised"},
+    )
+    assert res_conflict.status_code == 409
+    assert "currently in progress" in res_conflict.json()["detail"]
+
+    # 2. Make thread stale (>10 min old)
+    active_thread.updated_at = now - timedelta(minutes=15)
+    api_test_db.commit()
+
+    with patch("app.services.llm.service.LLMService.generate", new_callable=AsyncMock) as mock_llm:
+        mock_llm.return_value = "---TAILORED_SUMMARY---\n\\resumeItem{AI Engineer}\n---COVER_NOTE---\nCover\n---GAPS---\n- None\n"
+        res_reclaimed = client.post(
+            "/api/v1/tools/apply-workflow/start",
+            json={"job_id": sample_job.id, "autonomy_mode": "supervised"},
+        )
+        assert res_reclaimed.status_code == 200
+        assert "text/event-stream" in res_reclaimed.headers["content-type"]
