@@ -125,4 +125,14 @@ def test_compile_latex_docker_fallback():
         assert "docker:job-agent-saas-worker-1:pdflatex" in res["compiler"]
         assert res["pdf_bytes"] == fake_pdf
 
+        # Verify that docker exec was invoked with container sandboxing flags
+        compile_calls = [c for c in mock_run.call_args_list if "pdflatex" in c[0][0]]
+        assert len(compile_calls) >= 1
+        pdflatex_cmd = compile_calls[0][0][0]
+        assert "openin_any=p" in pdflatex_cmd
+        assert "openout_any=p" in pdflatex_cmd
+        assert "-no-shell-escape" in pdflatex_cmd
+        assert "-interaction=nonstopmode" in pdflatex_cmd
+        assert any("TEXMFOUTPUT=" in arg for arg in pdflatex_cmd)
+
 

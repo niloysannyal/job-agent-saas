@@ -170,9 +170,16 @@ class TeXLiveCompilerService:
                 check=True,
             )
 
-            # 3. Run pdflatex in nonstopmode with sandboxing
+            # 3. Run pdflatex in nonstopmode with strict container sandboxing flags
             cmd = [
-                "docker", "exec", "-w", work_dir, container,
+                "docker", "exec",
+                "-e", "openin_any=p",
+                "-e", "OPENIN_ANY=p",
+                "-e", "openout_any=p",
+                "-e", "OPENOUT_ANY=p",
+                "-e", f"TEXMFOUTPUT={work_dir}",
+                "-w", work_dir,
+                container,
                 "pdflatex",
                 "-interaction=nonstopmode",
                 "-no-shell-escape",

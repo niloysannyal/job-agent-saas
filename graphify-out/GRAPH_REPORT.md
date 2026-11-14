@@ -1,7 +1,7 @@
 # Graph Report - job-agent-saas  (2026-11-14)
 
 ## Corpus Check
-- 290 files · ~214,389 words
+- 290 files · ~214,455 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: (none) 6, .tex 4, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3a90f1e9`
+- Built from commit: `7c4c9bea`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -704,11 +704,11 @@ Nodes (3): 1.1 Decision D1 Resolution & Architectural Intent, 1.2 Go / No-Go Ver
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Account` connect `Account` to `tailor_service.py`, `UserProfile`, `JobPosting`, `api/profile.py`, `Job`, `Base`, `applications.py`, `tasks.py`, `crypto.py`, `TestClient`, `test_apply_graph.py`, `job.py`, `GoogleIntegrationService`, `test_matching.py`, `Application`, `api/agent.py`, `test_admin.py`, `admin.py`, `test_auth.py`, `Architecture — Job Application Agent SaaS`, `test_agent.py`, `run_live_dogfooding_tests.py`, `client`, `tools.py`, `TargetDesignation`, `test_matching_service_score_and_gate_clean_jobs`, `test_bookmarklet_generation_with_job_and_star_answers`, `session.py`, `cv_parser.py`, `SendGateway`, `models/__init__.py`, `test_google_dispatch.py`, `apply_graph.py`, `test_monitor_followups_task`?**
-  _High betweenness centrality (0.115) - this node is a cross-community bridge._
+  _High betweenness centrality (0.116) - this node is a cross-community bridge._
 - **Why does `Job` connect `Job` to `tailor_service.py`, `JobPosting`, `UserProfile`, `Account`, `Base`, `applications.py`, `tasks.py`, `LeverJobSource`, `TestClient`, `QuotaExceededException`, `test_apply_graph.py`, `job.py`, `matching/service.py`, `MatchingService`, `test_matching.py`, `Application`, `engine.py`, `test_admin.py`, `admin.py`, `fit_analyzer.py`, `Architecture — Job Application Agent SaaS`, `AgentEngine`, `test_agent.py`, `run_live_dogfooding_tests.py`, `tools.py`, `test_matching_service_score_and_gate_clean_jobs`, `test_bookmarklet_generation_with_job_and_star_answers`, `session.py`, `SendGateway`, `TestClient`, `models/__init__.py`, `state.py`, `test_monitor_followups_task`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Why does `2. Current State Map (Codebase Ground Truth)` connect `lucide-react` to `tailor_service.py`, `AgentEngine`, `UserProfile`, `Base`, `SendGateway`, `logging`, `JobEazy: LangGraph Migration & Per-Account Autonomy Architecture Plan`, `check_migrations.py`, `LLMService`, `GoogleIntegrationService`, `MatchingService`, `engine.py`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+  _High betweenness centrality (0.061) - this node is a cross-community bridge._
 - **Are the 149 inferred relationships involving `Account` (e.g. with `create_admin_template()` and `create_llm_provider()`) actually correct?**
   _`Account` has 149 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 55 inferred relationships involving `Job` (e.g. with `delete_job()` and `dismiss_job_flag()`) actually correct?**

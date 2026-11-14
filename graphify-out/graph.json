@@ -7840,7 +7840,7 @@
       "file_type": "code",
       "norm_label": ".compile_latex()",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L250"
+      "source_location": "L257"
     },
     {
       "id": "backend_app_services_cv_tailor_texlive_compiler_texlivecompilerservice_compile_latex_docker",
@@ -21040,7 +21040,7 @@
       "source_location": "L146"
     },
     {
-      "id": "backend_app_services_cv_tailor_texlive_compiler_rationale_257",
+      "id": "backend_app_services_cv_tailor_texlive_compiler_rationale_264",
       "label": "Compile LaTeX source into PDF using system TeX Live engine or Docker container\u2026",
       "_origin": "ast",
       "community": 130,
@@ -21048,7 +21048,7 @@
       "file_type": "rationale",
       "norm_label": "compile latex source into pdf using system tex live engine or docker container...",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L257"
+      "source_location": "L264"
     },
     {
       "id": "backend_app_services_cv_tailor_texlive_compiler_rationale_38",
@@ -37866,7 +37866,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L261",
+      "source_location": "L268",
       "weight": 1.0
     },
     {
@@ -37878,7 +37878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L264",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -37890,7 +37890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L266",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -37902,7 +37902,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L287",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -37914,7 +37914,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L313",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -50910,7 +50910,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L250",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -109897,7 +109897,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L250",
+      "source_location": "L257",
       "weight": 1.0
     },
     {
@@ -114422,14 +114422,14 @@
       "weight": 1.0
     },
     {
-      "source": "backend_app_services_cv_tailor_texlive_compiler_rationale_257",
+      "source": "backend_app_services_cv_tailor_texlive_compiler_rationale_264",
       "target": "backend_app_services_cv_tailor_texlive_compiler_texlivecompilerservice_compile_latex",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend/app/services/cv_tailor/texlive_compiler.py",
-      "source_location": "L257",
+      "source_location": "L264",
       "weight": 1.0
     },
     {
@@ -132258,5 +132258,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3a90f1e936dd7cd79f26d5fc9a5822e0dc3d5dfa"
+  "built_at_commit": "7c4c9bea3d1d41d85fd232526ed1fad9fe789d81"
 }

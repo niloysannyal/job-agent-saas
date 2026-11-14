@@ -1,13 +1,16 @@
 FROM python:3.11-slim AS base
 
-# Install system dependencies & LaTeX engine for CV compilation
+# Install system dependencies & LaTeX engine for CV compilation (full reproducible font & macro stack)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     libpq-dev \
     texlive-latex-base \
+    texlive-latex-recommended \
     texlive-latex-extra \
+    texlive-plain-generic \
     texlive-fonts-recommended \
+    texlive-fonts-extra \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

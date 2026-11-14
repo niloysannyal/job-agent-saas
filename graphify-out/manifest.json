@@ -1446,14 +1446,14 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/texlive_compiler.py": {
-    "mtime": 1794646318.1102734,
-    "seen": 1794646862.681337,
-    "ast_hash": "3656039a5f36e3f246ae63f2cefeab74",
+    "mtime": 1794647227.0061338,
+    "seen": 1794647296.6517847,
+    "ast_hash": "565398dcd6d898c1876b1e944603b192",
     "semantic_hash": ""
   },
   "backend/tests/api/test_profile_compile_texlive.py": {
-    "mtime": 1794646340.296951,
-    "seen": 1794646862.6815045,
+    "mtime": 1794647154.465681,
+    "seen": 1794647296.6519637,
     "ast_hash": "f0dde2216dc49dbc7fe1bd621218f6e9",
     "semantic_hash": ""
   },
@@ -1572,8 +1572,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/dispatch/gateway.py": {
-    "mtime": 1794646510.0965345,
-    "seen": 1794646862.68134,
+    "mtime": 1794647154.344561,
+    "seen": 1794647296.6517875,
     "ast_hash": "c57e2cf421afe4ab5046f92e89126e48",
     "semantic_hash": ""
   },
@@ -1668,8 +1668,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/agent/workflows/apply_graph.py": {
-    "mtime": 1794646500.8354726,
-    "seen": 1794646862.6813052,
+    "mtime": 1794647153.9825923,
+    "seen": 1794647296.6517549,
     "ast_hash": "608c01a84ade7288aa99ad6c99beb36b",
     "semantic_hash": ""
   },
@@ -1686,8 +1686,8 @@
     "semantic_hash": ""
   },
   "backend/app/services/cv_tailor/drafter.py": {
-    "mtime": 1794646549.5907283,
-    "seen": 1794646862.6813188,
+    "mtime": 1794647154.170472,
+    "seen": 1794647296.6517677,
     "ast_hash": "d4431e406e6599958bb3eb4fdc426e37",
     "semantic_hash": ""
   },
@@ -1746,9 +1746,9 @@
     "semantic_hash": ""
   },
   "backend/tests/services/test_texlive_sandbox.py": {
-    "mtime": 1794646349.2187343,
-    "seen": 1794646862.6815758,
-    "ast_hash": "2d5c378dd282c3538653db9db5ff3dc1",
+    "mtime": 1794647236.0979538,
+    "seen": 1794647296.6520395,
+    "ast_hash": "a805c0b2774ebc234648b29efef2abda",
     "semantic_hash": ""
   },
   "backend/tests/agent/test_apply_to_gateway_e2e.py": {
@@ -1797,18 +1797,6 @@
     "mtime": 1794645106.1061726,
     "seen": 1794646862.6817408,
     "ast_hash": "8038b5e72173c52dd846261c9cdda5d9",
-    "semantic_hash": ""
-  },
-  "real_master_cv.pdf": {
-    "mtime": 1794645739.343089,
-    "seen": 1794646862.6818385,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
-    "semantic_hash": ""
-  },
-  "test_output.pdf": {
-    "mtime": 1794645728.6992743,
-    "seen": 1794646862.68184,
-    "ast_hash": "60083a79a28a4abe4491123560e4179f",
     "semantic_hash": ""
   }
 }
