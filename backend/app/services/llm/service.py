@@ -58,10 +58,13 @@ class LLMService:
                 query = query.filter(
                     (LLMProviderConfig.account_id == self.account_id) | (LLMProviderConfig.account_id == None)
                 )
+                configs = query.order_by(
+                    LLMProviderConfig.account_id.desc().nulls_last(),
+                    LLMProviderConfig.priority.asc(),
+                ).all()
             else:
                 query = query.filter(LLMProviderConfig.account_id == None)
-
-            configs = query.order_by(LLMProviderConfig.priority.asc()).all()
+                configs = query.order_by(LLMProviderConfig.priority.asc()).all()
 
             for cfg in configs:
                 prov_name = cfg.provider.lower()

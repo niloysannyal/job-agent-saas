@@ -187,3 +187,50 @@ def test_llm_service_db_provider_decryption_and_resolution():
     assert isinstance(providers[2], OpenAIProvider)
     assert providers[2].api_key == "sk-secret-openai"
     assert providers[2].model_name == "gpt-4o"
+
+
+def test_llm_service_tenant_override_ordering_tiebreaker():
+    """Verify that tenant-specific provider rows take precedence over global NULL defaults at the same priority level."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from app.db.base import Base
+
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session = Session(engine)
+
+    # Global default: priority 1 (OpenAI)
+    global_cfg = LLMProviderConfig(
+        id="global-1",
+        account_id=None,
+        provider="openai",
+        model_name="gpt-4o-global",
+        encrypted_api_key="sk-global",
+        priority=1,
+        is_active=True,
+    )
+    # Tenant override: priority 1 (Gemini)
+    tenant_cfg = LLMProviderConfig(
+        id="tenant-1",
+        account_id="acc-tenant-1",
+        provider="gemini",
+        model_name="gemini-2.5-flash-tenant",
+        encrypted_api_key="ai-tenant",
+        priority=1,
+        is_active=True,
+    )
+
+    session.add(global_cfg)
+    session.add(tenant_cfg)
+    session.commit()
+
+    service = LLMService(db_session=session, account_id="acc-tenant-1")
+    providers = service._resolve_providers()
+
+    # Tenant-specific provider must be first, despite having identical priority=1
+    assert isinstance(providers[0], GeminiProvider)
+    assert providers[0].model_name == "gemini-2.5-flash-tenant"
+    assert isinstance(providers[1], OpenAIProvider)
+    assert providers[1].model_name == "gpt-4o-global"
+    session.close()
+
